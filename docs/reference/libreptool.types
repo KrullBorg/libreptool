@@ -1,0 +1,3 @@
+#include <libreptool.h>
+
+rpt_print_get_type

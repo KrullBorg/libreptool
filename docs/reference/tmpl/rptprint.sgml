@@ -1,0 +1,112 @@
+<!-- ##### SECTION Title ##### -->
+RptPrint
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### MACRO TYPE_RPT_PRINT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO RPT_PRINT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO RPT_PRINT_COMMON_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO IS_RPT_PRINT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO IS_RPT_PRINT_COMMON_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO RPT_PRINT_COMMON_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### STRUCT RptPrint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION rpt_print_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### ENUM RptPrintOutputType ##### -->
+<para>
+
+</para>
+
+@RPTP_OUTPUT_PNG: 
+@RPTP_OUTPUT_PDF: 
+@RPTP_OUTPUT_PS: 
+@RPTP_OUTPUT_SVG: 
+
+<!-- ##### FUNCTION rpt_print_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xdoc: 
+@output_type: 
+@out_filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_print_new_from_file ##### -->
+<para>
+
+</para>
+
+@filename: 
+@output_type: 
+@out_filename: 
+@Returns: 
+
+

@@ -1,0 +1,16 @@
+<SECTION>
+<FILE>rptprint</FILE>
+TYPE_RPT_PRINT
+RPT_PRINT
+RPT_PRINT_COMMON_CLASS
+IS_RPT_PRINT
+IS_RPT_PRINT_COMMON_CLASS
+RPT_PRINT_COMMON_GET_CLASS
+<TITLE>RptPrint</TITLE>
+RptPrint
+rpt_print_get_type
+RptPrintOutputType
+rpt_print_new_from_xml
+rpt_print_new_from_file
+</SECTION>
+

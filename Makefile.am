@@ -1,4 +1,4 @@
-SUBDIRS = src tests
+SUBDIRS = src tests docs
 
 EXTRA_DIST = libreptool.pc.in
 

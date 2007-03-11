@@ -15,6 +15,7 @@ AC_CANONICAL_SYSTEM
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_LIBTOOL
+GTK_DOC_CHECK
 
 # Checks for libraries.
 PKG_CHECK_MODULES([REPTOOL], [glib-2.0 >= 2.6.0
@@ -38,5 +39,8 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   tests/Makefile
+  docs/Makefile
+  docs/reference/Makefile
+  docs/reference/version.xml
 ])
 AC_OUTPUT
