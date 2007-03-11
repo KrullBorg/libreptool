@@ -1,0 +1,145 @@
+<!ENTITY % objects
+ "text*, line*, rect*, image*"
+>
+
+<!ENTITY % object_attrs
+ "x1   CDATA #REQUIRED
+  y1   CDATA #REQUIRED
+  x2   CDATA #REQUIRED
+  y2   CDATA #REQUIRED"
+>
+
+<!ENTITY % object_data_attrs
+  "source   CDATA #IMPLIED"
+>
+
+<!ENTITY % object_border_attrs
+ "border-top-width      CDATA #IMPLIED
+  border-right-width    CDATA #IMPLIED
+  border-bottom-width   CDATA #IMPLIED
+  border-left-width     CDATA #IMPLIED
+  border-top-color      CDATA #IMPLIED
+  border-right-color    CDATA #IMPLIED
+  border-bottom-color   CDATA #IMPLIED
+  border-left-color     CDATA #IMPLIED
+  border-top-style      CDATA #IMPLIED
+  border-right-style    CDATA #IMPLIED
+  border-bottom-style   CDATA #IMPLIED
+  border-left-style     CDATA #IMPLIED"
+>
+
+<!ENTITY % object_draw_attrs
+ "stroke-width   CDATA #IMPLIED
+  stroke-color   CDATA #IMPLIED
+  stroke-style   CDATA #IMPLIED
+  fill-color     CDATA #IMPLIED"
+>
+
+<!ENTITY % object_font_attrs
+ "font-name          CDATA #IMPLIED
+  font-size          CDATA #IMPLIED
+  font-bold          (y | n) #IMPLIED
+  font-italic        (y | n) #IMPLIED
+  font-underline     (y | n) #IMPLIED"
+>
+
+<!ENTITY % object_text_align_attrs
+ "horizontal-align   (left | center | right | justified) #IMPLIED
+  vertical-align     (top | center | bottom) #IMPLIED"
+>
+
+<!ELEMENT text EMPTY>
+<!ATTLIST text
+  %object_attrs;
+  %object_data_attr;
+  %object_border_attrs;
+  %object_draw_attrs;
+  %object_font_attrs;
+  %object_text_align_attrs;
+>
+
+<!ELEMENT rect EMPTY>
+<!ATTLIST rect
+  %object_attrs;
+  %object_border_attrs;
+  %object_draw_attrs;
+>
+
+<!ELEMENT line EMPTY>
+<!ATTLIST line
+  %object_attrs;
+  %object_draw_attrs;
+>
+
+<!ELEMENT image EMPTY>
+<!ATTLIST image
+  %object_attrs;
+  %object_data_attr;
+  %object_border_attrs;
+>
+
+<!ELEMENT reptool (page, database?, report)>
+
+<!ELEMENT page EMPTY>
+<!ATTLIST page
+  size            (A3, A4, A5, LETTER, LEGAL, TABLOID, CUSTOM) "A4"
+  width           CDATA #IMPLIED
+  height          CDATA #IMPLIED
+  orientation     (0 | 90 | 180 | 270) "0"
+  margin-top      CDATA #IMPLIED
+  margin-right    CDATA #IMPLIED
+  margin-bottom   CDATA #IMPLIED
+  margin-left     CDATA #IMPLIED
+>
+
+<!ELEMENT database EMPTY>
+<!ATTLIST database
+  provider        CDATA #REQUIRED
+  connection_string CDATA #REQUIRED
+  sql             CDATA #REQUIRED
+>
+
+<!ELEMENT report (report-header?, report-footer?, page-header?, page-footer?, group*, body)>
+
+<!ELEMENT report-header (%objects;)>
+<!ATTLIST report-header
+  height   CDATA #REQUIRED
+>
+
+<!ELEMENT report-footer (%objects;)>
+<!ATTLIST report-footer
+  height   CDATA #REQUIRED
+  align    (none | bottom) "none"
+>
+
+<!ELEMENT page-header (%objects;)>
+<!ATTLIST page-header
+  height       CDATA #REQUIRED
+  first-page   (y | n) "y"
+>
+
+<!ELEMENT page-footer (%objects;)>
+<!ATTLIST page-footer
+  height       CDATA #REQUIRED
+  first-page   (y | n ) "y"
+>
+
+<!ELEMENT group (groupheader?, groupfooter?)>
+<!ATTLIST group
+  source   CDATA #REQUIRED
+>
+
+<!ELEMENT group-header (%objects;)>
+<!ATTLIST group-header
+  height   CDATA #REQUIRED
+>
+
+<!ELEMENT group-footer (%objects;)>
+<!ATTLIST group-footer
+  height   CDATA #REQUIRED
+>
+
+<!ELEMENT body (%objects;)>
+<!ATTLIST group-footer
+  height   CDATA #REQUIRED
+>

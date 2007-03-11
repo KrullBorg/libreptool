@@ -1,0 +1,99 @@
+<!ENTITY % objects
+  "text*, line*, rect*, image*"
+>
+
+<!ENTITY % object_position_attrs
+ "x        CDATA #REQUIRED
+  y        CDATA #REQUIRED"
+>
+<!ENTITY % object_size_attrs
+ "width    CDATA #REQUIRED
+  height   CDATA #REQUIRED"
+>
+
+<!ENTITY % object_border_attrs
+ "border-top-width      CDATA #IMPLIED
+  border-right-width    CDATA #IMPLIED
+  border-bottom-width   CDATA #IMPLIED
+  border-left-width     CDATA #IMPLIED
+  border-top-color      CDATA #IMPLIED
+  border-right-color    CDATA #IMPLIED
+  border-bottom-color   CDATA #IMPLIED
+  border-left-color     CDATA #IMPLIED
+  border-top-style      CDATA #IMPLIED
+  border-right-style    CDATA #IMPLIED
+  border-bottom-style   CDATA #IMPLIED
+  border-left-style     CDATA #IMPLIED"
+>
+
+<!ENTITY % object_stroke_attrs
+ "stroke-width   CDATA #IMPLIED
+  stroke-color   CDATA #IMPLIED
+  stroke-style   CDATA #IMPLIED"
+>
+
+<!ENTITY % object_font_attrs
+ "font-name          CDATA #IMPLIED
+  font-size          CDATA #IMPLIED
+  font-bold          (y | n) #IMPLIED
+  font-italic        (y | n) #IMPLIED
+  font-underline     (y | n) #IMPLIED
+  font-strike        (y | n) #IMPLIED
+  font-color         CDATA #IMPLIED"
+>
+
+<!ENTITY % object_text_align_attrs
+ "horizontal-align   (left | center | right | justified) #IMPLIED
+  vertical-align     (top | center | bottom) #IMPLIED"
+>
+
+<!ELEMENT text (#PCDATA)>
+<!ATTLIST text
+  %object_position_attrs;
+  %object_size_attrs;
+  %object_border_attrs;
+  %object_font_attrs;
+  %object_text_align_attrs;
+  background-color   CDATA #IMPLIED
+  padding-top        CDATA #IMPLIED
+  padding-right      CDATA #IMPLIED
+  padding-bottom     CDATA #IMPLIED
+  padding-left       CDATA #IMPLIED
+  adapt              (to-text | none) #IMPLIED
+>
+
+<!ELEMENT line EMPTY>
+<!ATTLIST line
+  %object_poisition_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+>
+
+<!ELEMENT rect EMPTY>
+<!ATTLIST rect
+  %object_poisition_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+  fill-color   CDATA #IMPLIED
+>
+
+<!ELEMENT image EMPTY>
+<!ATTLIST image
+  %object_position_attrs;
+  %object_size_attrs;
+  %object_border_attrs;
+  source   CDATA #REQUIRED
+  adapt    (to-box | to-image | none) #IMPLIED
+>
+
+<!ELEMENT reptool_report (page*)>
+
+<!ELEMENT page (%objects;)>
+<!ATTLIST page
+  width           CDATA #REQUIRED
+  height          CDATA #REQUIRED
+  margin-top      CDATA #IMPLIED
+  margin-right    CDATA #IMPLIED
+  margin-bottom   CDATA #IMPLIED
+  margin-left     CDATA #IMPLIED
+>
