@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,18 +23,7 @@
 #include <pango/pangocairo.h>
 
 #include "rptprint.h"
-
-typedef struct
-{
-	gdouble x,
-	        y;
-} RptPoint;
-
-typedef struct
-{
-	gdouble width,
-	        height;
-} RptSize;
+#include "rptcommon.h"
 
 typedef enum
 {
@@ -59,32 +48,32 @@ typedef struct
 
 typedef struct
 {
-	gdouble r,
-	        g,
-	        b,
-	        a;
+	gdouble r;
+	gdouble g;
+	gdouble b;
+	gdouble a;
 } RptColor;
 
 typedef struct
 {
-	gdouble top_width,
-	        right_width,
-	        bottom_width,
-	        left_width;
-	RptColor top_color,
-	         right_color,
-	         bottom_color,
-	         left_color;
+	gdouble top_width;
+	gdouble right_width;
+	gdouble bottom_width;
+	gdouble left_width;
+	RptColor top_color;
+	RptColor right_color;
+	RptColor bottom_color;
+	RptColor left_color;
 } RptBorder;
 
 typedef struct
 {
 	gchar *name;
 	gdouble size;
-	gboolean bold,
-	         italic,
-	         underline,
-	         strike;
+	gboolean bold;
+	gboolean italic;
+	gboolean underline;
+	gboolean strike;
 	RptColor color;
 } RptFont;
 
@@ -129,10 +118,6 @@ static void rpt_print_border (RptPrint *rpt_print,
                               RptPoint position,
                               RptSize size,
                               RptBorder border);
-static void rpt_print_get_position (xmlNode *xnode,
-                                    RptPoint *position);
-static void rpt_print_get_size (xmlNode *xnode,
-                                RptSize *size);
 static void rpt_print_get_align (xmlNode *xnode,
                                  RptAlign *align);
 static void rpt_print_get_border (xmlNode *xnode,
@@ -150,8 +135,8 @@ static void rpt_print_parse_color (const gchar *str_color,
 typedef struct _RptPrintPrivate RptPrintPrivate;
 struct _RptPrintPrivate
 	{
-		gint width,
-		     height;
+		gint width;
+		gint height;
 		cairo_surface_t *surface;
 		cairo_t *cr;
 	};
@@ -218,9 +203,7 @@ RptPrint
 		{
 			if (strcmp (cur->name, "reptool_report") == 0)
 				{
-#if 0
 					FILE *fout;
-#endif
 					RptPrintPrivate *priv;
 
 					gint npage = 0;
@@ -228,17 +211,17 @@ RptPrint
 					rpt_print = RPT_PRINT (g_object_new (rpt_print_get_type (), NULL));
 
 					priv = RPT_PRINT_GET_PRIVATE (rpt_print);
-#if 0
+
 					if (output_type != RPTP_OUTPUT_PNG)
 						{
-							fout = fopen ("test.pdf", "w");
+							fout = fopen (out_filename, "w");
 							if (fout == NULL)
 								{
 									/* TO DO */
 									return NULL;
 								}
 						}
-#endif
+
 					cur = cur->children;
 					while (cur != NULL)
 						{
@@ -260,15 +243,15 @@ RptPrint
 																break;
 														
 															case RPTP_OUTPUT_PDF:
-																priv->surface = cairo_pdf_surface_create ("test.pdf", (double)priv->width, (double)priv->height);
+																priv->surface = cairo_pdf_surface_create (out_filename, (double)priv->width, (double)priv->height);
 																break;
 		
 															case RPTP_OUTPUT_PS:
-																priv->surface = cairo_ps_surface_create ("test.ps", (double)priv->width, (double)priv->height);
+																priv->surface = cairo_ps_surface_create (out_filename, (double)priv->width, (double)priv->height);
 																break;
 		
 															case RPTP_OUTPUT_SVG:
-																priv->surface = cairo_svg_surface_create ("test.svg", (double)priv->width, (double)priv->height);
+																priv->surface = cairo_svg_surface_create (out_filename, (double)priv->width, (double)priv->height);
 																break;
 														}
 												}
@@ -294,7 +277,7 @@ RptPrint
 															rpt_print_page (rpt_print, cur);
 															if (output_type == RPTP_OUTPUT_PNG)
 																{
-																	cairo_surface_write_to_png (priv->surface, "test.png");
+																	cairo_surface_write_to_png (priv->surface, out_filename);
 																	cairo_surface_destroy (priv->surface);
 																}
 
@@ -327,12 +310,10 @@ RptPrint
 						{						
 							cairo_destroy (priv->cr);
 						}
-#if 0
 					if (output_type != RPTP_OUTPUT_PNG)
 						{
 							fclose (fout);
 						}
-#endif
 				}
 			else
 				{
@@ -447,8 +428,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	        pad_bottom,
 	        pad_left;
 
-	rpt_print_get_position (xnode, &position);
-	rpt_print_get_size (xnode, &size);
+	rpt_common_get_position (xnode, &position);
+	rpt_common_get_size (xnode, &size);
 	rpt_print_get_align (xnode, &align);
 	rpt_print_get_border (xnode, &border);
 	rpt_print_get_font (xnode, &font);
@@ -571,8 +552,8 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 	RptSize size;
 	RptStroke stroke;
 
-	rpt_print_get_position (xnode, &position);
-	rpt_print_get_size (xnode, &size);
+	rpt_common_get_position (xnode, &position);
+	rpt_common_get_size (xnode, &size);
 	rpt_print_get_stroke (xnode, &stroke);
 
 	from_p.x = position.x;
@@ -595,8 +576,8 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	rpt_print_get_position (xnode, &position);
-	rpt_print_get_size (xnode, &size);
+	rpt_common_get_position (xnode, &position);
+	rpt_common_get_size (xnode, &size);
 	rpt_print_get_stroke (xnode, &stroke);
 
 	gchar *prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
@@ -637,8 +618,8 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	gchar *adapt,
-	      *filename= xmlGetProp (xnode, (const xmlChar *)"source");
+	gchar *adapt;
+	gchar *filename= xmlGetProp (xnode, (const xmlChar *)"source");
 	if (filename == NULL)
 		{
 			return;
@@ -654,8 +635,8 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 			g_strstrip (adapt);
 		}
 
-	rpt_print_get_position (xnode, &position);
-	rpt_print_get_size (xnode, &size);
+	rpt_common_get_position (xnode, &position);
+	rpt_common_get_size (xnode, &size);
 	rpt_print_get_border (xnode, &border);
 
 	image = cairo_image_surface_create_from_png (filename);
@@ -752,46 +733,6 @@ rpt_print_border (RptPrint *rpt_print, RptPoint position, RptSize size, RptBorde
 			stroke.width = border.left_width;
 			stroke.color = border.left_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
-		}
-}
-
-static void
-rpt_print_get_position (xmlNode *xnode, RptPoint *position)
-{
-	gchar *prop;
-
-	position->x = 0.0;
-	position->y = 0.0;
-
-	prop = xmlGetProp (xnode, (const xmlChar *)"x");
-	if (prop != NULL)
-		{
-			position->x = strtod (prop, NULL);
-		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"y");
-	if (prop != NULL)
-		{
-			position->y = strtod (prop, NULL);
-		}
-}
-
-static void
-rpt_print_get_size (xmlNode *xnode, RptSize *size)
-{
-	gchar *prop;
-
-	size->width = 0.0;
-	size->height = 0.0;
-
-	prop = xmlGetProp (xnode, (const xmlChar *)"width");
-	if (prop != NULL)
-		{
-			size->width = strtod (prop, NULL);
-		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"height");
-	if (prop != NULL)
-		{
-			size->height = strtod (prop, NULL);
 		}
 }
 

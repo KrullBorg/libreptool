@@ -21,6 +21,7 @@ GTK_DOC_CHECK
 PKG_CHECK_MODULES([REPTOOL], [glib-2.0 >= 2.6.0
                               gobject-2.0 >= 2.6.0
                               libxml-2.0 >= 2.6.0
+                              libgda >= 1.2.3
                               cairo >= 1.0.0
                               pangocairo >= 1.12])
 

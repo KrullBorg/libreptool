@@ -6,6 +6,7 @@
  "x        CDATA #REQUIRED
   y        CDATA #REQUIRED"
 >
+
 <!ENTITY % object_size_attrs
  "width    CDATA #REQUIRED
   height   CDATA #REQUIRED"

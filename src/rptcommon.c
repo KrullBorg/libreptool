@@ -14,13 +14,49 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- * 
  */
 
-#ifndef __LIBREPTOOL_H__
-#define __LIBREPTOOL_H__
+#include <stdlib.h>
+#include <string.h>
 
-#include <rptreport.h>
-#include <rptprint.h>
+#include "rptcommon.h"
 
-#endif /* __LIBREPTOOL_H__ */
+void
+rpt_common_get_position (xmlNode *xnode, RptPoint *position)
+{
+	gchar *prop;
+
+	position->x = 0.0;
+	position->y = 0.0;
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"x");
+	if (prop != NULL)
+		{
+			position->x = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"y");
+	if (prop != NULL)
+		{
+			position->y = strtod (prop, NULL);
+		}
+}
+
+void
+rpt_common_get_size (xmlNode *xnode, RptSize *size)
+{
+	gchar *prop;
+
+	size->width = 0.0;
+	size->height = 0.0;
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"width");
+	if (prop != NULL)
+		{
+			size->width = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"height");
+	if (prop != NULL)
+		{
+			size->height = strtod (prop, NULL);
+		}
+}

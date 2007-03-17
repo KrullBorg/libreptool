@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ main (int argc, char **argv)
 
 	g_type_init ();
 
-	rptp = rpt_print_new_from_file (argv[1], RPTP_OUTPUT_PDF, "");
+	rptp = rpt_print_new_from_file (argv[1], RPTP_OUTPUT_PDF, "test.pdf");
 
 	if (rptp != NULL)
 		{

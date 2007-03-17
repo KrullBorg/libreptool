@@ -1,12 +1,19 @@
 <!ENTITY % objects
- "text*, line*, rect*, image*"
+  "text*, line*, rect*, image*"
 >
 
-<!ENTITY % object_attrs
- "x1   CDATA #REQUIRED
-  y1   CDATA #REQUIRED
-  x2   CDATA #REQUIRED
-  y2   CDATA #REQUIRED"
+<!ENTITY % object_commons_attrs
+  "name   CDATA #REQUIRED"
+>
+
+<!ENTITY % object_position_attrs
+  "x        CDATA #REQUIRED
+   y        CDATA #REQUIRED"
+>
+
+<!ENTITY % object_size_attrs
+ "width    CDATA #REQUIRED
+  height   CDATA #REQUIRED"
 >
 
 <!ENTITY % object_data_attrs
@@ -28,11 +35,10 @@
   border-left-style     CDATA #IMPLIED"
 >
 
-<!ENTITY % object_draw_attrs
+<!ENTITY % object_stroke_attrs
  "stroke-width   CDATA #IMPLIED
   stroke-color   CDATA #IMPLIED
-  stroke-style   CDATA #IMPLIED
-  fill-color     CDATA #IMPLIED"
+  stroke-style   CDATA #IMPLIED"
 >
 
 <!ENTITY % object_font_attrs
@@ -40,7 +46,9 @@
   font-size          CDATA #IMPLIED
   font-bold          (y | n) #IMPLIED
   font-italic        (y | n) #IMPLIED
-  font-underline     (y | n) #IMPLIED"
+  font-underline     (y | n) #IMPLIED
+  font-strike        (y | n) #IMPLIED
+  font-color         CDATA #IMPLIED"
 >
 
 <!ENTITY % object_text_align_attrs
@@ -48,56 +56,66 @@
   vertical-align     (top | center | bottom) #IMPLIED"
 >
 
-<!ELEMENT text EMPTY>
+<!ELEMENT text (#PCDATA)>
 <!ATTLIST text
-  %object_attrs;
-  %object_data_attr;
+  %object_commons_attrs;
+  %object_position_attrs;
+  %object_size_attrs;
   %object_border_attrs;
-  %object_draw_attrs;
   %object_font_attrs;
   %object_text_align_attrs;
->
-
-<!ELEMENT rect EMPTY>
-<!ATTLIST rect
-  %object_attrs;
-  %object_border_attrs;
-  %object_draw_attrs;
+  %object_data_attrs;
+  background-color   CDATA #IMPLIED
+  padding-top        CDATA #IMPLIED
+  padding-right      CDATA #IMPLIED
+  padding-bottom     CDATA #IMPLIED
+  padding-left       CDATA #IMPLIED
+  adapt              (to-text | none) #IMPLIED
 >
 
 <!ELEMENT line EMPTY>
 <!ATTLIST line
-  %object_attrs;
-  %object_draw_attrs;
+  %object_commons_attrs;
+  %object_poisition_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+>
+
+<!ELEMENT rect EMPTY>
+<!ATTLIST rect
+  %object_commons_attrs;
+  %object_poisition_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+  fill-color   CDATA #IMPLIED
 >
 
 <!ELEMENT image EMPTY>
 <!ATTLIST image
-  %object_attrs;
-  %object_data_attr;
+  %object_commons_attrs;
+  %object_position_attrs;
+  %object_size_attrs;
   %object_border_attrs;
+  source   CDATA #REQUIRED
+  adapt    (to-box | to-image | none) #IMPLIED
 >
 
 <!ELEMENT reptool (page, database?, report)>
 
 <!ELEMENT page EMPTY>
 <!ATTLIST page
-  size            (A3, A4, A5, LETTER, LEGAL, TABLOID, CUSTOM) "A4"
-  width           CDATA #IMPLIED
-  height          CDATA #IMPLIED
-  orientation     (0 | 90 | 180 | 270) "0"
+  width           CDATA #REQUIRED
+  height          CDATA #REQUIRED
   margin-top      CDATA #IMPLIED
   margin-right    CDATA #IMPLIED
   margin-bottom   CDATA #IMPLIED
   margin-left     CDATA #IMPLIED
 >
 
-<!ELEMENT database EMPTY>
-<!ATTLIST database
-  provider        CDATA #REQUIRED
-  connection_string CDATA #REQUIRED
-  sql             CDATA #REQUIRED
->
+<!ELEMENT database (provider, connection_string, sql)>
+<!ELEMENT provider (#PCDATA)>
+<!ELEMENT connection_string (#PCDATA)>
+<!ELEMENT sql (#PCDATA)>
 
 <!ELEMENT report (report-header?, report-footer?, page-header?, page-footer?, group*, body)>
 

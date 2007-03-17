@@ -17,10 +17,34 @@
  * 
  */
 
-#ifndef __LIBREPTOOL_H__
-#define __LIBREPTOOL_H__
+#ifndef __RPT_COMMON_H__
+#define __RPT_COMMON_H__
 
-#include <rptreport.h>
-#include <rptprint.h>
+#include <glib.h>
+#include <libxml/tree.h>
 
-#endif /* __LIBREPTOOL_H__ */
+G_BEGIN_DECLS
+
+
+typedef struct
+{
+	gdouble x;
+	gdouble y;
+} RptPoint;
+
+typedef struct
+{
+	gdouble width;
+	gdouble height;
+} RptSize;
+
+
+void rpt_common_get_position (xmlNode *xnode,
+                              RptPoint *position);
+void rpt_common_get_size (xmlNode *xnode,
+                          RptSize *size);
+
+
+G_END_DECLS
+
+#endif /* __RPT_COMMON_H__ */
