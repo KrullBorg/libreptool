@@ -121,14 +121,21 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
  * Returns: the newly created #RptObject object.
  */
 RptObject
-*rpt_obj_text_new (const gchar *name, RptPoint *position)
+*rpt_obj_text_new (const gchar *name, RptPoint position)
 {
-	RptObject *rpt_obj_text = RPT_OBJECT (g_object_new (rpt_obj_text_get_type (), NULL));
+	RptObject *rpt_obj_text = NULL;
 
-	g_object_set (G_OBJECT (rpt_obj_text),
-	              "name", name,
-	              "position", position,
-	              NULL);
+	gchar *name_ = g_strstrip (g_strdup (name));
+
+	if (strcmp (name_, "") != 0)
+		{
+			rpt_obj_text = RPT_OBJECT (g_object_new (rpt_obj_text_get_type (), NULL));
+
+			g_object_set (G_OBJECT (rpt_obj_text),
+	                      "name", name_,
+	                      "position", &position,
+	                      NULL);
+		}
 
 	return rpt_obj_text;
 }
@@ -145,15 +152,15 @@ RptObject
 	gchar *name;
 	RptObject *rpt_obj_text = NULL;
 
-	name = (gchar *)xmlGetProp (xnode, "name");
+	name = g_strdup ((gchar *)xmlGetProp (xnode, "name"));
 	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
 		{
-			RptPoint *position;
+			RptPoint position;
 			RptObjTextPrivate *priv;
 
-			rpt_common_get_position (xnode, position);
+			rpt_common_get_position (xnode, &position);
 
-			rpt_obj_text = rpt_obj_text_new (name, position);
+			rpt_obj_text = rpt_obj_text_new ((const gchar *)name, position);
 
 			if (rpt_obj_text != NULL)
 				{

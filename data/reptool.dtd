@@ -114,25 +114,27 @@
 
 <!ELEMENT report-header (%objects;)>
 <!ATTLIST report-header
-  height   CDATA #REQUIRED
+  height           CDATA #REQUIRED
+  new-page-after   (y | n) #IMPLIED
 >
 
 <!ELEMENT report-footer (%objects;)>
 <!ATTLIST report-footer
-  height   CDATA #REQUIRED
-  align    (none | bottom) "none"
+  height            CDATA #REQUIRED
+  align             (none | bottom) #IMPLIED
+  new-page-before   (y | n) #IMPLIED
 >
 
 <!ELEMENT page-header (%objects;)>
 <!ATTLIST page-header
   height       CDATA #REQUIRED
-  first-page   (y | n) "y"
+  first-page   (y | n) #IMPLIED
 >
 
 <!ELEMENT page-footer (%objects;)>
 <!ATTLIST page-footer
   height       CDATA #REQUIRED
-  first-page   (y | n ) "y"
+  first-page   (y | n ) #IMPLIED
 >
 
 <!ELEMENT group (groupheader?, groupfooter?)>
@@ -148,11 +150,11 @@
 <!ELEMENT group-footer (%objects;)>
 <!ATTLIST group-footer
   height   CDATA #REQUIRED
-  new-page-after   (y | n) "n"
+  new-page-after   (y | n) #IMPLIED
 >
 
 <!ELEMENT body (%objects;)>
 <!ATTLIST body
   height           CDATA #REQUIRED
-  new-page-after   (y | n) "n"
+  new-page-after   (y | n) #IMPLIED
 >

@@ -113,13 +113,13 @@ rpt_object_init (RptObject *rpt_object)
  * Returns: the newly created #RptObject object.
  */
 RptObject
-*rpt_object_new (const gchar *name, RptPoint *position)
+*rpt_object_new (const gchar *name, RptPoint position)
 {
 	RptObject *rpt_object = RPT_OBJECT (g_object_new (rpt_object_get_type (), NULL));;
 
 	g_object_set (rpt_object,
 	              "name", name,
-	              "poisition", position,
+	              "poisition", &position,
 	              NULL);
 
 	return rpt_object;

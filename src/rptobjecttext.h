@@ -53,7 +53,7 @@ struct _RptObjTextClass
 GType rpt_obj_text_get_type (void) G_GNUC_CONST;
 
 
-RptObject *rpt_obj_text_new (const gchar *name, RptPoint *position);
+RptObject *rpt_obj_text_new (const gchar *name, RptPoint position);
 RptObject *rpt_obj_text_new_from_xml (xmlNode *xnode);
 
 void rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode);

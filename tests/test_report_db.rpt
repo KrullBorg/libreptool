@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<reptool>
+	<page width="595" height="842" />
+
+	<database>
+		<provider>SQLite</provider>
+		<connection_string>URI=///home/andreaz/files/c/reptool/libreptool/tests/db_test.db</connection_string>
+		<sql>SELECT * FROM articles ORDER BY name</sql>
+	</database>
+
+	<report>
+		<body height="200"><text name="txt_id" x="50" y="50" width="100" height="50" source="[id]" /><text name="txt_name" x="200" y="50" width="100" height="50" source="[name]" /></body>
+	</report>
+</reptool>
