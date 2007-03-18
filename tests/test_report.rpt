@@ -1,12 +1,10 @@
 <?xml version="1.0" ?>
 <reptool>
-  <page width="595" height="842" />
+	<page width="595" height="842" />
 
-  <report>
-    <body height="200">
-      <text name="text1" x="100" y="50" width="500" height="200">
-        the text's content
-      </text>
-    </body>
-  </report>
+	<report>
+		<body height="200">
+			<text name="text1" x="100" y="50" width="500" height="150" source="the text's content" />
+		</body>
+	</report>
 </reptool>

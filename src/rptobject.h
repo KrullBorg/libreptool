@@ -24,15 +24,17 @@
 #include <glib-object.h>
 #include <libxml/tree.h>
 
+#include "rptcommon.h"
+
 G_BEGIN_DECLS
 
 
-#define TYPE_RPT_OBJECT                 (rpt_object_get_type ())
-#define RPT_OBJECT(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_RPT_OBJECT, RptObject))
-#define RPT_OBJECT_COMMON_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_OBJECT, RptObjectClass))
-#define IS_RPT_OBJECT(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_RPT_OBJECT))
-#define IS_RPT_OBJECT_COMMON_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_OBJECT))
-#define RPT_OBJECT_COMMON_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_OBJECT, RptObjectClass))
+#define TYPE_RPT_OBJECT               (rpt_object_get_type ())
+#define RPT_OBJECT(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_RPT_OBJECT, RptObject))
+#define RPT_OBJECT_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_OBJECT, RptObjectClass))
+#define IS_RPT_OBJECT(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_RPT_OBJECT))
+#define IS_RPT_OBJECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_OBJECT))
+#define RPT_OBJECT_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_OBJECT, RptObjectClass))
 
 
 typedef struct _RptObject RptObject;
@@ -46,12 +48,14 @@ struct _RptObject
 struct _RptObjectClass
 	{
 		GObjectClass parent_class;
+
+		void (*get_xml) (RptObject *rptobj, xmlNode *xnode);
 	};
 
 GType rpt_object_get_type (void) G_GNUC_CONST;
 
 
-RptObject *rpt_object_new (const gchar *name);
+RptObject *rpt_object_new (const gchar *name, RptPoint *position);
 
 void rpt_object_get_xml (RptObject *rptobj, xmlNode *xnode);
 

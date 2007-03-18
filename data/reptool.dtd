@@ -3,12 +3,9 @@
 >
 
 <!ENTITY % object_commons_attrs
-  "name   CDATA #REQUIRED"
->
-
-<!ENTITY % object_position_attrs
-  "x        CDATA #REQUIRED
-   y        CDATA #REQUIRED"
+  "name   CDATA #REQUIRED
+   x      CDATA #REQUIRED
+   y      CDATA #REQUIRED"
 >
 
 <!ENTITY % object_size_attrs
@@ -56,10 +53,9 @@
   vertical-align     (top | center | bottom) #IMPLIED"
 >
 
-<!ELEMENT text (#PCDATA)>
+<!ELEMENT text EMPTY>
 <!ATTLIST text
   %object_commons_attrs;
-  %object_position_attrs;
   %object_size_attrs;
   %object_border_attrs;
   %object_font_attrs;
@@ -76,7 +72,6 @@
 <!ELEMENT line EMPTY>
 <!ATTLIST line
   %object_commons_attrs;
-  %object_poisition_attrs;
   %object_size_attrs;
   %object_stroke_attrs;
 >
@@ -84,7 +79,6 @@
 <!ELEMENT rect EMPTY>
 <!ATTLIST rect
   %object_commons_attrs;
-  %object_poisition_attrs;
   %object_size_attrs;
   %object_stroke_attrs;
   fill-color   CDATA #IMPLIED
@@ -93,7 +87,6 @@
 <!ELEMENT image EMPTY>
 <!ATTLIST image
   %object_commons_attrs;
-  %object_position_attrs;
   %object_size_attrs;
   %object_border_attrs;
   source   CDATA #REQUIRED
@@ -155,9 +148,11 @@
 <!ELEMENT group-footer (%objects;)>
 <!ATTLIST group-footer
   height   CDATA #REQUIRED
+  new-page-after   (y | n) "n"
 >
 
 <!ELEMENT body (%objects;)>
-<!ATTLIST group-footer
-  height   CDATA #REQUIRED
+<!ATTLIST body
+  height           CDATA #REQUIRED
+  new-page-after   (y | n) "n"
 >

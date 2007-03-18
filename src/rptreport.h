@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,10 +29,10 @@ G_BEGIN_DECLS
 
 #define TYPE_RPT_REPORT                 (rpt_report_get_type ())
 #define RPT_REPORT(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_RPT_REPORT, RptReport))
-#define RPT_REPORT_COMMON_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_REPORT, RptReportClass))
+#define RPT_REPORT_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_REPORT, RptReportClass))
 #define IS_RPT_REPORT(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_RPT_REPORT))
-#define IS_RPT_REPORT_COMMON_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_REPORT))
-#define RPT_REPORT_COMMON_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_REPORT, RptReportClass))
+#define IS_RPT_REPORT_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_REPORT))
+#define RPT_REPORT_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_REPORT, RptReportClass))
 
 
 typedef struct _RptReport RptReport;
@@ -56,7 +56,7 @@ RptReport *rpt_report_new_from_file (const gchar *filename);
 
 xmlDoc *rpt_report_get_xml (RptReport *rptreport);
 
-xmlDoc *rpt_report_get_rptprint (RptReport *rptreport);
+xmlDoc *rpt_report_get_xml_rptprint (RptReport *rptreport);
 
 
 G_END_DECLS

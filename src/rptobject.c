@@ -21,7 +21,8 @@
 enum
 {
 	PROP_0,
-	PROP_NAME
+	PROP_NAME,
+	PROP_POSITION
 };
 
 static void rpt_object_class_init (RptObjectClass *klass);
@@ -43,6 +44,7 @@ typedef struct _RptObjectPrivate RptObjectPrivate;
 struct _RptObjectPrivate
 	{
 		gchar *name;
+		RptPoint *position;
 	};
 
 GType
@@ -80,6 +82,8 @@ rpt_object_class_init (RptObjectClass *klass)
 
 	g_type_class_add_private (object_class, sizeof (RptObjectPrivate));
 
+	klass->get_xml = NULL;
+
 	object_class->set_property = rpt_object_set_property;
 	object_class->get_property = rpt_object_get_property;
 
@@ -89,6 +93,11 @@ rpt_object_class_init (RptObjectClass *klass)
 	                                                      "The object's name.",
 	                                                      "",
 	                                                      G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_POSITION,
+	                                 g_param_spec_pointer ("position",
+	                                                       "Position",
+	                                                       "The object's position.",
+	                                                       G_PARAM_READWRITE));
 }
 
 static void
@@ -99,17 +108,36 @@ rpt_object_init (RptObject *rpt_object)
 /**
  * rpt_object_new:
  * @name: the #RptObject's name.
+ * @position: an #RptPoint that represents the object's position.
  *
  * Returns: the newly created #RptObject object.
  */
 RptObject
-*rpt_object_new (const gchar *name)
+*rpt_object_new (const gchar *name, RptPoint *position)
 {
 	RptObject *rpt_object = RPT_OBJECT (g_object_new (rpt_object_get_type (), NULL));;
 
-	g_object_set (rpt_object, "name", name, NULL);
+	g_object_set (rpt_object,
+	              "name", name,
+	              "poisition", position,
+	              NULL);
 
 	return rpt_object;
+}
+
+void
+rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode)
+{
+	if (IS_RPT_OBJECT (rpt_object) && RPT_OBJECT_GET_CLASS (rpt_object)->get_xml != NULL)
+		{
+			RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
+		
+			xmlSetProp (xnode, "name", priv->name);
+			xmlSetProp (xnode, "x", g_strdup_printf ("%f", priv->position->x));
+			xmlSetProp (xnode, "y", g_strdup_printf ("%f", priv->position->y));
+
+			RPT_OBJECT_GET_CLASS (rpt_object)->get_xml (rpt_object, xnode);
+		}
 }
 
 static void
@@ -123,6 +151,10 @@ rpt_object_set_property (GObject *object, guint property_id, const GValue *value
 		{
 			case PROP_NAME:
 				priv->name = g_strstrip (g_strdup (g_value_get_string (value)));
+				break;
+
+			case PROP_POSITION:
+				priv->position = g_memdup (g_value_get_pointer (value), sizeof (RptPoint));
 				break;
 
 			default:
@@ -142,6 +174,10 @@ rpt_object_get_property (GObject *object, guint property_id, GValue *value, GPar
 		{
 			case PROP_NAME:
 				g_value_set_string (value, priv->name);
+				break;
+
+			case PROP_POSITION:
+				g_value_set_pointer (value, g_memdup (priv->position, sizeof (RptPoint)));
 				break;
 
 			default:

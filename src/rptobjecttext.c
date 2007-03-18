@@ -22,8 +22,8 @@
 enum
 {
 	PROP_0,
-	PROP_POSITION,
-	PROP_SIZE
+	PROP_SIZE,
+	PROP_SOURCE
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -44,10 +44,9 @@ static void rpt_obj_text_get_property (GObject *object,
 typedef struct _RptObjTextPrivate RptObjTextPrivate;
 struct _RptObjTextPrivate
 	{
-		RptPoint *position;
 		RptSize *size;
 
-		gchar *text;
+		gchar *source;
 	};
 
 GType
@@ -82,30 +81,54 @@ static void
 rpt_obj_text_class_init (RptObjTextClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	RptObjectClass *rptobject_class = RPT_OBJECT_CLASS (klass);
 
 	g_type_class_add_private (object_class, sizeof (RptObjTextPrivate));
 
 	object_class->set_property = rpt_obj_text_set_property;
 	object_class->get_property = rpt_obj_text_get_property;
+
+	rptobject_class->get_xml = rpt_obj_text_get_xml;
+
+	g_object_class_install_property (object_class, PROP_SIZE,
+	                                 g_param_spec_pointer ("size",
+	                                                       "Size",
+	                                                       "The object's size.",
+	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_SOURCE,
+	                                 g_param_spec_string ("source",
+	                                                      "Source",
+	                                                      "The source.",
+	                                                      "",
+	                                                      G_PARAM_READWRITE));
 }
 
 static void
 rpt_obj_text_init (RptObjText *rpt_obj_text)
 {
+	RptObjTextPrivate *priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
+
+	priv->size = (RptSize *)g_malloc0 (sizeof (RptSize));
+	priv->size->width = 0.0;
+	priv->size->height = 0.0;
 }
 
 /**
  * rpt_obj_text_new:
  * @name: the #RptObjText's name.
+ * @position:
  *
  * Returns: the newly created #RptObject object.
  */
 RptObject
-*rpt_obj_text_new (const gchar *name)
+*rpt_obj_text_new (const gchar *name, RptPoint *position)
 {
-	RptObject *rpt_obj_text = RPT_OBJ_TEXT (g_object_new (rpt_obj_text_get_type (), NULL));
+	RptObject *rpt_obj_text = RPT_OBJECT (g_object_new (rpt_obj_text_get_type (), NULL));
 
-	g_object_set (rpt_obj_text, "name", name, NULL);
+	g_object_set (G_OBJECT (rpt_obj_text),
+	              "name", name,
+	              "position", position,
+	              NULL);
 
 	return rpt_obj_text;
 }
@@ -123,19 +146,37 @@ RptObject
 	RptObject *rpt_obj_text = NULL;
 
 	name = (gchar *)xmlGetProp (xnode, "name");
-	if (strcmp (g_strstrip (name), "") != 0)
+	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
 		{
+			RptPoint *position;
 			RptObjTextPrivate *priv;
 
-			rpt_obj_text = rpt_obj_text_new (name);
+			rpt_common_get_position (xnode, position);
 
-			priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
+			rpt_obj_text = rpt_obj_text_new (name, position);
 
-			rpt_common_get_position (xnode, priv->position);
-			rpt_common_get_size (xnode, priv->size);
+			if (rpt_obj_text != NULL)
+				{
+					priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
+
+					rpt_common_get_size (xnode, priv->size);
+
+					g_object_set (rpt_obj_text, "source", xmlGetProp (xnode, "source"), NULL);
+				}
 		}
 
 	return rpt_obj_text;
+}
+
+void
+rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
+{
+	RptObjTextPrivate *priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_objtext);
+
+	xmlNodeSetName (xnode, "text");
+
+	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
+	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
 }
 
 static void
@@ -147,6 +188,14 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 
 	switch (property_id)
 		{
+			case PROP_SIZE:
+				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_SOURCE:
+				priv->source = g_strstrip (g_strdup (g_value_get_string (value)));
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -162,6 +211,14 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 	switch (property_id)
 		{
+			case PROP_SIZE:
+				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_SOURCE:
+				g_value_set_string (value, priv->source);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;

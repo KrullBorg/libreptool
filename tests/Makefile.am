@@ -5,6 +5,7 @@ AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
 
 libreptool = $(top_builddir)/src/libreptool.la
 
-noinst_PROGRAMS = rptprint
+noinst_PROGRAMS = rptprint \
+                  rptreport
 
-rptprint_LDADD = $(libreptool)
+LDADD = $(libreptool)

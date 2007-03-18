@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,6 +62,14 @@ static void rpt_report_get_property (GObject *object,
 static void rpt_report_xml_parse_body (RptReport *rpt_report, xmlNodeSetPtr xnodeset);
 static RptObject *rpt_report_get_object_from_name (GList *list, const gchar *name);
 
+static xmlNode *rpt_report_rptprint_new_page (RptReport *rptreport,
+                                              xmlNode *xroot);
+static void rpt_report_rptprint_body (RptReport *rptreport,
+                                      xmlNode *xpage);
+static void rpt_report_rptprint_parse_source (RptReport *rptreport,
+                                              RptObject *rptobj,
+                                              xmlNode *xnode);
+
 
 #define RPT_REPORT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_REPORT, RptReportPrivate))
 
@@ -121,7 +129,12 @@ rpt_report_init (RptReport *rpt_report)
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	priv->page = (Page *)g_malloc0 (sizeof (Page));
+	priv->page->size = (RptSize *)g_malloc0 (sizeof (RptSize));
+	priv->page->size->width = 0.0;
+	priv->page->size->height = 0.0;
+
 	priv->body = (Body *)g_malloc0 (sizeof (Body));
+	priv->body->height = 0.0;
 }
 
 /**
@@ -158,8 +171,17 @@ RptReport
 							xnodeset = xpresult->nodesetval;
 							if (xnodeset->nodeNr == 1)
 								{
-									priv->page->size->width = atol (xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"width"));
-									priv->page->size->height = atol (xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"height"));
+									gchar *prop;
+									prop = xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"width");
+									if (prop != NULL)
+										{
+											priv->page->size->width = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"height");
+									if (prop != NULL)
+										{
+											priv->page->size->height = strtod (prop, NULL);
+										}
 								}
 							else
 								{
@@ -308,26 +330,34 @@ xmlDoc
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
 
+	/* TO DO */
+
 	return xdoc;
 }
 
 /**
- * rpt_report_get_rptprint:
+ * rpt_report_get_xml_rptprint:
  * @rptreport: an #RptReport object.
  *
  */
 xmlDoc
-*rpt_report_get_rptprint (RptReport *rptreport)
+*rpt_report_get_xml_rptprint (RptReport *rptreport)
 {
 	xmlDoc *xdoc;
 	xmlNode *xroot;
+	xmlNode *xnode;
+	gint pages;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
 
 	xdoc = xmlNewDoc ("1.0");
 	xroot = xmlNewNode (NULL, "reptool_report");
 	xmlDocSetRootElement (xdoc, xroot);
-		
+
+	pages++;
+	xnode = rpt_report_rptprint_new_page (rptreport, xroot);
+	rpt_report_rptprint_body (rptreport, xnode);
+
 	return xdoc;
 }
 
@@ -366,24 +396,35 @@ rpt_report_xml_parse_body (RptReport *rpt_report, xmlNodeSetPtr xnodeset)
 {
 	RptObject *rptobj;
 	gchar *objname;
+	gchar *prop;
 	xmlNode *cur = xnodeset->nodeTab[0];
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
+	prop = xmlGetProp (cur, "height");
+	if (prop != NULL)
+		{
+			priv->body->height = strtod (prop, NULL);
+		}
+
+	cur = cur->children;
 	while (cur != NULL)
 		{
 			if (strcmp (cur->name, "text") == 0)
 				{
 					rptobj = rpt_obj_text_new_from_xml (cur);
-					g_object_get (rptobj, "name", objname, NULL);
+					if (rptobj != NULL)
+						{
+							g_object_get (rptobj, "name", objname, NULL);
 
-					if (rpt_report_get_object_from_name (priv->body->objects, objname) != NULL)
-						{
-							priv->body->objects = g_list_append (priv->body->objects, rptobj);
-						}
-					else
-						{
-							/* TO DO */
+							if (rpt_report_get_object_from_name (priv->body->objects, objname) == NULL)
+								{
+									priv->body->objects = g_list_append (priv->body->objects, rptobj);
+								}
+							else
+								{
+									/* TO DO */
+								}
 						}
 				}
 			else if (strcmp (cur->name, "line") == 0)
@@ -420,4 +461,65 @@ static RptObject
 		}
 
 	return obj;
+}
+
+static xmlNode
+*rpt_report_rptprint_new_page (RptReport *rptreport, xmlNode *xroot)
+{
+	xmlNode *xnode;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+
+	xnode = xmlNewNode (NULL, "page");
+	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->page->size->width));
+	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->page->size->height));
+	xmlAddChild (xroot, xnode);
+
+	return xnode;
+}
+
+static void
+rpt_report_rptprint_body (RptReport *rptreport, xmlNode *xpage)
+{
+	GList *objects;
+	xmlAttrPtr attr;
+	xmlNode *xnode;
+
+	RptObject *rptobj;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+
+	objects = g_list_first (priv->body->objects);
+	while (objects != NULL)
+		{
+			xnode = xmlNewNode (NULL, "node");
+
+			rptobj = (RptObject *)objects->data;
+			rpt_object_get_xml (rptobj, xnode);
+			attr = xmlHasProp (xnode, "name");
+			if (attr != NULL)
+				{
+					xmlRemoveProp (attr);
+				}
+
+			if (IS_RPT_OBJ_TEXT (rptobj))
+				{
+					rpt_report_rptprint_parse_source (rptreport, rptobj, xnode);
+				}
+
+			xmlAddChild (xpage, xnode);
+
+			objects = g_list_next (objects);
+		}
+}
+
+static void
+rpt_report_rptprint_parse_source (RptReport *rptreport, RptObject *rptobj, xmlNode *xnode)
+{
+	/* TO DO */
+	gchar *source;
+
+	g_object_get (G_OBJECT (rptobj), "source", &source, NULL);
+
+	xmlNodeSetContent (xnode, source);
 }

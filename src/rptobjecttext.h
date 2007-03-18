@@ -31,10 +31,10 @@ G_BEGIN_DECLS
 
 #define TYPE_RPT_OBJ_TEXT                 (rpt_obj_text_get_type ())
 #define RPT_OBJ_TEXT(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_RPT_OBJ_TEXT, RptObjText))
-#define RPT_OBJ_TEXT_COMMON_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_OBJ_TEXT, RptObjTextClass))
+#define RPT_OBJ_TEXT_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_RPT_OBJ_TEXT, RptObjTextClass))
 #define IS_RPT_OBJ_TEXT(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_RPT_OBJ_TEXT))
-#define IS_RPT_OBJ_TEXT_COMMON_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_OBJ_TEXT))
-#define RPT_OBJ_TEXT_COMMON_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_OBJ_TEXT, RptObjTextClass))
+#define IS_RPT_OBJ_TEXT_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_RPT_OBJ_TEXT))
+#define RPT_OBJ_TEXT_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_RPT_OBJ_TEXT, RptObjTextClass))
 
 
 typedef struct _RptObjText RptObjText;
@@ -53,11 +53,10 @@ struct _RptObjTextClass
 GType rpt_obj_text_get_type (void) G_GNUC_CONST;
 
 
-RptObject *rpt_obj_text_new (const gchar *name);
+RptObject *rpt_obj_text_new (const gchar *name, RptPoint *position);
 RptObject *rpt_obj_text_new_from_xml (xmlNode *xnode);
 
-xmlNode *rpt_obj_text_get_xml (RptObjText *rpt_obj_text);
-
+void rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode);
 
 G_END_DECLS
 
