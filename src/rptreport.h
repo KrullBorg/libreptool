@@ -54,9 +54,9 @@ GType rpt_report_get_type (void) G_GNUC_CONST;
 RptReport *rpt_report_new_from_xml (xmlDoc *xdoc);
 RptReport *rpt_report_new_from_file (const gchar *filename);
 
-xmlDoc *rpt_report_get_xml (RptReport *rptreport);
+xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
 
-xmlDoc *rpt_report_get_xml_rptprint (RptReport *rptreport);
+xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
 
 
 G_END_DECLS

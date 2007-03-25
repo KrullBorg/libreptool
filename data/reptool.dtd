@@ -145,6 +145,7 @@
 <!ELEMENT group-header (%objects;)>
 <!ATTLIST group-header
   height   CDATA #REQUIRED
+  new-page-after   (y | n) #IMPLIED
 >
 
 <!ELEMENT group-footer (%objects;)>

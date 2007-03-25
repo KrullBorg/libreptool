@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -125,6 +125,12 @@ RptObject
 	return rpt_object;
 }
 
+/**
+ * rpt_object_get_xml:
+ * @rpt_object:
+ * @xnode:
+ *
+ */
 void
 rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode)
 {

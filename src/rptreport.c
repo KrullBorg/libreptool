@@ -30,11 +30,33 @@
 #include "rptcommon.h"
 #include "rptobject.h"
 #include "rptobjecttext.h"
+#include "rptobjectline.h"
+#include "rptobjectrect.h"
+#include "rptobjectimage.h"
+
+typedef enum
+{
+	RPTREPORT_SECTION_PAGE_HEADER,
+	RPTREPORT_SECTION_PAGE_FOOTER,
+	RPTREPORT_SECTION_BODY
+} RptReportSection;
 
 typedef struct
 {
 	RptSize *size;
 } Page;
+
+typedef struct
+{
+	gdouble height;
+	GList *objects;
+} PageHeader;
+
+typedef struct
+{
+	gdouble height;
+	GList *objects;
+} PageFooter;
 
 typedef struct
 {
@@ -59,17 +81,21 @@ static void rpt_report_get_property (GObject *object,
                                      GValue *value,
                                      GParamSpec *pspec);
 
-static void rpt_report_xml_parse_body (RptReport *rpt_report, xmlNode *xnode);
-static RptObject *rpt_report_get_object_from_name (GList *list, const gchar *name);
+static void rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSection section);
 
-static xmlNode *rpt_report_rptprint_new_page (RptReport *rptreport,
+static RptObject *rpt_report_get_object_from_name (RptReport *rpt_report, const gchar *name);
+static RptObject *rpt_report_get_object_from_name_in_list (GList *list, const gchar *name);
+
+static xmlNode *rpt_report_rptprint_new_page (RptReport *rpt_report,
                                               xmlNode *xroot);
-static void rpt_report_rptprint_body (RptReport *rptreport,
-                                      xmlNode *xpage,
-                                      gdouble *cur_y);
-static void rpt_report_rptprint_parse_source (RptReport *rptreport,
-                                              RptObject *rptobj,
-                                              xmlNode *xnode);
+static void rpt_report_rptprint_section (RptReport *rpt_report,
+                                         xmlNode *xpage,
+                                         gdouble *cur_y,
+                                         RptReportSection section);
+									  
+static void rpt_report_rptprint_parse_text_source (RptReport *rpt_report,
+                                                   RptObject *rptobj,
+                                                   xmlNode *xnode);
 
 
 #define RPT_REPORT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_REPORT, RptReportPrivate))
@@ -82,6 +108,8 @@ struct _RptReportPrivate
 		GdaDataModel *gda_datamodel;
 
 		Page *page;
+		PageHeader *page_header;
+		PageFooter *page_footer;
 		Body *body;
 	};
 
@@ -138,8 +166,17 @@ rpt_report_init (RptReport *rpt_report)
 	priv->page->size->width = 0.0;
 	priv->page->size->height = 0.0;
 
+	priv->page_header = (PageHeader *)g_malloc0 (sizeof (PageHeader));
+	priv->page_header->height = 0.0;
+	priv->page_header->objects = NULL;
+
+	priv->page_footer = (PageFooter *)g_malloc0 (sizeof (PageFooter));
+	priv->page_footer->height = 0.0;
+	priv->page_footer->objects = NULL;
+
 	priv->body = (Body *)g_malloc0 (sizeof (Body));
 	priv->body->height = 0.0;
+	priv->body->objects = NULL;
 }
 
 /**
@@ -176,17 +213,11 @@ RptReport
 							xnodeset = xpresult->nodesetval;
 							if (xnodeset->nodeNr == 1)
 								{
-									gchar *prop;
-									prop = xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"width");
-									if (prop != NULL)
-										{
-											priv->page->size->width = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (xnodeset->nodeTab[0], (const xmlChar *)"height");
-									if (prop != NULL)
-										{
-											priv->page->size->height = strtod (prop, NULL);
-										}
+									RptSize size;
+
+									rpt_common_get_size (xnodeset->nodeTab[0], &size);
+									priv->page->size->width = size.width;
+									priv->page->size->height = size.height;
 								}
 							else
 								{
@@ -271,16 +302,33 @@ RptReport
 							xnodeset = xpresult->nodesetval;
 							if (xnodeset->nodeNr == 1)
 								{
+									/* search for node "page-header" */
+									xpcontext->node = xnodeset->nodeTab[0];
+									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page-header", xpcontext);
+									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
+										{
+											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_PAGE_HEADER);
+										}
+
+									/* search for node "page-footer" */
+									xpcontext->node = xnodeset->nodeTab[0];
+									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page-footer", xpcontext);
+									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
+										{
+											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_PAGE_FOOTER);
+										}
+
 									/* search for node "body" */
 									xpcontext->node = xnodeset->nodeTab[0];
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::body", xpcontext);
-									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
 										{
-											xnodeset = xpresult->nodesetval;
-											if (xnodeset->nodeNr == 1)
-												{
-													rpt_report_xml_parse_body (rpt_report, xnodeset->nodeTab[0]);
-												}
+											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_BODY);
+										}
+									else
+										{
+											/* TO DO */
+											/* return */
 										}
 								}
 							else
@@ -326,15 +374,15 @@ RptReport
 
 /**
  * rpt_report_get_xml:
- * @rptreport: an #RptReport object.
+ * @rpt_report: an #RptReport object.
  *
  */
 xmlDoc
-*rpt_report_get_xml (RptReport *rptreport)
+*rpt_report_get_xml (RptReport *rpt_report)
 {
-	xmlDoc *xdoc;
+	xmlDoc *xdoc = NULL;
 
-	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	/* TO DO */
 
@@ -343,19 +391,19 @@ xmlDoc
 
 /**
  * rpt_report_get_xml_rptprint:
- * @rptreport: an #RptReport object.
+ * @rpt_report: an #RptReport object.
  *
  */
 xmlDoc
-*rpt_report_get_xml_rptprint (RptReport *rptreport)
+*rpt_report_get_xml_rptprint (RptReport *rpt_report)
 {
 	xmlDoc *xdoc;
 	xmlNode *xroot;
 	xmlNode *xpage;
-	gint pages;
+	gint pages = 0;
 	gdouble cur_y = 0.0;
 
-	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	xdoc = xmlNewDoc ("1.0");
 	xroot = xmlNewNode (NULL, "reptool_report");
@@ -370,21 +418,51 @@ xmlDoc
 
 			for (row = 0; row < rows; row++)
 				{
-					if (row == 0 || cur_y > priv->page->size->height)
+					if (row == 0 ||
+					    (priv->page_footer != NULL && (cur_y > priv->page->size->height - priv->page_footer->height)) ||
+					    cur_y > priv->page->size->height)
 						{
+							if (pages > 0 && priv->page_footer != NULL)
+								{
+									cur_y = priv->page->size->height - priv->page_footer->height;
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+								}
+
 							cur_y = 0.0;
 							pages++;
-							xpage = rpt_report_rptprint_new_page (rptreport, xroot);
+							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+
+							if (priv->page_header != NULL)
+								{
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+								}
 						}
 
-					rpt_report_rptprint_body (rptreport, xpage, &cur_y);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
+				}
+
+			if (pages > 0 && priv->page_footer != NULL)
+				{
+					cur_y = priv->page->size->height - priv->page_footer->height;
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
 				}
 		}
 	else
 		{
+			if (priv->page_header != NULL)
+				{
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+				}
+
 			pages++;
-			xpage = rpt_report_rptprint_new_page (rptreport, xroot);
-			rpt_report_rptprint_body (rptreport, xpage, &cur_y);
+			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+			rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
+
+			if (priv->page_footer != NULL)
+				{
+					cur_y = priv->page->size->height - priv->page_footer->height;
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+				}
 		}
 
 	return xdoc;
@@ -421,9 +499,11 @@ rpt_report_get_property (GObject *object, guint property_id, GValue *value, GPar
 }
 
 static void
-rpt_report_xml_parse_body (RptReport *rpt_report, xmlNode *xnode)
+rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSection section)
 {
 	RptObject *rptobj;
+	GList *objects = NULL;
+	gdouble height;
 	gchar *prop;
 	gchar *objname;
 	xmlNode *cur;
@@ -433,7 +513,7 @@ rpt_report_xml_parse_body (RptReport *rpt_report, xmlNode *xnode)
 	prop = (gchar *)xmlGetProp (xnode, "height");
 	if (prop != NULL)
 		{
-			priv->body->height = strtod (g_strstrip (g_strdup (prop)), NULL);
+			height = strtod (g_strstrip (g_strdup (prop)), NULL);
 		}
 
 	cur = xnode->children;
@@ -442,37 +522,79 @@ rpt_report_xml_parse_body (RptReport *rpt_report, xmlNode *xnode)
 			if (strcmp (cur->name, "text") == 0)
 				{
 					rptobj = rpt_obj_text_new_from_xml (cur);
-					if (rptobj != NULL)
-						{
-							g_object_get (rptobj, "name", &objname, NULL);
-
-							if (rpt_report_get_object_from_name (priv->body->objects, objname) == NULL)
-								{
-									priv->body->objects = g_list_append (priv->body->objects, rptobj);
-								}
-							else
-								{
-									/* TO DO */
-									g_warning ("An object with name \"%s\" already exists.", objname);
-								}
-						}
 				}
 			else if (strcmp (cur->name, "line") == 0)
 				{
+					rptobj = rpt_obj_line_new_from_xml (cur);
 				}
 			else if (strcmp (cur->name, "rect") == 0)
 				{
+					rptobj = rpt_obj_rect_new_from_xml (cur);
 				}
 			else if (strcmp (cur->name, "image") == 0)
 				{
+					rptobj = rpt_obj_image_new_from_xml (cur);
+				}
+
+			if (rptobj != NULL)
+				{
+					g_object_get (rptobj, "name", &objname, NULL);
+
+					if (rpt_report_get_object_from_name (rpt_report, objname) == NULL)
+						{
+							objects = g_list_append (objects, rptobj);
+						}
+					else
+						{
+							/* TO DO */
+							g_warning ("An object with name \"%s\" already exists.", objname);
+						}
 				}
 
 			cur = cur->next;
 		}
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				priv->page_header->height = height;
+				priv->page_header->objects = objects;
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				priv->page_footer->height = height;
+				priv->page_footer->objects = objects;
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				priv->body->height = height;
+				priv->body->objects = objects;
+				break;
+		}
 }
 
 static RptObject
-*rpt_report_get_object_from_name (GList *list, const gchar *name)
+*rpt_report_get_object_from_name (RptReport *rpt_report, const gchar *name)
+{
+	RptObject *obj = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if ((obj = rpt_report_get_object_from_name_in_list (priv->page_header->objects, name)) != NULL)
+		{
+		}
+	else if ((obj = rpt_report_get_object_from_name_in_list (priv->page_footer->objects, name)) != NULL)
+		{
+		}
+	else if ((obj = rpt_report_get_object_from_name_in_list (priv->body->objects, name)) != NULL)
+		{
+		}
+
+	return obj;
+}
+
+static RptObject
+*rpt_report_get_object_from_name_in_list (GList *list, const gchar *name)
 {
 	gchar *objname;
 	RptObject *obj = NULL;
@@ -494,11 +616,11 @@ static RptObject
 }
 
 static xmlNode
-*rpt_report_rptprint_new_page (RptReport *rptreport, xmlNode *xroot)
+*rpt_report_rptprint_new_page (RptReport *rpt_report, xmlNode *xroot)
 {
 	xmlNode *xnode;
 
-	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	xnode = xmlNewNode (NULL, "page");
 	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->page->size->width));
@@ -509,7 +631,7 @@ static xmlNode
 }
 
 static void
-rpt_report_rptprint_body (RptReport *rptreport, xmlNode *xpage, gdouble *cur_y)
+rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur_y, RptReportSection section)
 {
 	GList *objects;
 	xmlAttrPtr attr;
@@ -518,9 +640,23 @@ rpt_report_rptprint_body (RptReport *rptreport, xmlNode *xpage, gdouble *cur_y)
 
 	RptObject *rptobj;
 
-	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rptreport);
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	objects = g_list_first (priv->body->objects);
+	switch (section)
+		{
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				objects = g_list_first (priv->page_header->objects);
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				objects = g_list_first (priv->page_footer->objects);
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				objects = g_list_first (priv->body->objects);
+				break;
+		}
+
 	while (objects != NULL)
 		{
 			xnode = xmlNewNode (NULL, "node");
@@ -542,18 +678,37 @@ rpt_report_rptprint_body (RptReport *rptreport, xmlNode *xpage, gdouble *cur_y)
 
 			if (IS_RPT_OBJ_TEXT (rptobj))
 				{
-					rpt_report_rptprint_parse_source (rptreport, rptobj, xnode);
+					rpt_report_rptprint_parse_text_source (rpt_report, rptobj, xnode);
+				}
+			else if (IS_RPT_OBJ_IMAGE (rptobj))
+				{
+					/* TO DO */
+					/* rpt_report_rptprint_parse_image_source (rpt_report, rptobj, xnode); */
 				}
 
 			xmlAddChild (xpage, xnode);
 
 			objects = g_list_next (objects);
 		}
-	*cur_y += priv->body->height;
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				*cur_y += priv->page_header->height;
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				*cur_y += priv->page_footer->height;
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				*cur_y += priv->body->height;
+				break;
+		}
 }
 
 static void
-rpt_report_rptprint_parse_source (RptReport *rptreport, RptObject *rptobj, xmlNode *xnode)
+rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj, xmlNode *xnode)
 {
 	/* TO DO */
 	gchar *source;

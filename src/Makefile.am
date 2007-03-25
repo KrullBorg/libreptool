@@ -7,6 +7,9 @@ lib_LTLIBRARIES = libreptool.la
 libreptool_la_SOURCES = \
                         rptobject.c \
                         rptobjecttext.c \
+                        rptobjectline.c \
+                        rptobjectrect.c \
+                        rptobjectimage.c \
                         rptreport.c \
                         rptprint.c \
                         rptcommon.c
@@ -14,6 +17,9 @@ libreptool_la_SOURCES = \
 include_HEADERS = \
                   rptobject.h \
                   rptobjecttext.h \
+                  rptobjectline.h \
+                  rptobjectrect.h \
+                  rptobjectimage.h \
                   rptreport.h \
                   rptprint.h \
                   rptcommon.h
