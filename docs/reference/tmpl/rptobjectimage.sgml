@@ -1,0 +1,63 @@
+<!-- ##### SECTION Title ##### -->
+RptObjImage
+
+<!-- ##### SECTION Short_Description ##### -->
+An image object.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptObjImage ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG RptObjImage:size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG RptObjImage:source ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION rpt_obj_image_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_image_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_image_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_objimage: 
+@xnode: 
+
+

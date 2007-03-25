@@ -57,7 +57,7 @@ GType rpt_object_get_type (void) G_GNUC_CONST;
 
 RptObject *rpt_object_new (const gchar *name, RptPoint position);
 
-void rpt_object_get_xml (RptObject *rptobj, xmlNode *xnode);
+void rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode);
 
 
 G_END_DECLS

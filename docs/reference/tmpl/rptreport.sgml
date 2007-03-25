@@ -1,0 +1,61 @@
+<!-- ##### SECTION Title ##### -->
+RptReport
+
+<!-- ##### SECTION Short_Description ##### -->
+Manage report definition files and produces the xml report/print's file.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptReport ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION rpt_report_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xdoc: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_report_new_from_file ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_report_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_report_get_xml_rptprint ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@Returns: 
+
+

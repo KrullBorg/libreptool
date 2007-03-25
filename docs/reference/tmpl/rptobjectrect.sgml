@@ -1,0 +1,53 @@
+<!-- ##### SECTION Title ##### -->
+RptObjRect
+
+<!-- ##### SECTION Short_Description ##### -->
+A rectangular object.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptObjRect ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION rpt_obj_rect_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_rect_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_rect_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_object: 
+@xnode: 
+
+

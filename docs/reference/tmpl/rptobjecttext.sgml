@@ -1,0 +1,63 @@
+<!-- ##### SECTION Title ##### -->
+RptObjText
+
+<!-- ##### SECTION Short_Description ##### -->
+A textual object.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptObjText ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG RptObjText:size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG RptObjText:source ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION rpt_obj_text_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_text_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_text_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_objtext: 
+@xnode: 
+
+

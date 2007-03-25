@@ -1,0 +1,37 @@
+<!-- ##### SECTION Title ##### -->
+rptcommon
+
+<!-- ##### SECTION Short_Description ##### -->
+Common functions usefull for the library's classes.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION rpt_common_get_position ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@position: 
+
+
+<!-- ##### FUNCTION rpt_common_get_size ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@size: 
+
+

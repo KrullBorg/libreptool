@@ -1,0 +1,336 @@
+<!-- ##### MACRO IS_RPT_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_OBJ_IMAGE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_OBJ_IMAGE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_OBJ_LINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_OBJ_LINE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_OBJ_RECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_OBJ_RECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_OBJ_TEXT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_OBJ_TEXT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_PRINT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_PRINT_COMMON_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO IS_RPT_REPORT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO IS_RPT_REPORT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJECT_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_IMAGE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_IMAGE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJ_IMAGE_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_LINE ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_LINE_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJ_LINE_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_RECT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_RECT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJ_RECT_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_TEXT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_OBJ_TEXT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_OBJ_TEXT_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_PRINT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_PRINT_COMMON_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_PRINT_COMMON_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_REPORT ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO RPT_REPORT_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO RPT_REPORT_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO TYPE_RPT_OBJECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_OBJ_IMAGE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_OBJ_LINE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_OBJ_RECT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_OBJ_TEXT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_PRINT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO TYPE_RPT_REPORT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION rpt_obj_image_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_obj_line_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_obj_rect_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_obj_text_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_object_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_print_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION rpt_report_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
+

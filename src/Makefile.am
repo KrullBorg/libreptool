@@ -15,6 +15,7 @@ libreptool_la_SOURCES = \
                         rptcommon.c
 
 include_HEADERS = \
+                  libreptool.h \
                   rptobject.h \
                   rptobjecttext.h \
                   rptobjectline.h \

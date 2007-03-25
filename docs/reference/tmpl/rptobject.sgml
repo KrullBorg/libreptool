@@ -1,0 +1,54 @@
+<!-- ##### SECTION Title ##### -->
+RptObject
+
+<!-- ##### SECTION Short_Description ##### -->
+The base class for report's objects.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptObject ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG RptObject:name ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG RptObject:position ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION rpt_object_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_object_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_object: 
+@xnode: 
+
+

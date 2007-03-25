@@ -1,0 +1,58 @@
+<!-- ##### SECTION Title ##### -->
+RptObjLine
+
+<!-- ##### SECTION Short_Description ##### -->
+A line object.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT RptObjLine ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG RptObjLine:size ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION rpt_obj_line_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_line_new_from_xml ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_obj_line_get_xml ##### -->
+<para>
+
+</para>
+
+@rpt_objline: 
+@xnode: 
+
+

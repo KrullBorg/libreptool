@@ -21,6 +21,12 @@
 
 #include "rptcommon.h"
 
+/**
+ * rpt_common_get_position:
+ * @xnode:
+ * @position:
+ *
+ */
 void
 rpt_common_get_position (xmlNode *xnode, RptPoint *position)
 {
@@ -41,6 +47,12 @@ rpt_common_get_position (xmlNode *xnode, RptPoint *position)
 		}
 }
 
+/**
+ * rpt_common_get_size:
+ * @xnode:
+ * @size:
+ *
+ */
 void
 rpt_common_get_size (xmlNode *xnode, RptSize *size)
 {

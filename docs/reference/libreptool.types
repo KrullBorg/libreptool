@@ -1,3 +1,14 @@
 #include <libreptool.h>
+#include <rptobject.h>
+#include <rptobjecttext.h>
+#include <rptobjectline.h>
+#include <rptobjectrect.h>
+#include <rptobjectimage.h>
 
+rpt_report_get_type
+rpt_object_get_type
+rpt_obj_text_get_type
+rpt_obj_line_get_type
+rpt_obj_rect_get_type
+rpt_obj_image_get_type
 rpt_print_get_type

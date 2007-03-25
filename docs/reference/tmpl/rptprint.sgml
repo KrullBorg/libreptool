@@ -2,7 +2,7 @@
 RptPrint
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Produces the report/print.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -17,65 +17,10 @@ RptPrint
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### MACRO TYPE_RPT_PRINT ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO RPT_PRINT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO RPT_PRINT_COMMON_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO IS_RPT_PRINT ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO IS_RPT_PRINT_COMMON_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO RPT_PRINT_COMMON_GET_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
 <!-- ##### STRUCT RptPrint ##### -->
 <para>
 
 </para>
-
-
-<!-- ##### FUNCTION rpt_print_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
 
 
 <!-- ##### ENUM RptPrintOutputType ##### -->

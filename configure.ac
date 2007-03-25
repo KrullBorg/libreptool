@@ -43,5 +43,6 @@ AC_CONFIG_FILES([
   docs/Makefile
   docs/reference/Makefile
   docs/reference/version.xml
+  data/Makefile
 ])
 AC_OUTPUT

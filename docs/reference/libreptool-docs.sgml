@@ -1,13 +1,23 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>Libreptool Reference Manual</title>
+    <title>LibRepTool Reference Manual</title>
+    <releaseinfo>for LibRepTool &version;</releaseinfo>
   </bookinfo>
 
   <chapter>
-    <title>Libreptool</title>
+    <title>LibRepTool</title>
+    <xi:include href="xml/rptcommon.xml"/>
+    <xi:include href="xml/rptreport.xml"/>
+    <xi:include href="xml/rptobject.xml"/>
+    <xi:include href="xml/rptobjectimage.xml"/>
+    <xi:include href="xml/rptobjectline.xml"/>
+    <xi:include href="xml/rptobjectrect.xml"/>
+    <xi:include href="xml/rptobjecttext.xml"/>
     <xi:include href="xml/rptprint.xml"/>
   </chapter>
 </book>
