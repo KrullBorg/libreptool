@@ -10,11 +10,11 @@
 
 	<report>
 		<page-header height="80">
-			<text name="title" x="10" y="10" width="300" height="50" source="the page title" />
+			<text name="title" x="10" y="10" width="300" height="50" font-name="Courier New" font-size="10" font-bold="y" source="the page title" />
 			<line name="line1" x="10" y="65" width="500" height="0" />
 		</page-header>
 		<body height="200">
-			<text name="txt_id" x="50" y="50" width="100" height="50" source="[id]" />
+			<text name="txt_id" x="50" y="50" width="100" height="50" border-top-width="1.0" border-top-color="#FF0000" source="[id]" />
 			<text name="txt_name" x="200" y="50" width="100" height="50" source="[name]" />
 			<rect name="rect1" x="400" y="10" width="20" height="20" />
 			<image name="img1" x="450" y="10" width="60" height="60" source="tests/gnome-globe.png" />

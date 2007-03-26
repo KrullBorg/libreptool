@@ -20,68 +20,13 @@
 #include <string.h>
 
 #include <cairo.h>
+#include <cairo-pdf.h>
+#include <cairo-ps.h>
+#include <cairo-svg.h>
 #include <pango/pangocairo.h>
 
 #include "rptprint.h"
 #include "rptcommon.h"
-
-typedef enum
-{
-	RPT_HALIGN_LEFT,
-	RPT_HALIGN_CENTER,
-	RPT_HALIGN_RIGHT,
-	RPT_HALIGN_JUSTIFIED
-} eRptHAlign;
-
-typedef enum
-{
-	RPT_VALIGN_TOP,
-	RPT_VALIGN_CENTER,
-	RPT_VALIGN_BOTTOM
-} eRptVAlign;
-
-typedef struct
-{
-	eRptHAlign h_align;
-	eRptVAlign v_align;
-} RptAlign;
-
-typedef struct
-{
-	gdouble r;
-	gdouble g;
-	gdouble b;
-	gdouble a;
-} RptColor;
-
-typedef struct
-{
-	gdouble top_width;
-	gdouble right_width;
-	gdouble bottom_width;
-	gdouble left_width;
-	RptColor top_color;
-	RptColor right_color;
-	RptColor bottom_color;
-	RptColor left_color;
-} RptBorder;
-
-typedef struct
-{
-	gchar *name;
-	gdouble size;
-	gboolean bold;
-	gboolean italic;
-	gboolean underline;
-	gboolean strike;
-	RptColor color;
-} RptFont;
-
-typedef struct
-{
-	gdouble width;
-	RptColor color;
-} RptStroke;
 
 enum
 {
@@ -118,16 +63,6 @@ static void rpt_print_border (RptPrint *rpt_print,
                               RptPoint position,
                               RptSize size,
                               RptBorder border);
-static void rpt_print_get_align (xmlNode *xnode,
-                                 RptAlign *align);
-static void rpt_print_get_border (xmlNode *xnode,
-                                  RptBorder *border);
-static void rpt_print_get_stroke (xmlNode *xnode,
-                                  RptStroke *stroke);
-static void rpt_print_get_font (xmlNode *xnode,
-                                RptFont *font);
-static void rpt_print_parse_color (const gchar *str_color,
-                                   RptColor *color);
 
 
 #define RPT_PRINT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_PRINT, RptPrintPrivate))
@@ -430,9 +365,9 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	rpt_common_get_position (xnode, &position);
 	rpt_common_get_size (xnode, &size);
-	rpt_print_get_align (xnode, &align);
-	rpt_print_get_border (xnode, &border);
-	rpt_print_get_font (xnode, &font);
+	rpt_common_get_align (xnode, &align);
+	rpt_common_get_border (xnode, &border);
+	rpt_common_get_font (xnode, &font);
 
 	/* padding */
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
@@ -493,7 +428,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	prop = xmlGetProp (xnode, (const xmlChar *)"background-color");
 	if (prop != NULL)
 		{
-			rpt_print_parse_color (prop, &color);
+			rpt_common_parse_color (prop, &color);
 		}
 
 	/* drawing border */
@@ -554,7 +489,7 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	rpt_common_get_position (xnode, &position);
 	rpt_common_get_size (xnode, &size);
-	rpt_print_get_stroke (xnode, &stroke);
+	rpt_common_get_stroke (xnode, &stroke);
 
 	from_p.x = position.x;
 	from_p.y = position.y;
@@ -578,7 +513,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	rpt_common_get_position (xnode, &position);
 	rpt_common_get_size (xnode, &size);
-	rpt_print_get_stroke (xnode, &stroke);
+	rpt_common_get_stroke (xnode, &stroke);
 
 	gchar *prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
 	if (prop != NULL)
@@ -587,7 +522,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 			fill_color.g = 0.0;
 			fill_color.b = 0.0;
 			fill_color.a = 1.0;
-			rpt_print_parse_color (prop, &fill_color);
+			rpt_common_parse_color (prop, &fill_color);
 		}
 
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
@@ -637,7 +572,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	rpt_common_get_position (xnode, &position);
 	rpt_common_get_size (xnode, &size);
-	rpt_print_get_border (xnode, &border);
+	rpt_common_get_border (xnode, &border);
 
 	image = cairo_image_surface_create_from_png (filename);
 
@@ -733,250 +668,5 @@ rpt_print_border (RptPrint *rpt_print, RptPoint position, RptSize size, RptBorde
 			stroke.width = border.left_width;
 			stroke.color = border.left_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
-		}
-}
-
-static void
-rpt_print_get_align (xmlNode *xnode, RptAlign *align)
-{
-	gchar *prop;
-
-	align->h_align = RPT_HALIGN_LEFT;
-	align->v_align = RPT_VALIGN_TOP;
-
-	prop = xmlGetProp (xnode, "horizontal-align");
-	if (prop != NULL)
-		{
-			if (strcmp (prop, "center") == 0)
-				{
-					align->h_align = RPT_HALIGN_CENTER;
-				}
-			else if (strcmp (prop, "right") == 0)
-				{
-					align->h_align = RPT_HALIGN_RIGHT;
-				}
-			else if (strcmp (prop, "justified") == 0)
-				{
-					align->h_align = RPT_HALIGN_JUSTIFIED;
-				}
-		}
-
-	prop = xmlGetProp (xnode, "vertical-align");
-	if (prop != NULL)
-		{
-			if (strcmp (prop, "center") == 0)
-				{
-					align->v_align = RPT_VALIGN_CENTER;
-				}
-			else if (strcmp (prop, "bottom") == 0)
-				{
-					align->v_align = RPT_VALIGN_BOTTOM;
-				}
-		}
-}
-
-static void
-rpt_print_get_border (xmlNode *xnode, RptBorder *border)
-{
-	gchar *prop;
-
-	border->top_width = 0.0;
-	border->right_width = 0.0;
-	border->bottom_width = 0.0;
-	border->left_width = 0.0;
-	border->top_color.r = 0.0;
-	border->top_color.g = 0.0;
-	border->top_color.b = 0.0;
-	border->top_color.a = 1.0;
-	border->right_color.r = 0.0;
-	border->right_color.g = 0.0;
-	border->right_color.b = 0.0;
-	border->right_color.a = 1.0;
-	border->bottom_color.r = 0.0;
-	border->bottom_color.g = 0.0;
-	border->bottom_color.b = 0.0;
-	border->bottom_color.a = 1.0;
-	border->left_color.r = 0.0;
-	border->left_color.g = 0.0;
-	border->left_color.b = 0.0;
-	border->left_color.a = 1.0;
-
-	prop = xmlGetProp (xnode, "border-top-width");
-	if (prop != NULL)
-		{
-			border->top_width = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "border-right-width");
-	if (prop != NULL)
-		{
-			border->right_width = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "border-bottom-width");
-	if (prop != NULL)
-		{
-			border->bottom_width = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "border-left-width");
-	if (prop != NULL)
-		{
-			border->left_width = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "border-top-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &border->top_color);
-		}
-
-	prop = xmlGetProp (xnode, "border-right-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &border->right_color);
-		}
-
-	prop = xmlGetProp (xnode, "border-bottom-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &border->bottom_color);
-		}
-
-	prop = xmlGetProp (xnode, "border-left-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &border->left_color);
-		}
-}
-
-static void
-rpt_print_get_stroke (xmlNode *xnode, RptStroke *stroke)
-{
-	gchar *prop;
-
-	stroke->width = 1.0;
-	stroke->color.r = 0.0;
-	stroke->color.g = 0.0;
-	stroke->color.b = 0.0;
-	stroke->color.a = 1.0;
-
-	prop = xmlGetProp (xnode, "stroke-width");
-	if (prop != NULL)
-		{
-			stroke->width = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "stroke-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &stroke->color);
-		}
-}
-
-static void
-rpt_print_get_font (xmlNode *xnode, RptFont *font)
-{
-	gchar *prop;
-
-	font->name = g_strdup ("sans");
-	font->size = 12.0;
-	font->bold = FALSE;
-	font->italic = FALSE;
-	font->underline = FALSE;
-	font->strike = FALSE;
-	font->color.r = 0.0;
-	font->color.g = 0.0;
-	font->color.b = 0.0;
-	font->color.a = 1.0;
-
-	prop = xmlGetProp (xnode, "font-name");
-	if (prop != NULL)
-		{
-			font->name = g_strdup (prop);
-		}
-
-	prop = xmlGetProp (xnode, "font-size");
-	if (prop != NULL)
-		{
-			font->size = strtod (prop, NULL);
-		}
-
-	prop = xmlGetProp (xnode, "font-bold");
-	if (prop != NULL)
-		{
-			font->bold = (strcmp (g_strstrip (prop), "y") == 0);
-		}
-
-	prop = xmlGetProp (xnode, "font-italic");
-	if (prop != NULL)
-		{
-			font->italic = (strcmp (g_strstrip (prop), "y") == 0);
-		}
-
-	prop = xmlGetProp (xnode, "font-underline");
-	if (prop != NULL)
-		{
-			font->underline = (strcmp (g_strstrip (prop), "y") == 0);
-		}
-
-	prop = xmlGetProp (xnode, "font-strike");
-	if (prop != NULL)
-		{
-			font->strike = (strcmp (g_strstrip (prop), "y") == 0);
-		}
-
-	prop = xmlGetProp (xnode, "font-color");
-	if (prop != NULL)
-		{
-			rpt_print_parse_color (prop, &font->color);
-		}
-}
-
-static void
-rpt_print_parse_color (const gchar *str_color, RptColor *color)
-{
-	gchar *c = g_strstrip (g_strdup (str_color));
-
-	if (c[0] == '#')
-		{
-			if (strlen (c) == 4 || strlen (c) == 5)
-				{
-					if (isxdigit (c[1]))
-						{
-							color->r = strtol (g_strdup_printf ("%c%c", c[1], c[1]), NULL, 16) / 255.0;
-						}
-					if (isxdigit (c[2]))
-						{
-							color->g = strtol (g_strdup_printf ("%c%c", c[2], c[2]), NULL, 16) / 255.0;
-						}
-					if (isxdigit (c[3]))
-						{
-							color->b = strtol (g_strdup_printf ("%c%c", c[3], c[3]), NULL, 16) / 255.0;
-						}
-					if (strlen (c) == 5 && isxdigit (c[4]))
-						{
-							color->a = strtol (g_strdup_printf ("%c%c", c[4], c[4]), NULL, 16) / 255.0;
-						}
-				}
-			else if (strlen (c) == 7 || strlen (c) == 9)
-				{
-					if (isxdigit (c[1]) && isxdigit (c[2]))
-						{
-							color->r = strtol (g_strndup (&c[1], 2), NULL, 16) / 255.0;
-						}
-					if (isxdigit (c[3]) && isxdigit (c[4]))
-						{
-							color->g = strtol (g_strndup (&c[3], 2), NULL, 16) / 255.0;
-						}
-					if (isxdigit (c[5]) && isxdigit (c[6]))
-						{
-							color->b = strtol (g_strndup (&c[5], 2), NULL, 16) / 255.0;
-						}
-					if (strlen (c) == 9)
-						{
-							color->a = strtol (g_strndup (&c[7], 2), NULL, 16) / 255.0;
-						}
-				}
 		}
 }

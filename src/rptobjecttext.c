@@ -23,6 +23,9 @@ enum
 {
 	PROP_0,
 	PROP_SIZE,
+	PROP_BORDER,
+	PROP_FONT,
+	PROP_ALIGN,
 	PROP_SOURCE
 };
 
@@ -30,13 +33,13 @@ static void rpt_obj_text_class_init (RptObjTextClass *klass);
 static void rpt_obj_text_init (RptObjText *rpt_obj_text);
 
 static void rpt_obj_text_set_property (GObject *object,
-                                    guint property_id,
-                                    const GValue *value,
-                                    GParamSpec *pspec);
+                                       guint property_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec);
 static void rpt_obj_text_get_property (GObject *object,
-                                    guint property_id,
-                                    GValue *value,
-                                    GParamSpec *pspec);
+                                       guint property_id,
+                                       GValue *value,
+                                       GParamSpec *pspec);
 
 
 #define RPT_OBJ_TEXT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_OBJ_TEXT, RptObjTextPrivate))
@@ -45,7 +48,9 @@ typedef struct _RptObjTextPrivate RptObjTextPrivate;
 struct _RptObjTextPrivate
 	{
 		RptSize *size;
-
+		RptBorder *border;
+		RptFont *font;
+		RptAlign *align;
 		gchar *source;
 	};
 
@@ -95,6 +100,21 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                       "Size",
 	                                                       "The object's size.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_BORDER,
+	                                 g_param_spec_pointer ("border",
+	                                                       "Border",
+	                                                       "The object's border.",
+	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_FONT,
+	                                 g_param_spec_pointer ("font",
+	                                                       "Font",
+	                                                       "The object's font.",
+	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_ALIGN,
+	                                 g_param_spec_pointer ("align",
+	                                                       "Align",
+	                                                       "The text's align.",
+	                                                       G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_SOURCE,
 	                                 g_param_spec_string ("source",
 	                                                      "Source",
@@ -111,6 +131,10 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->size = (RptSize *)g_malloc0 (sizeof (RptSize));
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
+
+	priv->border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
+	priv->font = (RptFont *)g_malloc0 (sizeof (RptFont));
+	priv->align = (RptAlign *)g_malloc0 (sizeof (RptAlign));
 }
 
 /**
@@ -167,6 +191,8 @@ RptObject
 					priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
 					rpt_common_get_size (xnode, priv->size);
+					rpt_common_get_border (xnode, priv->border);
+					rpt_common_get_font (xnode, priv->font);
 
 					g_object_set (rpt_obj_text, "source", xmlGetProp (xnode, "source"), NULL);
 				}
@@ -184,6 +210,10 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 
 	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
 	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
+
+	rpt_common_set_border (xnode, (RptBorder)*priv->border);
+	rpt_common_set_font (xnode, (RptFont)*priv->font);
+	rpt_common_set_align (xnode, (RptAlign)*priv->font);
 }
 
 static void
@@ -197,6 +227,18 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 		{
 			case PROP_SIZE:
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_BORDER:
+				priv->border = g_memdup (g_value_get_pointer (value), sizeof (RptBorder));
+				break;
+
+			case PROP_FONT:
+				priv->font = g_memdup (g_value_get_pointer (value), sizeof (RptFont));
+				break;
+
+			case PROP_ALIGN:
+				priv->align = g_memdup (g_value_get_pointer (value), sizeof (RptAlign));
 				break;
 
 			case PROP_SOURCE:
@@ -220,6 +262,18 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 		{
 			case PROP_SIZE:
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_BORDER:
+				g_value_set_pointer (value, g_memdup (priv->border, sizeof (RptBorder)));
+				break;
+
+			case PROP_FONT:
+				g_value_set_pointer (value, g_memdup (priv->font, sizeof (RptFont)));
+				break;
+
+			case PROP_ALIGN:
+				g_value_set_pointer (value, g_memdup (priv->align, sizeof (RptAlign)));
 				break;
 
 			case PROP_SOURCE:

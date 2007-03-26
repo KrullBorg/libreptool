@@ -3,13 +3,13 @@
 >
 
 <!ENTITY % object_position_attrs
- "x        CDATA #REQUIRED
-  y        CDATA #REQUIRED"
+  "x        CDATA #REQUIRED
+   y        CDATA #REQUIRED"
 >
 
 <!ENTITY % object_size_attrs
- "width    CDATA #REQUIRED
-  height   CDATA #REQUIRED"
+  "width    CDATA #REQUIRED
+   height   CDATA #REQUIRED"
 >
 
 <!ENTITY % object_border_attrs
@@ -44,8 +44,8 @@
 >
 
 <!ENTITY % object_text_align_attrs
- "horizontal-align   (left | center | right | justified) #IMPLIED
-  vertical-align     (top | center | bottom) #IMPLIED"
+  "horizontal-align   (left | center | right | justified) #IMPLIED
+   vertical-align     (top | center | bottom) #IMPLIED"
 >
 
 <!ELEMENT text (#PCDATA)>
