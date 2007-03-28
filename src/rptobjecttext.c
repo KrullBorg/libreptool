@@ -120,7 +120,7 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                      "Source",
 	                                                      "The source.",
 	                                                      "",
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -213,7 +213,7 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 
 	rpt_common_set_border (xnode, (RptBorder)*priv->border);
 	rpt_common_set_font (xnode, (RptFont)*priv->font);
-	rpt_common_set_align (xnode, (RptAlign)*priv->font);
+	rpt_common_set_align (xnode, (RptAlign)*priv->align);
 }
 
 static void

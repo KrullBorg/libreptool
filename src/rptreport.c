@@ -32,6 +32,7 @@
 #include "rptobjecttext.h"
 #include "rptobjectline.h"
 #include "rptobjectrect.h"
+#include "rptobjectellipse.h"
 #include "rptobjectimage.h"
 
 typedef enum
@@ -533,6 +534,10 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 				{
 					rptobj = rpt_obj_rect_new_from_xml (cur);
 				}
+			else if (strcmp (cur->name, "ellipse") == 0)
+				{
+					rptobj = rpt_obj_ellipse_new_from_xml (cur);
+				}
 			else if (strcmp (cur->name, "image") == 0)
 				{
 					rptobj = rpt_obj_image_new_from_xml (cur);
@@ -625,9 +630,9 @@ static xmlNode
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	xnode = xmlNewNode (NULL, "page");
-	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->page->size->width));
-	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->page->size->height));
 	xmlAddChild (xroot, xnode);
+
+	rpt_common_set_size (xnode, *priv->page->size);
 
 	return xnode;
 }

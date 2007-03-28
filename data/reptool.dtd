@@ -1,5 +1,5 @@
 <!ENTITY % objects
-  "text*, line*, rect*, image*"
+  "text*, line*, rect*, ellipse*, image*"
 >
 
 <!ENTITY % object_commons_attrs
@@ -78,6 +78,14 @@
 
 <!ELEMENT rect EMPTY>
 <!ATTLIST rect
+  %object_commons_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+  fill-color   CDATA #IMPLIED
+>
+
+<!ELEMENT ellipse EMPTY>
+<!ATTLIST ellipse
   %object_commons_attrs;
   %object_size_attrs;
   %object_stroke_attrs;

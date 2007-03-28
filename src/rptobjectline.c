@@ -22,7 +22,8 @@
 enum
 {
 	PROP_0,
-	PROP_SIZE
+	PROP_SIZE,
+	PROP_STROKE
 };
 
 static void rpt_obj_line_class_init (RptObjLineClass *klass);
@@ -44,6 +45,7 @@ typedef struct _RptObjLinePrivate RptObjLinePrivate;
 struct _RptObjLinePrivate
 	{
 		RptSize *size;
+		RptStroke *stroke;
 	};
 
 GType
@@ -92,6 +94,11 @@ rpt_obj_line_class_init (RptObjLineClass *klass)
 	                                                       "Size",
 	                                                       "The object's size.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_STROKE,
+	                                 g_param_spec_pointer ("stroke",
+	                                                       "Stroke",
+	                                                       "The object's stroke.",
+	                                                       G_PARAM_READWRITE));
 }
 
 static void
@@ -102,6 +109,8 @@ rpt_obj_line_init (RptObjLine *rpt_obj_line)
 	priv->size = (RptSize *)g_malloc0 (sizeof (RptSize));
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
+
+	priv->stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
 }
 
 /**
@@ -158,6 +167,7 @@ RptObject
 					priv = RPT_OBJ_LINE_GET_PRIVATE (rpt_obj_line);
 
 					rpt_common_get_size (xnode, priv->size);
+					rpt_common_get_stroke (xnode, priv->stroke);
 				}
 		}
 
@@ -177,8 +187,8 @@ rpt_obj_line_get_xml (RptObject *rpt_objline, xmlNode *xnode)
 
 	xmlNodeSetName (xnode, "line");
 
-	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
-	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
+	rpt_common_set_size (xnode, *priv->size);
+	rpt_common_set_stroke (xnode, *priv->stroke);
 }
 
 static void
@@ -192,6 +202,10 @@ rpt_obj_line_set_property (GObject *object, guint property_id, const GValue *val
 		{
 			case PROP_SIZE:
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_STROKE:
+				priv->stroke = g_memdup (g_value_get_pointer (value), sizeof (RptStroke));
 				break;
 
 			default:
@@ -211,6 +225,10 @@ rpt_obj_line_get_property (GObject *object, guint property_id, GValue *value, GP
 		{
 			case PROP_SIZE:
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_STROKE:
+				g_value_set_pointer (value, g_memdup (priv->stroke, sizeof (RptStroke)));
 				break;
 
 			default:

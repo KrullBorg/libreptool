@@ -23,20 +23,22 @@ enum
 {
 	PROP_0,
 	PROP_SIZE,
-	PROP_SOURCE
+	PROP_BORDER,
+	PROP_SOURCE,
+	PROP_ADAPT
 };
 
 static void rpt_obj_image_class_init (RptObjImageClass *klass);
 static void rpt_obj_image_init (RptObjImage *rpt_obj_image);
 
 static void rpt_obj_image_set_property (GObject *object,
-                                       guint property_id,
-                                       const GValue *value,
-                                       GParamSpec *pspec);
+                                        guint property_id,
+                                        const GValue *value,
+                                        GParamSpec *pspec);
 static void rpt_obj_image_get_property (GObject *object,
-                                       guint property_id,
-                                       GValue *value,
-                                       GParamSpec *pspec);
+                                        guint property_id,
+                                        GValue *value,
+                                        GParamSpec *pspec);
 
 
 #define RPT_OBJ_IMAGE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_OBJ_IMAGE, RptObjImagePrivate))
@@ -45,7 +47,9 @@ typedef struct _RptObjImagePrivate RptObjImagePrivate;
 struct _RptObjImagePrivate
 	{
 		RptSize *size;
+		RptBorder *border;
 		gchar *source;
+		guint adapt;
 	};
 
 GType
@@ -94,12 +98,23 @@ rpt_obj_image_class_init (RptObjImageClass *klass)
 	                                                       "Size",
 	                                                       "The object's size.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_BORDER,
+	                                 g_param_spec_pointer ("border",
+	                                                       "Border",
+	                                                       "The object's border.",
+	                                                       G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_SOURCE,
 	                                 g_param_spec_string ("source",
 	                                                      "Source",
 	                                                      "The image's source.",
 	                                                      "",
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_ADAPT,
+	                                 g_param_spec_uint ("adapt",
+	                                                    "Adapt",
+	                                                    "Whether to adapt the image.",
+	                                                    RPT_OBJ_IMAGE_ADAPT_NONE, RPT_OBJ_IMAGE_ADAPT_TO_IMAGE, 0,
+	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -111,7 +126,7 @@ rpt_obj_image_init (RptObjImage *rpt_obj_image)
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
-	priv->source = g_strdup ("");
+	priv->border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
 }
 
 /**
@@ -168,8 +183,18 @@ RptObject
 					priv = RPT_OBJ_IMAGE_GET_PRIVATE (rpt_obj_image);
 
 					rpt_common_get_size (xnode, priv->size);
+					rpt_common_get_border (xnode, priv->border);
 
 					priv->source = (gchar *)xmlGetProp (xnode, "source");
+
+					if (xmlStrcasecmp (xmlGetProp (xnode, "adapt"), (const xmlChar *)"to-box") == 0)
+						{
+							priv->adapt = RPT_OBJ_IMAGE_ADAPT_TO_BOX;
+						}
+					else if (xmlStrcasecmp (xmlGetProp (xnode, "adapt"), (const xmlChar *)"to-image") == 0)
+						{
+							priv->adapt = RPT_OBJ_IMAGE_ADAPT_TO_IMAGE;
+						}
 				}
 		}
 
@@ -191,7 +216,21 @@ rpt_obj_image_get_xml (RptObject *rpt_objimage, xmlNode *xnode)
 
 	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
 	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
+
+	rpt_common_set_border (xnode, *priv->border);
+
 	xmlSetProp (xnode, "source", priv->source);
+
+	switch (priv->adapt)
+		{
+			case RPT_OBJ_IMAGE_ADAPT_TO_BOX:
+				xmlSetProp (xnode, "adapt", "to-box");
+				break;
+
+			case RPT_OBJ_IMAGE_ADAPT_TO_IMAGE:
+				xmlSetProp (xnode, "adapt", "to-image");
+				break;
+		}
 }
 
 static void
@@ -207,8 +246,16 @@ rpt_obj_image_set_property (GObject *object, guint property_id, const GValue *va
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
 				break;
 
+			case PROP_BORDER:
+				priv->border = g_memdup (g_value_get_pointer (value), sizeof (RptBorder));
+				break;
+
 			case PROP_SOURCE:
 				priv->source = g_strstrip (g_strdup (g_value_get_string (value)));
+				break;
+
+			case PROP_ADAPT:
+				priv->adapt = g_value_get_uint (value);
 				break;
 
 			default:
@@ -230,8 +277,16 @@ rpt_obj_image_get_property (GObject *object, guint property_id, GValue *value, G
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
 				break;
 
+			case PROP_BORDER:
+				g_value_set_pointer (value, g_memdup (priv->border, sizeof (RptBorder)));
+				break;
+
 			case PROP_SOURCE:
 				g_value_set_string (value, priv->source);
+				break;
+
+			case PROP_ADAPT:
+				g_value_set_uint (value, priv->adapt);
 				break;
 
 			default:

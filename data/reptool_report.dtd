@@ -1,5 +1,5 @@
 <!ENTITY % objects
-  "text*, line*, rect*, image*"
+  "text*, line*, rect*, ellipse*, image*"
 >
 
 <!ENTITY % object_position_attrs
@@ -72,6 +72,14 @@
 
 <!ELEMENT rect EMPTY>
 <!ATTLIST rect
+  %object_poisition_attrs;
+  %object_size_attrs;
+  %object_stroke_attrs;
+  fill-color   CDATA #IMPLIED
+>
+
+<!ELEMENT ellipse EMPTY>
+<!ATTLIST ellipse
   %object_poisition_attrs;
   %object_size_attrs;
   %object_stroke_attrs;

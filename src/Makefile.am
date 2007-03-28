@@ -9,6 +9,7 @@ libreptool_la_SOURCES = \
                         rptobjecttext.c \
                         rptobjectline.c \
                         rptobjectrect.c \
+                        rptobjectellipse.c \
                         rptobjectimage.c \
                         rptreport.c \
                         rptprint.c \
@@ -20,6 +21,7 @@ include_HEADERS = \
                   rptobjecttext.h \
                   rptobjectline.h \
                   rptobjectrect.h \
+                  rptobjectellipse.h \
                   rptobjectimage.h \
                   rptreport.h \
                   rptprint.h \

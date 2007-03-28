@@ -21,7 +21,8 @@
 
 enum
 {
-	PROP_0
+	PROP_0,
+	PROP_FILL_COLOR
 };
 
 static void rpt_obj_rect_class_init (RptObjRectClass *klass);
@@ -42,6 +43,7 @@ static void rpt_obj_rect_get_property (GObject *object,
 typedef struct _RptObjRectPrivate RptObjRectPrivate;
 struct _RptObjRectPrivate
 	{
+		RptColor *fill_color;
 	};
 
 GType
@@ -84,12 +86,20 @@ rpt_obj_rect_class_init (RptObjRectClass *klass)
 	object_class->get_property = rpt_obj_rect_get_property;
 
 	rptobject_class->get_xml = rpt_obj_rect_get_xml;
+
+	g_object_class_install_property (object_class, PROP_FILL_COLOR,
+	                                 g_param_spec_pointer ("fill-color",
+	                                                       "Fill Color",
+	                                                       "The object's fill color.",
+	                                                       G_PARAM_READWRITE));
 }
 
 static void
 rpt_obj_rect_init (RptObjRect *rpt_obj_rect)
 {
 	RptObjRectPrivate *priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
+
+	priv->fill_color = (RptColor *)g_malloc0 (sizeof (RptColor));
 }
 
 /**
@@ -143,12 +153,24 @@ RptObject
 
 			if (rpt_obj_rect != NULL)
 				{
+					const gchar *prop;
 					RptSize size;
+					RptStroke stroke;
 
 					priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
 
 					rpt_common_get_size (xnode, &size);
-					g_object_set (G_OBJECT (rpt_obj_rect), "size", &size, NULL);
+					rpt_common_get_stroke (xnode, &stroke);
+					g_object_set (G_OBJECT (rpt_obj_rect),
+					              "size", &size,
+					              "stroke", &stroke,
+					              NULL);
+
+					prop = (const gchar *)xmlGetProp (xnode, "fill-color");
+					if (prop != NULL)
+						{
+							rpt_common_parse_color (prop, priv->fill_color);
+						}
 				}
 		}
 
@@ -169,6 +191,11 @@ rpt_obj_rect_get_xml (RptObject *rpt_object, xmlNode *xnode)
 	rpt_obj_line_get_xml (rpt_object, xnode);
 
 	xmlNodeSetName (xnode, "rect");
+
+	if (priv->fill_color != NULL)
+		{
+			xmlSetProp (xnode, "fill-color", rpt_common_convert_to_str_color (*priv->fill_color));
+		}
 }
 
 static void
@@ -180,6 +207,10 @@ rpt_obj_rect_set_property (GObject *object, guint property_id, const GValue *val
 
 	switch (property_id)
 		{
+			case PROP_FILL_COLOR:
+				priv->fill_color = g_memdup (g_value_get_pointer (value), sizeof (RptColor));
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -195,6 +226,10 @@ rpt_obj_rect_get_property (GObject *object, guint property_id, GValue *value, GP
 
 	switch (property_id)
 		{
+			case PROP_FILL_COLOR:
+				g_value_set_pointer (value, g_memdup (priv->fill_color, sizeof (RptColor)));
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;

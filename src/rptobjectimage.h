@@ -52,6 +52,12 @@ struct _RptObjImageClass
 
 GType rpt_obj_image_get_type (void) G_GNUC_CONST;
 
+typedef enum
+{
+	RPT_OBJ_IMAGE_ADAPT_NONE,
+	RPT_OBJ_IMAGE_ADAPT_TO_BOX,
+	RPT_OBJ_IMAGE_ADAPT_TO_IMAGE
+} eRptObjImageAdapt;
 
 RptObject *rpt_obj_image_new (const gchar *name, RptPoint position);
 RptObject *rpt_obj_image_new_from_xml (xmlNode *xnode);

@@ -99,8 +99,12 @@ typedef struct
 
 void rpt_common_get_position (xmlNode *xnode,
                               RptPoint *position);
+void rpt_common_set_position (xmlNode *xnode,
+                              RptPoint position);
 void rpt_common_get_size (xmlNode *xnode,
                           RptSize *size);
+void rpt_common_set_size (xmlNode *xnode,
+                          RptSize size);
 void rpt_common_get_font (xmlNode *xnode,
                           RptFont *font);
 void rpt_common_set_font (xmlNode *xnode,
@@ -115,8 +119,11 @@ void rpt_common_set_align (xmlNode *xnode,
                            RptAlign align);
 void rpt_common_get_stroke (xmlNode *xnode,
                             RptStroke *stroke);
+void rpt_common_set_stroke (xmlNode *xnode,
+                            RptStroke stroke);
 void rpt_common_parse_color (const gchar *str_color,
                              RptColor *color);
+gchar *rpt_common_convert_to_str_color (RptColor color);
 
 
 G_END_DECLS

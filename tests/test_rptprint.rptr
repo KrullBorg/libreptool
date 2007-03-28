@@ -10,5 +10,6 @@
 	<page width="595" height="842">
 		<text x="10" y="300" width="300" height="800" font-size="30" font-color="#FF0">Text sample on second page</text>
 		<line x="10" y="300" width="100" height="0" stroke-color="#0F0" />
+		<ellipse x="200" y="700" width="100" height="30" stroke-color="#FF0000" fill-color="#0000FF" />
 	</page>
 </reptool_report>

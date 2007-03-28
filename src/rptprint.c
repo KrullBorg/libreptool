@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <cairo.h>
 #include <cairo-pdf.h>
@@ -53,6 +54,8 @@ static void rpt_print_line_xml (RptPrint *rpt_print,
                                 xmlNode *xnode);
 static void rpt_print_rect_xml (RptPrint *rpt_print,
                                 xmlNode *xnode);
+static void rpt_print_ellipse_xml (RptPrint *rpt_print,
+                                   xmlNode *xnode);
 static void rpt_print_image_xml (RptPrint *rpt_print,
                                  xmlNode *xnode);
 static void rpt_print_line (RptPrint *rpt_print,
@@ -314,6 +317,8 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 static void
 rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 {
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
 	xmlNode *cur = xnode->children;
 
 	while (cur != NULL)
@@ -329,6 +334,10 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 			else if (strcmp (cur->name, "rect") == 0)
 				{
 					rpt_print_rect_xml (rpt_print, cur);
+				}
+			else if (strcmp (cur->name, "ellipse") == 0)
+				{
+					rpt_print_ellipse_xml (rpt_print, cur);
 				}
 			else if (strcmp (cur->name, "image") == 0)
 				{
@@ -528,6 +537,48 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
 	cairo_rectangle (priv->cr, position.x, position.y, size.width, size.height);
 
+	if (prop != NULL)
+		{
+			cairo_set_source_rgba (priv->cr, fill_color.r, fill_color.g, fill_color.b, fill_color.a);
+			cairo_fill_preserve (priv->cr);
+		}
+
+	cairo_set_source_rgba (priv->cr, stroke.color.r, stroke.color.g, stroke.color.b, stroke.color.a);
+	cairo_stroke (priv->cr);
+}
+
+static void
+rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
+{
+	RptPoint position;
+	RptSize size;
+	RptStroke stroke;
+	RptColor fill_color;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	rpt_common_get_position (xnode, &position);
+	rpt_common_get_size (xnode, &size);
+	rpt_common_get_stroke (xnode, &stroke);
+
+	gchar *prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
+	if (prop != NULL)
+		{
+			fill_color.r = 0.0;
+			fill_color.g = 0.0;
+			fill_color.b = 0.0;
+			fill_color.a = 1.0;
+			rpt_common_parse_color (prop, &fill_color);
+		}
+
+	cairo_new_path (priv->cr);
+
+	cairo_save (priv->cr);
+	cairo_translate (priv->cr, position.x, position.y);
+	cairo_scale (priv->cr, size.width, size.height);
+	cairo_arc (priv->cr, 0., 0., 1., 0., 2. * M_PI);
+	cairo_restore (priv->cr);
+	
 	if (prop != NULL)
 		{
 			cairo_set_source_rgba (priv->cr, fill_color.r, fill_color.g, fill_color.b, fill_color.a);
