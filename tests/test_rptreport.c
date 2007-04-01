@@ -17,11 +17,13 @@
  */
 
 #include <rptreport.h>
+#include <rptprint.h>
 
 int
 main (int argc, char **argv)
 {
 	RptReport *rptr;
+	RptPrint *rptp;
 
 	g_type_init ();
 
@@ -31,6 +33,8 @@ main (int argc, char **argv)
 		{
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
 			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
+		
+			rpt_print_new_from_xml (rptprint, RPTP_OUTPUT_PDF, "test.pdf");
 		}
 
 	return 0;

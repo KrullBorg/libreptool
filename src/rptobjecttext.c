@@ -193,6 +193,7 @@ RptObject
 					rpt_common_get_size (xnode, priv->size);
 					rpt_common_get_border (xnode, priv->border);
 					rpt_common_get_font (xnode, priv->font);
+					rpt_common_get_align (xnode, priv->align);
 
 					g_object_set (rpt_obj_text, "source", xmlGetProp (xnode, "source"), NULL);
 				}
@@ -208,9 +209,7 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 
 	xmlNodeSetName (xnode, "text");
 
-	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
-	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
-
+	rpt_common_set_size (xnode, (RptSize)*priv->size);
 	rpt_common_set_border (xnode, (RptBorder)*priv->border);
 	rpt_common_set_font (xnode, (RptFont)*priv->font);
 	rpt_common_set_align (xnode, (RptAlign)*priv->align);

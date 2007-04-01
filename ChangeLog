@@ -1,0 +1,29 @@
+2007-04-01 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.c: added and managed RPT_REPORT_SECTION_REPORT_HEADER and
+	RPT_REPORT_SECTION_REPORT_FOOTER
+	* src/rptobjtext.c: some bugfixes; the source attribute understand @Page, 
+	resulting in printing current page number
+	* src/rptprint.c: managed "underline" and "strike" font's attributes
+
+2007-03-28 Andrea Zagli <azagli@inwind.it>
+
+	* Added object RptObjEllipse derived from RptObjrect
+	* src/rptprint.c: managed ellipse xml node
+	* src/rptobjline.c:
+	* src/rptobjline.h: extended RptObjLine (stroke attributes)
+	* src/rptobjimage.c:
+	* src/rptobjimage.h: extended RptObjImage (border attributes)
+	* src/rptobjrect.c:
+	* src/rptobjrect.h: extended RptObjRect (stroke and fill-color attributes)
+
+2007-03-26 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptprint.c:
+	* src/rptprint.h:
+	* src/rptcommon.c:
+	* src/rptcommon.h: moved some functions from rpt_print to rpt_common
+	* src/rptobjtext.c:
+	* src/rptobjtext.h: extended RptObjText (border, font and align attributes)
+	* src/rptobjtext.c: RptObjText's source attribute now read values from db (if
+	there's a connection)

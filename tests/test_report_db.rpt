@@ -4,13 +4,17 @@
 
 	<database>
 		<provider>SQLite</provider>
+		<!-- connection_string must be changed to your libretool source directory because SQLite wants an absolute path -->
 		<connection_string>URI=///home/andreaz/files/c/reptool/libreptool/tests/db_test.db</connection_string>
 		<sql>SELECT * FROM articles ORDER BY name</sql>
 	</database>
 
 	<report>
+		<report-header height="80">
+			<text name="rephead" x="10" y="10" width="300" height="70" font-name="Verdana" font-size="16" font-bold="y" font-underline="y" font-color="#0000FF" source="the report's header" />
+		</report-header>
 		<page-header height="80">
-			<text name="title" x="10" y="10" width="300" height="50" font-name="Courier New" font-size="10" font-bold="y" source="the page title" />
+			<text name="title" x="10" y="10" width="300" height="50" font-name="Courier New" font-size="10" font-bold="y" source="the page's title" />
 			<line name="line1" x="10" y="65" width="500" height="0" />
 		</page-header>
 		<body height="200">
@@ -19,10 +23,16 @@
 			<rect name="rect1" x="400" y="10" width="20" height="20" fill-color="#00FF00" />
 			<image name="img1" x="450" y="10" width="60" height="60" source="tests/gnome-globe.png" />
 		</body>
+		<report-footer height="50">
+			<line name="line3" x="10" y="10" width="500" height="0" stroke-color="#FFFF00" />
+			<text name="txt_report_footer" x="10" y="20" width="500" height="30" horizontal-align="center" source="the report's footer" />
+			<line name="line4" x="10" y="50" width="500" height="0" stroke-color="#FFFF00" />
+		</report-footer>
 		<page-footer height="80">
 			<line name="line2" x="10" y="10" width="500" height="0" />
-			<text name="footer" x="10" y="20" width="300" height="50" source="the page footer" />
+			<text name="footer" x="10" y="20" width="300" height="50" source="the page's footer" />
 			<ellipse name="ellipse1" x="400" y="50" width="20" height="10" stroke-color="#FF0000" fill-color="#00FF00" />
+			<text name="page_n" x="500" y="20" width="30" height="50" source="@Page" />
 		</page-footer>
 	</report>
 </reptool>

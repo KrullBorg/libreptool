@@ -2,7 +2,8 @@
 rptcommon
 
 <!-- ##### SECTION Short_Description ##### -->
-Common functions usefull for the library's classes.
+Usefull functions and struct.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -17,7 +18,104 @@ Common functions usefull for the library's classes.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### STRUCT RptColor ##### -->
+<para>
+
+</para>
+
+@r: 
+@g: 
+@b: 
+@a: 
+
+<!-- ##### STRUCT RptPoint ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+
+<!-- ##### STRUCT RptSize ##### -->
+<para>
+
+</para>
+
+@width: 
+@height: 
+
+<!-- ##### STRUCT RptFont ##### -->
+<para>
+
+</para>
+
+@name: 
+@size: 
+@bold: 
+@italic: 
+@underline: 
+@strike: 
+@color: 
+
+<!-- ##### STRUCT RptBorder ##### -->
+<para>
+
+</para>
+
+@top_width: 
+@right_width: 
+@bottom_width: 
+@left_width: 
+@top_color: 
+@right_color: 
+@bottom_color: 
+@left_color: 
+
+<!-- ##### ENUM eRptHAlign ##### -->
+<para>
+
+</para>
+
+@RPT_HALIGN_LEFT: 
+@RPT_HALIGN_CENTER: 
+@RPT_HALIGN_RIGHT: 
+@RPT_HALIGN_JUSTIFIED: 
+
+<!-- ##### ENUM eRptVAlign ##### -->
+<para>
+
+</para>
+
+@RPT_VALIGN_TOP: 
+@RPT_VALIGN_CENTER: 
+@RPT_VALIGN_BOTTOM: 
+
+<!-- ##### STRUCT RptAlign ##### -->
+<para>
+
+</para>
+
+@h_align: 
+@v_align: 
+
+<!-- ##### STRUCT RptStroke ##### -->
+<para>
+
+</para>
+
+@width: 
+@color: 
+
 <!-- ##### FUNCTION rpt_common_get_position ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@position: 
+
+
+<!-- ##### FUNCTION rpt_common_set_position ##### -->
 <para>
 
 </para>
@@ -33,5 +131,104 @@ Common functions usefull for the library's classes.
 
 @xnode: 
 @size: 
+
+
+<!-- ##### FUNCTION rpt_common_set_size ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@size: 
+
+
+<!-- ##### FUNCTION rpt_common_get_font ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@font: 
+
+
+<!-- ##### FUNCTION rpt_common_set_font ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@font: 
+
+
+<!-- ##### FUNCTION rpt_common_get_border ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@border: 
+
+
+<!-- ##### FUNCTION rpt_common_set_border ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@border: 
+
+
+<!-- ##### FUNCTION rpt_common_get_align ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@align: 
+
+
+<!-- ##### FUNCTION rpt_common_set_align ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@align: 
+
+
+<!-- ##### FUNCTION rpt_common_get_stroke ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@stroke: 
+
+
+<!-- ##### FUNCTION rpt_common_set_stroke ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@stroke: 
+
+
+<!-- ##### FUNCTION rpt_common_parse_color ##### -->
+<para>
+
+</para>
+
+@str_color: 
+@color: 
+
+
+<!-- ##### FUNCTION rpt_common_convert_to_str_color ##### -->
+<para>
+
+</para>
+
+@color: 
+@Returns: 
 
 

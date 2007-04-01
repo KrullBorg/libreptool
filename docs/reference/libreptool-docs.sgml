@@ -14,6 +14,7 @@
     <xi:include href="xml/rptcommon.xml"/>
     <xi:include href="xml/rptreport.xml"/>
     <xi:include href="xml/rptobject.xml"/>
+    <xi:include href="xml/rptobjectellipse.xml"/>
     <xi:include href="xml/rptobjectimage.xml"/>
     <xi:include href="xml/rptobjectline.xml"/>
     <xi:include href="xml/rptobjectrect.xml"/>

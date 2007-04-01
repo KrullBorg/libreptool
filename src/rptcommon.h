@@ -23,41 +23,64 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
+#include <pango/pango-attributes.h>
+
 G_BEGIN_DECLS
 
 
-typedef struct
+/**
+ * RptColor:
+ * @r: the red channel
+ * @g: the green channel
+ * @b: the blue channel
+ * @a: the alpha channel
+ */
+struct _RptColor
 {
 	gdouble r;
 	gdouble g;
 	gdouble b;
 	gdouble a;
-} RptColor;
+};
+typedef struct _RptColor RptColor;
 
-typedef struct
+struct _RptPoint
 {
 	gdouble x;
 	gdouble y;
-} RptPoint;
+};
+typedef struct _RptPoint RptPoint;
 
-typedef struct
+struct _RptSize
 {
 	gdouble width;
 	gdouble height;
-} RptSize;
+};
+typedef struct _RptSize RptSize;
 
-typedef struct
+/**
+ * RptFont:
+ * @name: the font's family name.
+ * @size: the font's size in pixel.
+ * @bold: if the font is bold.
+ * @italic: if the font is italic.
+ * @underline:
+ * @strike: if the font is striked.
+ * @color: an #RptColor.
+ */
+struct _RptFont
 {
 	gchar *name;
 	gdouble size;
 	gboolean bold;
 	gboolean italic;
-	gboolean underline;
+	PangoUnderline underline;
 	gboolean strike;
 	RptColor color;
-} RptFont;
+};
+typedef struct _RptFont RptFont;
 
-typedef struct
+struct _RptBorder
 {
 	gdouble top_width;
 	gdouble right_width;
@@ -67,7 +90,8 @@ typedef struct
 	RptColor right_color;
 	RptColor bottom_color;
 	RptColor left_color;
-} RptBorder;
+};
+typedef struct _RptBorder RptBorder;
 
 typedef enum
 {
@@ -84,17 +108,19 @@ typedef enum
 	RPT_VALIGN_BOTTOM
 } eRptVAlign;
 
-typedef struct
+struct _RptAlign
 {
 	eRptHAlign h_align;
 	eRptVAlign v_align;
-} RptAlign;
+};
+typedef struct _RptAlign RptAlign;
 
-typedef struct
+struct _RptStroke
 {
 	gdouble width;
 	RptColor color;
-} RptStroke;
+};
+typedef struct _RptStroke RptStroke;
 
 
 void rpt_common_get_position (xmlNode *xnode,

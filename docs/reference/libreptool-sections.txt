@@ -122,8 +122,46 @@ rpt_obj_rect_get_type
 </SECTION>
 
 <SECTION>
+<FILE>rptobjectellipse</FILE>
+<TITLE>RptObjEllipse</TITLE>
+RptObjEllipse
+rpt_obj_ellipse_new
+rpt_obj_ellipse_new_from_xml
+rpt_obj_ellipse_get_xml
+<SUBSECTION Standard>
+TYPE_RPT_OBJ_ELLIPSE
+RPT_OBJ_ELLIPSE
+RPT_OBJ_ELLIPSE_CLASS
+IS_RPT_OBJ_ELLIPSE
+IS_RPT_OBJ_ELLIPSE_CLASS
+RPT_OBJ_ELLIPSE_GET_CLASS
+rpt_obj_ellipse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>rptcommon</FILE>
+RptColor
+RptPoint
+RptSize
+RptFont
+RptBorder
+eRptHAlign
+eRptVAlign
+RptAlign
+RptStroke
 rpt_common_get_position
+rpt_common_set_position
 rpt_common_get_size
+rpt_common_set_size
+rpt_common_get_font
+rpt_common_set_font
+rpt_common_get_border
+rpt_common_set_border
+rpt_common_get_align
+rpt_common_set_align
+rpt_common_get_stroke
+rpt_common_set_stroke
+rpt_common_parse_color
+rpt_common_convert_to_str_color
 </SECTION>
 

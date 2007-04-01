@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-RptObjRect
+RptObjEllipse
 
 <!-- ##### SECTION Short_Description ##### -->
-A rectangular object.
+An ellipse object.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -17,18 +17,13 @@ A rectangular object.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### STRUCT RptObjRect ##### -->
+<!-- ##### STRUCT RptObjEllipse ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### ARG RptObjRect:fill-color ##### -->
-<para>
-
-</para>
-
-<!-- ##### FUNCTION rpt_obj_rect_new ##### -->
+<!-- ##### FUNCTION rpt_obj_ellipse_new ##### -->
 <para>
 
 </para>
@@ -38,7 +33,7 @@ A rectangular object.
 @Returns: 
 
 
-<!-- ##### FUNCTION rpt_obj_rect_new_from_xml ##### -->
+<!-- ##### FUNCTION rpt_obj_ellipse_new_from_xml ##### -->
 <para>
 
 </para>
@@ -47,7 +42,7 @@ A rectangular object.
 @Returns: 
 
 
-<!-- ##### FUNCTION rpt_obj_rect_get_xml ##### -->
+<!-- ##### FUNCTION rpt_obj_ellipse_get_xml ##### -->
 <para>
 
 </para>

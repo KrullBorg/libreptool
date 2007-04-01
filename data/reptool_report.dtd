@@ -38,7 +38,7 @@
   font-size          CDATA #IMPLIED
   font-bold          (y | n) #IMPLIED
   font-italic        (y | n) #IMPLIED
-  font-underline     (y | n) #IMPLIED
+  font-underline     (none | single | double | low | error) #IMPLIED
   font-strike        (y | n) #IMPLIED
   font-color         CDATA #IMPLIED"
 >

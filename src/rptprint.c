@@ -25,6 +25,7 @@
 #include <cairo-ps.h>
 #include <cairo-svg.h>
 #include <pango/pangocairo.h>
+#include <pango/pango-attributes.h>
 
 #include "rptprint.h"
 #include "rptcommon.h"
@@ -362,6 +363,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	PangoLayout *playout;
 	PangoFontDescription *pfdesc;
+	PangoAttribute *pattr;
+	PangoAttrList *lpattr = NULL;
 
 	gchar *text = (gchar *)xmlNodeGetContent (xnode),
 	      *prop,
@@ -413,12 +416,6 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		{
 			str_font = g_strjoin (NULL, str_font, " italic", NULL);
 		}
-	/*if (font.underline)
-		{
-		}*/
-	/*if (font.strike)
-		{
-		}*/
 	if (font.size > 0)
 		{
 			str_font = g_strjoin (NULL, str_font, g_strdup_printf (" %f", font.size), NULL);
@@ -432,6 +429,41 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	pfdesc = pango_font_description_from_string (str_font);
 	pango_layout_set_font_description (playout, pfdesc);
 	pango_font_description_free (pfdesc);
+
+	/* setting layout attributes */
+	if (font.underline != PANGO_UNDERLINE_NONE)
+		{
+			PangoAttribute *pattr;
+
+			pattr = pango_attr_underline_new (font.underline);
+			pattr->start_index = 0;
+			pattr->end_index = strlen (text) + 1;
+
+			if (lpattr == NULL)
+				{
+					lpattr = pango_attr_list_new ();
+				}
+			pango_attr_list_insert (lpattr, pattr);
+		}
+	if (font.strike)
+		{
+			PangoAttribute *pattr;
+		
+			pattr = pango_attr_strikethrough_new (TRUE);
+			pattr->start_index = 0;
+			pattr->end_index = strlen (text) + 1;
+
+			if (lpattr == NULL)
+				{
+					lpattr = pango_attr_list_new ();
+				}
+			pango_attr_list_insert (lpattr, pattr);
+		}
+
+	if (lpattr != NULL)
+		{
+			pango_layout_set_attributes (playout, lpattr);
+		}
 
 	/* background */
 	prop = xmlGetProp (xnode, (const xmlChar *)"background-color");

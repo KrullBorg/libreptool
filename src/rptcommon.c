@@ -115,7 +115,7 @@ rpt_common_get_font (xmlNode *xnode, RptFont *font)
 	font->size = 12.0;
 	font->bold = FALSE;
 	font->italic = FALSE;
-	font->underline = FALSE;
+	font->underline = PANGO_UNDERLINE_NONE;
 	font->strike = FALSE;
 	font->color.r = 0.0;
 	font->color.g = 0.0;
@@ -149,7 +149,24 @@ rpt_common_get_font (xmlNode *xnode, RptFont *font)
 	prop = xmlGetProp (xnode, "font-underline");
 	if (prop != NULL)
 		{
-			font->underline = (strcmp (g_strstrip (prop), "y") == 0);
+			g_strstrip (prop);
+
+			if (strcmp (prop, "single") == 0)
+				{
+					font->underline = PANGO_UNDERLINE_SINGLE;
+				}
+			else if (strcmp (prop, "double") == 0)
+				{
+					font->underline = PANGO_UNDERLINE_DOUBLE;
+				}
+			else if (strcmp (prop, "low") == 0)
+				{
+					font->underline = PANGO_UNDERLINE_LOW;
+				}
+			else if (strcmp (prop, "error") == 0)
+				{
+					font->underline = PANGO_UNDERLINE_ERROR;
+				}
 		}
 
 	prop = xmlGetProp (xnode, "font-strike");
@@ -184,9 +201,26 @@ rpt_common_set_font (xmlNode *xnode, RptFont font)
 		{
 			xmlSetProp (xnode, "font-italic", "y");
 		}
-	if (font.underline)
+	if (font.underline != PANGO_UNDERLINE_NONE)
 		{
-			xmlSetProp (xnode, "font-underline", "y");
+			switch (font.underline)
+				{
+					case PANGO_UNDERLINE_SINGLE:
+						xmlSetProp (xnode, "font-underline", "single");
+						break;
+
+					case PANGO_UNDERLINE_DOUBLE:
+						xmlSetProp (xnode, "font-underline", "double");
+						break;
+
+					case PANGO_UNDERLINE_LOW:
+						xmlSetProp (xnode, "font-underline", "low");
+						break;
+
+					case PANGO_UNDERLINE_ERROR:
+						xmlSetProp (xnode, "font-underline", "error");
+						break;
+				}
 		}
 	if (font.strike)
 		{

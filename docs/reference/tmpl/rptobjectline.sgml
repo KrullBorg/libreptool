@@ -28,6 +28,11 @@ A line object.
 
 </para>
 
+<!-- ##### ARG RptObjLine:stroke ##### -->
+<para>
+
+</para>
+
 <!-- ##### FUNCTION rpt_obj_line_new ##### -->
 <para>
 

@@ -37,6 +37,8 @@
 
 typedef enum
 {
+	RPTREPORT_SECTION_REPORT_HEADER,
+	RPTREPORT_SECTION_REPORT_FOOTER,
 	RPTREPORT_SECTION_PAGE_HEADER,
 	RPTREPORT_SECTION_PAGE_FOOTER,
 	RPTREPORT_SECTION_BODY
@@ -46,6 +48,18 @@ typedef struct
 {
 	RptSize *size;
 } Page;
+
+typedef struct
+{
+	gdouble height;
+	GList *objects;
+} ReportHeader;
+
+typedef struct
+{
+	gdouble height;
+	GList *objects;
+} ReportFooter;
 
 typedef struct
 {
@@ -111,9 +125,13 @@ struct _RptReportPrivate
 		GdaDataModel *gda_datamodel;
 
 		Page *page;
+		ReportHeader *report_header;
+		ReportFooter *report_footer;
 		PageHeader *page_header;
 		PageFooter *page_footer;
 		Body *body;
+
+		guint cur_page;
 	};
 
 GType
@@ -168,6 +186,14 @@ rpt_report_init (RptReport *rpt_report)
 	priv->page->size = (RptSize *)g_malloc0 (sizeof (RptSize));
 	priv->page->size->width = 0.0;
 	priv->page->size->height = 0.0;
+
+	priv->report_header = (ReportHeader *)g_malloc0 (sizeof (ReportHeader));
+	priv->report_header->height = 0.0;
+	priv->report_header->objects = NULL;
+
+	priv->report_footer = (ReportFooter *)g_malloc0 (sizeof (ReportFooter));
+	priv->report_footer->height = 0.0;
+	priv->report_footer->objects = NULL;
 
 	priv->page_header = (PageHeader *)g_malloc0 (sizeof (PageHeader));
 	priv->page_header->height = 0.0;
@@ -305,6 +331,22 @@ RptReport
 							xnodeset = xpresult->nodesetval;
 							if (xnodeset->nodeNr == 1)
 								{
+									/* search for node "report-header" */
+									xpcontext->node = xnodeset->nodeTab[0];
+									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::report-header", xpcontext);
+									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
+										{
+											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_REPORT_HEADER);
+										}
+
+									/* search for node "report-footer" */
+									xpcontext->node = xnodeset->nodeTab[0];
+									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::report-footer", xpcontext);
+									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
+										{
+											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_REPORT_FOOTER);
+										}
+
 									/* search for node "page-header" */
 									xpcontext->node = xnodeset->nodeTab[0];
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page-header", xpcontext);
@@ -396,6 +438,8 @@ xmlDoc
  * rpt_report_get_xml_rptprint:
  * @rpt_report: an #RptReport object.
  *
+ * Returns: an #xmlDoc, that represents the generated report, to pass to 
+ * function rpt_print_new_from_xml().
  */
 xmlDoc
 *rpt_report_get_xml_rptprint (RptReport *rpt_report)
@@ -403,7 +447,6 @@ xmlDoc
 	xmlDoc *xdoc;
 	xmlNode *xroot;
 	xmlNode *xpage;
-	gint pages = 0;
 	gdouble cur_y = 0.0;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
@@ -412,6 +455,7 @@ xmlDoc
 	xroot = xmlNewNode (NULL, "reptool_report");
 	xmlDocSetRootElement (xdoc, xroot);
 
+	priv->cur_page = 0;
 	if (priv->gda_datamodel != NULL)
 		{
 			gint row;
@@ -422,19 +466,23 @@ xmlDoc
 			for (row = 0; row < rows; row++)
 				{
 					if (row == 0 ||
-					    (priv->page_footer != NULL && (cur_y > priv->page->size->height - priv->page_footer->height)) ||
+					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page_footer->height)) ||
 					    cur_y > priv->page->size->height)
 						{
-							if (pages > 0 && priv->page_footer != NULL)
+							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
 									cur_y = priv->page->size->height - priv->page_footer->height;
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 								}
 
 							cur_y = 0.0;
-							pages++;
+							priv->cur_page++;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
+							if (priv->cur_page == 1 && priv->report_header != NULL)
+								{
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, row);
+								}
 							if (priv->page_header != NULL)
 								{
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
@@ -444,7 +492,11 @@ xmlDoc
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY, row);
 				}
 
-			if (pages > 0 && priv->page_footer != NULL)
+			if (priv->cur_page > 0 && priv->report_footer != NULL)
+				{
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER, row - 1);
+				}
+			if (priv->cur_page > 0 && priv->page_footer != NULL)
 				{
 					cur_y = priv->page->size->height - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
@@ -452,15 +504,24 @@ xmlDoc
 		}
 	else
 		{
+			priv->cur_page++;
+			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+
+			if (priv->report_header != NULL)
+				{
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, -1);
+				}
 			if (priv->page_header != NULL)
 				{
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, -1);
 				}
 
-			pages++;
-			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 			rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY, -1);
 
+			if (priv->report_footer != NULL)
+				{
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER, -1);
+				}
 			if (priv->page_footer != NULL)
 				{
 					cur_y = priv->page->size->height - priv->page_footer->height;
@@ -563,6 +624,16 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 
 	switch (section)
 		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				priv->report_header->height = height;
+				priv->report_header->objects = objects;
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				priv->report_footer->height = height;
+				priv->report_footer->objects = objects;
+				break;
+
 			case RPTREPORT_SECTION_PAGE_HEADER:
 				priv->page_header->height = height;
 				priv->page_header->objects = objects;
@@ -587,7 +658,13 @@ static RptObject
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	if ((obj = rpt_report_get_object_from_name_in_list (priv->page_header->objects, name)) != NULL)
+	if ((obj = rpt_report_get_object_from_name_in_list (priv->report_header->objects, name)) != NULL)
+		{
+		}
+	else if ((obj = rpt_report_get_object_from_name_in_list (priv->report_footer->objects, name)) != NULL)
+		{
+		}
+	else if ((obj = rpt_report_get_object_from_name_in_list (priv->page_header->objects, name)) != NULL)
 		{
 		}
 	else if ((obj = rpt_report_get_object_from_name_in_list (priv->page_footer->objects, name)) != NULL)
@@ -651,6 +728,14 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 
 	switch (section)
 		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				objects = g_list_first (priv->report_header->objects);
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				objects = g_list_first (priv->report_footer->objects);
+				break;
+
 			case RPTREPORT_SECTION_PAGE_HEADER:
 				objects = g_list_first (priv->page_header->objects);
 				break;
@@ -700,6 +785,14 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 
 	switch (section)
 		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				*cur_y += priv->report_header->height;
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				*cur_y += priv->report_footer->height;
+				break;
+
 			case RPTREPORT_SECTION_PAGE_HEADER:
 				*cur_y += priv->page_header->height;
 				break;
@@ -724,7 +817,7 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 
 	g_object_get (G_OBJECT (rptobj), "source", &source, NULL);
 
-	if (row > -1 && source[0] == '[' && source[strlen (source) - 1] == ']')
+	if (row > -1 && priv->gda_datamodel != NULL && source[0] == '[' && source[strlen (source) - 1] == ']')
 		{
 			gint col;
 			gchar *field;
@@ -735,6 +828,26 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 			if (col > -1)
 				{
 					source = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->gda_datamodel, col, row));
+				}
+			else
+				{
+					/* TO DO */
+					/* ask value */
+				}
+		}
+	else if (source[0] == '[' && source[strlen (source) - 1] == ']')
+		{
+			/* TO DO */
+			/* ask value */
+		}
+	else if (source[0] == '@')
+		{
+			/* TO DO */
+			/* special */
+
+			if (strcmp (source + 1, "Page") == 0)
+				{
+					source = g_strdup_printf ("%d", priv->cur_page);
 				}
 		}
 
