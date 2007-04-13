@@ -1,9 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-rptcommon
+RptCommon
 
 <!-- ##### SECTION Short_Description ##### -->
 Usefull functions and struct.
-
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -112,7 +111,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@position: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_position ##### -->
@@ -130,7 +129,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@size: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_size ##### -->
@@ -148,7 +147,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@font: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_font ##### -->
@@ -166,7 +165,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@border: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_border ##### -->
@@ -184,7 +183,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@align: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_align ##### -->
@@ -202,7 +201,7 @@ Usefull functions and struct.
 </para>
 
 @xnode: 
-@stroke: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_set_stroke ##### -->
@@ -220,7 +219,7 @@ Usefull functions and struct.
 </para>
 
 @str_color: 
-@color: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_common_convert_to_str_color ##### -->

@@ -3,8 +3,10 @@
 	<page width="595" height="842" />
 
 	<report>
-		<body height="200">
+		<body height="300">
 			<text name="text1" x="100" y="50" width="500" height="150" source="the text's content" />
+			<text name="date" x="100" y="150" width="500" height="150" source="@Date" />
+			<text name="time" x="100" y="250" width="500" height="150" source="@Time" />
 		</body>
 	</report>
 </reptool>

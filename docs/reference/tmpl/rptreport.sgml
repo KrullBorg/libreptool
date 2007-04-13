@@ -23,6 +23,25 @@ Manage report definition files and produces the xml report/print's file.
 </para>
 
 
+<!-- ##### ENUM RptReportSection ##### -->
+<para>
+
+</para>
+
+@RPTREPORT_SECTION_REPORT_HEADER: 
+@RPTREPORT_SECTION_REPORT_FOOTER: 
+@RPTREPORT_SECTION_PAGE_HEADER: 
+@RPTREPORT_SECTION_PAGE_FOOTER: 
+@RPTREPORT_SECTION_BODY: 
+
+<!-- ##### FUNCTION rpt_report_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### FUNCTION rpt_report_new_from_xml ##### -->
 <para>
 
@@ -41,6 +60,74 @@ Manage report definition files and produces the xml report/print's file.
 @Returns: 
 
 
+<!-- ##### FUNCTION rpt_report_set_database ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@provider_id: 
+@connection_string: 
+@sql: 
+
+
+<!-- ##### FUNCTION rpt_report_set_page_size ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@size: 
+
+
+<!-- ##### FUNCTION rpt_report_set_section_height ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@section: 
+@height: 
+
+
+<!-- ##### FUNCTION rpt_report_set_report_header_new_page_after ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@new_page_after: 
+
+
+<!-- ##### FUNCTION rpt_report_set_report_footer_new_page_before ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@new_page_before: 
+
+
+<!-- ##### FUNCTION rpt_report_set_page_header_first_last_page ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@first_page: 
+@last_page: 
+
+
+<!-- ##### FUNCTION rpt_report_set_page_footer_first_last_page ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@first_page: 
+@last_page: 
+
+
 <!-- ##### FUNCTION rpt_report_get_xml ##### -->
 <para>
 
@@ -56,6 +143,35 @@ Manage report definition files and produces the xml report/print's file.
 </para>
 
 @rpt_report: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_report_add_object_to_section ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@rpt_object: 
+@section: 
+
+
+<!-- ##### FUNCTION rpt_report_remove_object ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@rpt_object: 
+
+
+<!-- ##### FUNCTION rpt_report_get_object_from_name ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@name: 
 @Returns: 
 
 

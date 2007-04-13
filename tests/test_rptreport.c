@@ -31,6 +31,9 @@ main (int argc, char **argv)
 
 	if (rptr != NULL)
 		{
+			xmlDoc *report = rpt_report_get_xml (rptr);
+			xmlSaveFormatFile ("test_report.rpt", report, 2);
+
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
 			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
 		

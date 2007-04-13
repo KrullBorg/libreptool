@@ -64,7 +64,7 @@ typedef struct _RptSize RptSize;
  * @size: the font's size in pixel.
  * @bold: if the font is bold.
  * @italic: if the font is italic.
- * @underline:
+ * @underline: if the font is underline.
  * @strike: if the font is striked.
  * @color: an #RptColor.
  */
@@ -76,7 +76,7 @@ struct _RptFont
 	gboolean italic;
 	PangoUnderline underline;
 	gboolean strike;
-	RptColor color;
+	RptColor *color;
 };
 typedef struct _RptFont RptFont;
 
@@ -86,10 +86,10 @@ struct _RptBorder
 	gdouble right_width;
 	gdouble bottom_width;
 	gdouble left_width;
-	RptColor top_color;
-	RptColor right_color;
-	RptColor bottom_color;
-	RptColor left_color;
+	RptColor *top_color;
+	RptColor *right_color;
+	RptColor *bottom_color;
+	RptColor *left_color;
 };
 typedef struct _RptBorder RptBorder;
 
@@ -118,38 +118,37 @@ typedef struct _RptAlign RptAlign;
 struct _RptStroke
 {
 	gdouble width;
-	RptColor color;
+	RptColor *color;
 };
 typedef struct _RptStroke RptStroke;
 
 
-void rpt_common_get_position (xmlNode *xnode,
-                              RptPoint *position);
+RptPoint *rpt_common_get_position (xmlNode *xnode);
 void rpt_common_set_position (xmlNode *xnode,
-                              RptPoint position);
-void rpt_common_get_size (xmlNode *xnode,
-                          RptSize *size);
+                              const RptPoint *position);
+
+RptSize *rpt_common_get_size (xmlNode *xnode);
 void rpt_common_set_size (xmlNode *xnode,
-                          RptSize size);
-void rpt_common_get_font (xmlNode *xnode,
-                          RptFont *font);
+                          const RptSize *size);
+
+RptFont *rpt_common_get_font (xmlNode *xnode);
 void rpt_common_set_font (xmlNode *xnode,
-                          RptFont font);
-void rpt_common_get_border (xmlNode *xnode,
-                            RptBorder *border);
+                          const RptFont *font);
+
+RptBorder *rpt_common_get_border (xmlNode *xnode);
 void rpt_common_set_border (xmlNode *xnode,
-                            RptBorder border);
-void rpt_common_get_align (xmlNode *xnode,
-                           RptAlign *align);
+                            const RptBorder *border);
+
+RptAlign *rpt_common_get_align (xmlNode *xnode);
 void rpt_common_set_align (xmlNode *xnode,
-                           RptAlign align);
-void rpt_common_get_stroke (xmlNode *xnode,
-                            RptStroke *stroke);
+                           const RptAlign *align);
+
+RptStroke *rpt_common_get_stroke (xmlNode *xnode);
 void rpt_common_set_stroke (xmlNode *xnode,
-                            RptStroke stroke);
-void rpt_common_parse_color (const gchar *str_color,
-                             RptColor *color);
-gchar *rpt_common_convert_to_str_color (RptColor color);
+                            const RptStroke *stroke);
+
+RptColor *rpt_common_parse_color (const gchar *str_color);
+gchar *rpt_common_convert_to_str_color (const RptColor *color);
 
 
 G_END_DECLS

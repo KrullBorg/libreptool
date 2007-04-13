@@ -1,3 +1,31 @@
+2007-04-08 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.h:
+	* src/rptreport.c: added body's property new-page-after;
+	added report header's property new-page-after;
+	added report footer's property new-page-before;
+	added page header/footer's properties first-page and last-page
+
+2007-04-07 Andrea Zagli <azagli@inwind.it>
+
+	* Some general code adjustments and refactorings
+	* src/rptprint.c:
+	* src/rptobjtext.c: added text's property background-color
+
+2007-04-04 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.h:
+	* src/rptreport.c: added rpt_report_set_database(), rpt_report_set_section_height(),
+	rpt_report_set_page_size()
+	* src/rptreport.c: changed rpt_report_object_is_in_section()'s prototype;
+	added special source's text objects values @Date and @Time
+
+2007-04-02 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.h:
+	* src/rptreport.c: added rpt_report_new(), rpt_report_add_object_to_section(),
+	rpt_report_remove_object() and rpt_report_get_object_from_name()
+
 2007-04-01 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.c: added and managed RPT_REPORT_SECTION_REPORT_HEADER and

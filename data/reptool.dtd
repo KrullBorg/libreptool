@@ -101,7 +101,12 @@
   adapt    (to-box | to-image | none) #IMPLIED
 >
 
-<!ELEMENT reptool (page, database?, report)>
+<!ELEMENT reptool (database?, page, report)>
+
+<!ELEMENT database (provider, connection_string, sql)>
+<!ELEMENT provider (#PCDATA)>
+<!ELEMENT connection-string (#PCDATA)>
+<!ELEMENT sql (#PCDATA)>
 
 <!ELEMENT page EMPTY>
 <!ATTLIST page
@@ -112,11 +117,6 @@
   margin-bottom   CDATA #IMPLIED
   margin-left     CDATA #IMPLIED
 >
-
-<!ELEMENT database (provider, connection_string, sql)>
-<!ELEMENT provider (#PCDATA)>
-<!ELEMENT connection_string (#PCDATA)>
-<!ELEMENT sql (#PCDATA)>
 
 <!ELEMENT report (report-header?, report-footer?, page-header?, page-footer?, group*, body)>
 
@@ -136,12 +136,14 @@
 <!ATTLIST page-header
   height       CDATA #REQUIRED
   first-page   (y | n) #IMPLIED
+  last-page    (y | n) #IMPLIED
 >
 
 <!ELEMENT page-footer (%objects;)>
 <!ATTLIST page-footer
   height       CDATA #REQUIRED
-  first-page   (y | n ) #IMPLIED
+  first-page   (y | n) #IMPLIED
+  last-page    (y | n) #IMPLIED
 >
 
 <!ELEMENT group (groupheader?, groupfooter?)>
@@ -151,13 +153,13 @@
 
 <!ELEMENT group-header (%objects;)>
 <!ATTLIST group-header
-  height   CDATA #REQUIRED
+  height           CDATA #REQUIRED
   new-page-after   (y | n) #IMPLIED
 >
 
 <!ELEMENT group-footer (%objects;)>
 <!ATTLIST group-footer
-  height   CDATA #REQUIRED
+  height           CDATA #REQUIRED
   new-page-after   (y | n) #IMPLIED
 >
 

@@ -60,13 +60,13 @@ static void rpt_print_ellipse_xml (RptPrint *rpt_print,
 static void rpt_print_image_xml (RptPrint *rpt_print,
                                  xmlNode *xnode);
 static void rpt_print_line (RptPrint *rpt_print,
-                            RptPoint from_p,
-                            RptPoint to_p,
-                            RptStroke stroke);
+                            const RptPoint *from_p,
+                            const RptPoint *to_p,
+                            const RptStroke *stroke);
 static void rpt_print_border (RptPrint *rpt_print,
-                              RptPoint position,
-                              RptSize size,
-                              RptBorder border);
+                              const RptPoint *position,
+                              const RptSize *size,
+                              const RptBorder *border);
 
 
 #define RPT_PRINT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_PRINT, RptPrintPrivate))
@@ -211,7 +211,7 @@ RptPrint
 															cairo_surface_destroy (priv->surface);
 														}
 
-													if (cairo_status (priv->cr) ==  CAIRO_STATUS_SUCCESS)
+													if (cairo_status (priv->cr) == CAIRO_STATUS_SUCCESS)
 														{
 															rpt_print_page (rpt_print, cur);
 															if (output_type == RPTP_OUTPUT_PNG)
@@ -225,16 +225,19 @@ RptPrint
 													else
 														{
 															/* TO DO */
+															g_warning ("cairo status not sucess: %d",cairo_status (priv->cr));
 														}												
 												}
 											else
 												{
 													/* TO DO */
+													g_warning ("cairo surface status not sucess");
 												}
 										}
 									else
 										{
 											/* TO DO */
+											g_warning ("page width or height cannot be zero");
 										}
 								}
 							else
@@ -257,6 +260,7 @@ RptPrint
 			else
 				{
 					/* TO DO */
+					g_warning ("Not a valid reptool print report format");
 				}
 		}
 
@@ -324,6 +328,7 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 
 	while (cur != NULL)
 		{
+			cairo_save (priv->cr);
 			if (strcmp (cur->name, "text") == 0)
 				{
 					rpt_print_text_xml (rpt_print, cur);
@@ -344,6 +349,7 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 				{
 					rpt_print_image_xml (rpt_print, cur);
 				}
+			cairo_restore (priv->cr);
 
 			cur = cur->next;
 		}
@@ -354,32 +360,32 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	RptPoint position;
-	RptSize size;
-	RptAlign align;
-	RptBorder border;
-	RptFont font;
-	RptColor color;
+	RptPoint *position;
+	RptSize *size;
+	RptAlign *align;
+	RptBorder *border;
+	RptFont *font;
+	RptColor *color;
 
 	PangoLayout *playout;
 	PangoFontDescription *pfdesc;
 	PangoAttribute *pattr;
 	PangoAttrList *lpattr = NULL;
 
-	gchar *text = (gchar *)xmlNodeGetContent (xnode),
-	      *prop,
-	      *str_font;
+	gchar *text = (gchar *)xmlNodeGetContent (xnode);
+	gchar *prop;
+	gchar *str_font;
 
-	gdouble pad_top,
-	        pad_right,
-	        pad_bottom,
-	        pad_left;
+	gdouble pad_top;
+	gdouble pad_right;
+	gdouble pad_bottom;
+	gdouble pad_left;
 
-	rpt_common_get_position (xnode, &position);
-	rpt_common_get_size (xnode, &size);
-	rpt_common_get_align (xnode, &align);
-	rpt_common_get_border (xnode, &border);
-	rpt_common_get_font (xnode, &font);
+	position = rpt_common_get_position (xnode);
+	size = rpt_common_get_size (xnode);
+	align = rpt_common_get_align (xnode);
+	border = rpt_common_get_border (xnode);
+	font = rpt_common_get_font (xnode);
 
 	/* padding */
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
@@ -405,24 +411,27 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	/* creating pango layout */
 	playout = pango_cairo_create_layout (priv->cr);
-	pango_layout_set_width (playout, size.width * PANGO_SCALE);
+	if (size != NULL)
+		{
+			pango_layout_set_width (playout, size->width * PANGO_SCALE);
+		}
 
-	str_font = g_strdup (font.name);
-	if (font.bold)
+	str_font = g_strdup (font->name);
+	if (font->bold)
 		{
-			str_font = g_strjoin (NULL, str_font, " bold", NULL);
+			str_font = g_strconcat (str_font, " bold", NULL);
 		}
-	if (font.italic)
+	if (font->italic)
 		{
-			str_font = g_strjoin (NULL, str_font, " italic", NULL);
+			str_font = g_strconcat (str_font, " italic", NULL);
 		}
-	if (font.size > 0)
+	if (font->size > 0)
 		{
-			str_font = g_strjoin (NULL, str_font, g_strdup_printf (" %f", font.size), NULL);
+			str_font = g_strconcat (str_font, g_strdup_printf (" %f", font->size), NULL);
 		}
 	else
 		{
-			str_font = g_strjoin (NULL, str_font, " 12", NULL);
+			str_font = g_strconcat (str_font, " 12", NULL);
 		}
 
 	/* creating pango font description */
@@ -431,11 +440,11 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	pango_font_description_free (pfdesc);
 
 	/* setting layout attributes */
-	if (font.underline != PANGO_UNDERLINE_NONE)
+	if (font->underline != PANGO_UNDERLINE_NONE)
 		{
 			PangoAttribute *pattr;
 
-			pattr = pango_attr_underline_new (font.underline);
+			pattr = pango_attr_underline_new (font->underline);
 			pattr->start_index = 0;
 			pattr->end_index = strlen (text) + 1;
 
@@ -445,7 +454,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 				}
 			pango_attr_list_insert (lpattr, pattr);
 		}
-	if (font.strike)
+	if (font->strike)
 		{
 			PangoAttribute *pattr;
 		
@@ -467,16 +476,20 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	/* background */
 	prop = xmlGetProp (xnode, (const xmlChar *)"background-color");
-	if (prop != NULL)
+	if (prop != NULL && position != NULL && size != NULL)
 		{
-			rpt_common_parse_color (prop, &color);
+			color = rpt_common_parse_color (prop);
+
+			cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
+			cairo_set_source_rgba (priv->cr, color->r, color->g, color->b, color->a);
+			cairo_fill_preserve (priv->cr);
 		}
 
 	/* drawing border */
 	rpt_print_border (rpt_print, position, size, border);
 
 	/* setting alignment */
-	switch (align.h_align)
+	switch (align->h_align)
 		{
 			case RPT_HALIGN_LEFT:
 				break;
@@ -494,7 +507,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 				break;
 		}
 
-	switch (align.v_align)
+	switch (align->v_align)
 		{
 	 		case RPT_VALIGN_TOP:
 	 			break;
@@ -507,35 +520,54 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 
 	/* setting clipping region */
-	cairo_rectangle (priv->cr, position.x, position.y, size.width, size.height);
-	cairo_clip (priv->cr);
+	if (position != NULL && size != NULL)
+		{
+			cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
+			cairo_clip (priv->cr);
+		}
 
 	/* drawing text */
-	cairo_set_source_rgba (priv->cr, font.color.r, font.color.g, font.color.b, font.color.a);
-	cairo_move_to (priv->cr, position.x, position.y);
+	if (font != NULL)
+		{
+			if (font->color != NULL)
+				{
+					cairo_set_source_rgba (priv->cr, font->color->r, font->color->g, font->color->b, font->color->a);
+				}
+			else
+				{
+					cairo_set_source_rgba (priv->cr, 0.0, 0.0, 0.0, 1.0);
+				}
+		}
+	if (position != NULL)
+		{
+			cairo_move_to (priv->cr, position->x, position->y);
+		}
 	pango_layout_set_text (playout, text, -1);
 	pango_cairo_show_layout (priv->cr, playout);
 
-	cairo_reset_clip (priv->cr);
+	if (position != NULL && size != NULL)
+		{
+			cairo_reset_clip (priv->cr);
+		}
 }
 
 static void
 rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
-	RptPoint position,
-	         from_p,
-	         to_p;
-	RptSize size;
-	RptStroke stroke;
+	RptPoint *position;
+	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	RptSize *size;
+	RptStroke *stroke;
 
-	rpt_common_get_position (xnode, &position);
-	rpt_common_get_size (xnode, &size);
-	rpt_common_get_stroke (xnode, &stroke);
+	position = rpt_common_get_position (xnode);
+	size = rpt_common_get_size (xnode);
+	stroke = rpt_common_get_stroke (xnode);
 
-	from_p.x = position.x;
-	from_p.y = position.y;
-	to_p.x = position.x + size.width;
-	to_p.y = position.y + size.height;
+	from_p->x = position->x;
+	from_p->y = position->y;
+	to_p->x = position->x + size->width;
+	to_p->y = position->y + size->height;
 
 	rpt_print_line (rpt_print, from_p, to_p, stroke);
 }
@@ -543,90 +575,106 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 static void
 rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
-	RptPoint position,
-	         from_p,
-	         to_p;
-	RptSize size;
-	RptStroke stroke;
-	RptColor fill_color;
+	RptPoint *position;
+	RptSize *size;
+	RptStroke *stroke;
+	RptColor *fill_color;
+	gchar *prop;
 
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	rpt_common_get_position (xnode, &position);
-	rpt_common_get_size (xnode, &size);
-	rpt_common_get_stroke (xnode, &stroke);
+	position = rpt_common_get_position (xnode);
+	size = rpt_common_get_size (xnode);
+	stroke = rpt_common_get_stroke (xnode);
 
-	gchar *prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
+	if (position == NULL || size == NULL)
+		{
+			return;
+		}
+	if (stroke == NULL)
+		{
+			stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+			stroke->width = 1.0;
+			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+			stroke->color->a = 1.0;
+		}
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
 	if (prop != NULL)
 		{
-			fill_color.r = 0.0;
-			fill_color.g = 0.0;
-			fill_color.b = 0.0;
-			fill_color.a = 1.0;
-			rpt_common_parse_color (prop, &fill_color);
+			fill_color = rpt_common_parse_color (prop);
 		}
 
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
-	cairo_rectangle (priv->cr, position.x, position.y, size.width, size.height);
+	cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
 
-	if (prop != NULL)
+	if (prop != NULL && fill_color != NULL)
 		{
-			cairo_set_source_rgba (priv->cr, fill_color.r, fill_color.g, fill_color.b, fill_color.a);
+			cairo_set_source_rgba (priv->cr, fill_color->r, fill_color->g, fill_color->b, fill_color->a);
 			cairo_fill_preserve (priv->cr);
 		}
 
-	cairo_set_source_rgba (priv->cr, stroke.color.r, stroke.color.g, stroke.color.b, stroke.color.a);
+	cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
 	cairo_stroke (priv->cr);
 }
 
 static void
 rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
-	RptPoint position;
-	RptSize size;
-	RptStroke stroke;
-	RptColor fill_color;
+	RptPoint *position;
+	RptSize *size;
+	RptStroke *stroke;
+	RptColor *fill_color;
+	gchar *prop;
 
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	rpt_common_get_position (xnode, &position);
-	rpt_common_get_size (xnode, &size);
-	rpt_common_get_stroke (xnode, &stroke);
+	position = rpt_common_get_position (xnode);
+	size = rpt_common_get_size (xnode);
+	stroke = rpt_common_get_stroke (xnode);
 
-	gchar *prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
+	if (position == NULL || size == NULL)
+		{
+			return;
+		}
+	if (stroke == NULL)
+		{
+			stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+			stroke->width = 1.0;
+			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+			stroke->color->a = 1.0;
+		}
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
 	if (prop != NULL)
 		{
-			fill_color.r = 0.0;
-			fill_color.g = 0.0;
-			fill_color.b = 0.0;
-			fill_color.a = 1.0;
-			rpt_common_parse_color (prop, &fill_color);
+			fill_color = rpt_common_parse_color (prop);
 		}
 
 	cairo_new_path (priv->cr);
 
 	cairo_save (priv->cr);
-	cairo_translate (priv->cr, position.x, position.y);
-	cairo_scale (priv->cr, size.width, size.height);
+	cairo_translate (priv->cr, position->x, position->y);
+	cairo_scale (priv->cr, size->width, size->height);
 	cairo_arc (priv->cr, 0., 0., 1., 0., 2. * M_PI);
 	cairo_restore (priv->cr);
 	
-	if (prop != NULL)
+	if (prop != NULL && fill_color != NULL)
 		{
-			cairo_set_source_rgba (priv->cr, fill_color.r, fill_color.g, fill_color.b, fill_color.a);
+			cairo_set_source_rgba (priv->cr, fill_color->r, fill_color->g, fill_color->b, fill_color->a);
 			cairo_fill_preserve (priv->cr);
 		}
 
-	cairo_set_source_rgba (priv->cr, stroke.color.r, stroke.color.g, stroke.color.b, stroke.color.a);
+	cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
 	cairo_stroke (priv->cr);
 }
 
 static void
 rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
-	RptPoint position;
-	RptSize size;
-	RptBorder border;
+	RptPoint *position;
+	RptSize *size;
+	RptBorder *border;
 
 	cairo_surface_t *image;
 	cairo_pattern_t *pattern;
@@ -653,9 +701,9 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 			g_strstrip (adapt);
 		}
 
-	rpt_common_get_position (xnode, &position);
-	rpt_common_get_size (xnode, &size);
-	rpt_common_get_border (xnode, &border);
+	position = rpt_common_get_position (xnode);
+	size = rpt_common_get_size (xnode);
+	border = rpt_common_get_border (xnode);
 
 	image = cairo_image_surface_create_from_png (filename);
 
@@ -669,20 +717,20 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 			if (strcmp (adapt, "to-box") == 0)
 				{
-					cairo_matrix_scale (&matrix, w / size.width, h / size.height);
+					cairo_matrix_scale (&matrix, w / size->width, h / size->height);
 				}
 			else if (strcmp (adapt, "to-image") == 0)
 				{
-					size.width = (gdouble)w;
-					size.height = (gdouble)h;
+					size->width = (gdouble)w;
+					size->height = (gdouble)h;
 				}
 		}
-	cairo_matrix_translate (&matrix, -position.x, -position.y);
+	cairo_matrix_translate (&matrix, -position->x, -position->y);
 	
 	cairo_pattern_set_matrix (pattern, &matrix);
 	cairo_set_source (priv->cr, pattern);
 
-	cairo_rectangle (priv->cr, position.x, position.y, size.width, size.height);
+	cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
 	cairo_fill (priv->cr);
 
 	rpt_print_border (rpt_print, position, size, border);
@@ -692,64 +740,75 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 }
 
 static void
-rpt_print_line (RptPrint *rpt_print, RptPoint from_p, RptPoint to_p, RptStroke stroke)
+rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_p, const RptStroke *stroke)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	/*cairo_set_line_width (priv->cr, stroke.width);*/
-	cairo_set_source_rgba (priv->cr, stroke.color.r, stroke.color.g, stroke.color.b, stroke.color.a);
-	cairo_move_to (priv->cr, from_p.x, from_p.y);
-	cairo_line_to (priv->cr, to_p.x, to_p.y);
+	if (from_p == NULL || to_p == NULL) return;
+
+	if (stroke != NULL)
+		{
+			/*cairo_set_line_width (priv->cr, stroke.width);*/
+			cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
+		}
+	else
+		{
+			cairo_set_source_rgba (priv->cr, 0.0, 0.0, 0.0, 1.0);
+		}
+	cairo_move_to (priv->cr, from_p->x, from_p->y);
+	cairo_line_to (priv->cr, to_p->x, to_p->y);
 	cairo_stroke (priv->cr);
 }
 
 static void
-rpt_print_border (RptPrint *rpt_print, RptPoint position, RptSize size, RptBorder border)
+rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, const RptBorder *border)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	RptPoint from_p,
-	         to_p;
-	RptStroke stroke;
+	if (position == NULL || size == NULL || border == NULL) return;
 
-	if (border.top_width != 0.0)
+	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	RptStroke *stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+
+	if (border->top_width != 0.0)
 		{
-			from_p.x = position.x;
-			from_p.y = position.y;
-			to_p.x = position.x + size.width;
-			to_p.y = position.y;
-			stroke.width = border.top_width;
-			stroke.color = border.top_color;
+			from_p->x = position->x;
+			from_p->y = position->y;
+			to_p->x = position->x + size->width;
+			to_p->y = position->y;
+			stroke->width = border->top_width;
+			stroke->color = border->top_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
-	if (border.right_width != 0.0)
+	if (border->right_width != 0.0)
 		{
-			from_p.x = position.x + size.width;
-			from_p.y = position.y;
-			to_p.x = position.x + size.width;
-			to_p.y = position.y + size.height;
-			stroke.width = border.right_width;
-			stroke.color = border.right_color;
+			from_p->x = position->x + size->width;
+			from_p->y = position->y;
+			to_p->x = position->x + size->width;
+			to_p->y = position->y + size->height;
+			stroke->width = border->right_width;
+			stroke->color = border->right_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
-	if (border.bottom_width != 0.0)
+	if (border->bottom_width != 0.0)
 		{
-			from_p.x = position.x;
-			from_p.y = position.y + size.height;
-			to_p.x = position.x + size.width;
-			to_p.y = position.y + size.height;
-			stroke.width = border.bottom_width;
-			stroke.color = border.bottom_color;
+			from_p->x = position->x;
+			from_p->y = position->y + size->height;
+			to_p->x = position->x + size->width;
+			to_p->y = position->y + size->height;
+			stroke->width = border->bottom_width;
+			stroke->color = border->bottom_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
-	if (border.left_width != 0.0)
+	if (border->left_width != 0.0)
 		{
-			from_p.x = position.x;
-			from_p.y = position.y;
-			to_p.x = position.x;
-			to_p.y = position.y + size.height;
-			stroke.width = border.left_width;
-			stroke.color = border.left_color;
+			from_p->x = position->x;
+			from_p->y = position->y;
+			to_p->x = position->x;
+			to_p->y = position->y + size->height;
+			stroke->width = border->left_width;
+			stroke->color = border->left_color;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
 }

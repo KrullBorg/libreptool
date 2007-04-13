@@ -24,92 +24,97 @@
 
 /**
  * rpt_common_get_position:
- * @xnode:
- * @position:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_position (xmlNode *xnode, RptPoint *position)
+RptPoint
+*rpt_common_get_position (xmlNode *xnode)
 {
-	gchar *prop;
+	RptPoint *position = NULL;
+	gchar *x;
+	gchar *y;
 
-	position->x = 0.0;
-	position->y = 0.0;
+	x = xmlGetProp (xnode, (const xmlChar *)"x");
+	y = xmlGetProp (xnode, (const xmlChar *)"y");
 
-	prop = xmlGetProp (xnode, (const xmlChar *)"x");
-	if (prop != NULL)
+	if (x != NULL || y != NULL)
 		{
-			position->x = strtod (prop, NULL);
+			position = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+			position->x = (x == NULL ? 0.0 : strtod (x, NULL));
+			position->y = (y == NULL ? 0.0 : strtod (y, NULL));
 		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"y");
-	if (prop != NULL)
-		{
-			position->y = strtod (prop, NULL);
-		}
+
+	return position;
 }
 
 /**
  * rpt_common_set_position:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @position:
  *
  */
 void
-rpt_common_set_position (xmlNode *xnode, RptPoint position)
+rpt_common_set_position (xmlNode *xnode, const RptPoint *position)
 {
-	xmlSetProp (xnode, "x", g_strdup_printf ("%f", position.x));
-	xmlSetProp (xnode, "y", g_strdup_printf ("%f", position.y));
+	if (position != NULL)
+		{
+			xmlSetProp (xnode, "x", g_strdup_printf ("%f", position->x));
+			xmlSetProp (xnode, "y", g_strdup_printf ("%f", position->y));
+		}
 }
 
 /**
  * rpt_common_get_size:
- * @xnode:
- * @size:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_size (xmlNode *xnode, RptSize *size)
+RptSize
+*rpt_common_get_size (xmlNode *xnode)
 {
-	gchar *prop;
+	RptSize *size = NULL;
+	gchar *width;
+	gchar *height;
 
-	size->width = 0.0;
-	size->height = 0.0;
+	width = xmlGetProp (xnode, (const xmlChar *)"width");
+	height = xmlGetProp (xnode, (const xmlChar *)"height");
+	if (width != NULL && height != NULL)
+		{
+			size = (RptSize *)g_malloc0 (sizeof (RptSize));
+			size->width = strtod (width, NULL);
+			size->height = strtod (height, NULL);
+		}
 
-	prop = xmlGetProp (xnode, (const xmlChar *)"width");
-	if (prop != NULL)
-		{
-			size->width = strtod (prop, NULL);
-		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"height");
-	if (prop != NULL)
-		{
-			size->height = strtod (prop, NULL);
-		}
+	return size;
 }
 
 /**
  * rpt_common_set_size:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @size:
  *
  */
 void
-rpt_common_set_size (xmlNode *xnode, RptSize size)
+rpt_common_set_size (xmlNode *xnode, const RptSize *size)
 {
-	xmlSetProp (xnode, "width", g_strdup_printf ("%f", size.width));
-	xmlSetProp (xnode, "height", g_strdup_printf ("%f", size.height));
+	if (size != NULL)
+		{
+			xmlSetProp (xnode, "width", g_strdup_printf ("%f", size->width));
+			xmlSetProp (xnode, "height", g_strdup_printf ("%f", size->height));
+		}
 }
 
 /**
  * rpt_common_get_font:
- * @xnode:
- * @font:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_font (xmlNode *xnode, RptFont *font)
+RptFont
+*rpt_common_get_font (xmlNode *xnode)
 {
+	RptFont *font = NULL;
 	gchar *prop;
+
+	font = (RptFont *)g_malloc0 (sizeof (RptFont));
 
 	font->name = g_strdup ("sans");
 	font->size = 12.0;
@@ -117,10 +122,6 @@ rpt_common_get_font (xmlNode *xnode, RptFont *font)
 	font->italic = FALSE;
 	font->underline = PANGO_UNDERLINE_NONE;
 	font->strike = FALSE;
-	font->color.r = 0.0;
-	font->color.g = 0.0;
-	font->color.b = 0.0;
-	font->color.a = 1.0;
 
 	prop = xmlGetProp (xnode, "font-name");
 	if (prop != NULL)
@@ -178,88 +179,102 @@ rpt_common_get_font (xmlNode *xnode, RptFont *font)
 	prop = xmlGetProp (xnode, "font-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &font->color);
+			font->color = rpt_common_parse_color (prop);
 		}
+
+	return font;
 }
 
 /**
  * rpt_common_set_font:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @font:
  *
  */
 void
-rpt_common_set_font (xmlNode *xnode, RptFont font)
+rpt_common_set_font (xmlNode *xnode, const RptFont *font)
 {
-	xmlSetProp (xnode, "font-name", font.name);
-	xmlSetProp (xnode, "font-size", g_strdup_printf ("%f", font.size));
-	if (font.bold)
+	if (font != NULL)
 		{
-			xmlSetProp (xnode, "font-bold", "y");
-		}
-	if (font.italic)
-		{
-			xmlSetProp (xnode, "font-italic", "y");
-		}
-	if (font.underline != PANGO_UNDERLINE_NONE)
-		{
-			switch (font.underline)
+			xmlSetProp (xnode, "font-name", font->name);
+			xmlSetProp (xnode, "font-size", g_strdup_printf ("%f", font->size));
+			if (font->bold)
 				{
-					case PANGO_UNDERLINE_SINGLE:
-						xmlSetProp (xnode, "font-underline", "single");
-						break;
-
-					case PANGO_UNDERLINE_DOUBLE:
-						xmlSetProp (xnode, "font-underline", "double");
-						break;
-
-					case PANGO_UNDERLINE_LOW:
-						xmlSetProp (xnode, "font-underline", "low");
-						break;
-
-					case PANGO_UNDERLINE_ERROR:
-						xmlSetProp (xnode, "font-underline", "error");
-						break;
+					xmlSetProp (xnode, "font-bold", "y");
+				}
+			if (font->italic)
+				{
+					xmlSetProp (xnode, "font-italic", "y");
+				}
+			if (font->underline != PANGO_UNDERLINE_NONE)
+				{
+					switch (font->underline)
+						{
+							case PANGO_UNDERLINE_SINGLE:
+								xmlSetProp (xnode, "font-underline", "single");
+								break;
+		
+							case PANGO_UNDERLINE_DOUBLE:
+								xmlSetProp (xnode, "font-underline", "double");
+								break;
+		
+							case PANGO_UNDERLINE_LOW:
+								xmlSetProp (xnode, "font-underline", "low");
+								break;
+		
+							case PANGO_UNDERLINE_ERROR:
+								xmlSetProp (xnode, "font-underline", "error");
+								break;
+						}
+				}
+			if (font->strike)
+				{
+					xmlSetProp (xnode, "font-strike", "y");
+				}
+			if (font->color != NULL)
+				{
+					xmlSetProp (xnode, "font-color", rpt_common_convert_to_str_color (font->color));
 				}
 		}
-	if (font.strike)
-		{
-			xmlSetProp (xnode, "font-strike", "y");
-		}
-	xmlSetProp (xnode, "font-color", rpt_common_convert_to_str_color (font.color));
 }
 
 /**
  * rpt_common_get_border:
- * @xnode:
- * @border:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_border (xmlNode *xnode, RptBorder *border)
+RptBorder
+*rpt_common_get_border (xmlNode *xnode)
 {
+	RptBorder *border = NULL;
 	gchar *prop;
+
+	border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
 
 	border->top_width = 0.0;
 	border->right_width = 0.0;
 	border->bottom_width = 0.0;
 	border->left_width = 0.0;
-	border->top_color.r = 0.0;
-	border->top_color.g = 0.0;
-	border->top_color.b = 0.0;
-	border->top_color.a = 1.0;
-	border->right_color.r = 0.0;
-	border->right_color.g = 0.0;
-	border->right_color.b = 0.0;
-	border->right_color.a = 1.0;
-	border->bottom_color.r = 0.0;
-	border->bottom_color.g = 0.0;
-	border->bottom_color.b = 0.0;
-	border->bottom_color.a = 1.0;
-	border->left_color.r = 0.0;
-	border->left_color.g = 0.0;
-	border->left_color.b = 0.0;
-	border->left_color.a = 1.0;
+	border->top_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->top_color->r = 0.0;
+	border->top_color->g = 0.0;
+	border->top_color->b = 0.0;
+	border->top_color->a = 1.0;
+	border->right_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->right_color->r = 0.0;
+	border->right_color->g = 0.0;
+	border->right_color->b = 0.0;
+	border->right_color->a = 1.0;
+	border->bottom_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->bottom_color->r = 0.0;
+	border->bottom_color->g = 0.0;
+	border->bottom_color->b = 0.0;
+	border->bottom_color->a = 1.0;
+	border->left_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->left_color->r = 0.0;
+	border->left_color->g = 0.0;
+	border->left_color->b = 0.0;
+	border->left_color->a = 1.0;
 
 	prop = xmlGetProp (xnode, "border-top-width");
 	if (prop != NULL)
@@ -288,69 +303,76 @@ rpt_common_get_border (xmlNode *xnode, RptBorder *border)
 	prop = xmlGetProp (xnode, "border-top-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &border->top_color);
+			border->top_color = rpt_common_parse_color (prop);
 		}
 
 	prop = xmlGetProp (xnode, "border-right-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &border->right_color);
+			border->right_color = rpt_common_parse_color (prop);
 		}
 
 	prop = xmlGetProp (xnode, "border-bottom-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &border->bottom_color);
+			border->bottom_color = rpt_common_parse_color (prop);
 		}
 
 	prop = xmlGetProp (xnode, "border-left-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &border->left_color);
+			border->left_color = rpt_common_parse_color (prop);
 		}
+
+	return border;
 }
 
 /**
  * rpt_common_set_border:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @border:
  *
  */
 void
-rpt_common_set_border (xmlNode *xnode, RptBorder border)
+rpt_common_set_border (xmlNode *xnode, const RptBorder *border)
 {
-	if (border.top_width > 0.0)
+	if (border != NULL)
 		{
-			xmlSetProp (xnode, "border-top-width", g_strdup_printf ("%f", border.top_width));
-			xmlSetProp (xnode, "border-top-color", rpt_common_convert_to_str_color (border.top_color));
-		}
-	if (border.right_width > 0.0)
-		{
-			xmlSetProp (xnode, "border-right-width", g_strdup_printf ("%f", border.right_width));
-			xmlSetProp (xnode, "border-right-color", rpt_common_convert_to_str_color (border.right_color));
-		}
-	if (border.bottom_width > 0.0)
-		{
-			xmlSetProp (xnode, "border-bottom-width", g_strdup_printf ("%f", border.bottom_width));
-			xmlSetProp (xnode, "border-bottom-color", rpt_common_convert_to_str_color (border.bottom_color));
-		}
-	if (border.left_width > 0.0)
-		{
-			xmlSetProp (xnode, "border-left-width", g_strdup_printf ("%f", border.left_width));
-			xmlSetProp (xnode, "border-left-color", rpt_common_convert_to_str_color (border.left_color));
+			if (border->top_width > 0.0 && border->top_color != NULL)
+				{
+					xmlSetProp (xnode, "border-top-width", g_strdup_printf ("%f", border->top_width));
+					xmlSetProp (xnode, "border-top-color", rpt_common_convert_to_str_color (border->top_color));
+				}
+			if (border->right_width > 0.0 && border->right_color != NULL)
+				{
+					xmlSetProp (xnode, "border-right-width", g_strdup_printf ("%f", border->right_width));
+					xmlSetProp (xnode, "border-right-color", rpt_common_convert_to_str_color (border->right_color));
+				}
+			if (border->bottom_width > 0.0 && border->bottom_color != NULL)
+				{
+					xmlSetProp (xnode, "border-bottom-width", g_strdup_printf ("%f", border->bottom_width));
+					xmlSetProp (xnode, "border-bottom-color", rpt_common_convert_to_str_color (border->bottom_color));
+				}
+			if (border->left_width > 0.0 && border->left_color != NULL)
+				{
+					xmlSetProp (xnode, "border-left-width", g_strdup_printf ("%f", border->left_width));
+					xmlSetProp (xnode, "border-left-color", rpt_common_convert_to_str_color (border->left_color));
+				}
 		}
 }
 
 /**
  * rpt_common_get_align:
- * @xnode:
- * @align:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_align (xmlNode *xnode, RptAlign *align)
+RptAlign
+*rpt_common_get_align (xmlNode *xnode)
 {
+	RptAlign *align = NULL;
 	gchar *prop;
+
+	align = (RptAlign *)g_malloc0 (sizeof (RptAlign));
 
 	align->h_align = RPT_HALIGN_LEFT;
 	align->v_align = RPT_VALIGN_TOP;
@@ -384,65 +406,73 @@ rpt_common_get_align (xmlNode *xnode, RptAlign *align)
 					align->v_align = RPT_VALIGN_BOTTOM;
 				}
 		}
+
+	return align;
 }
 
 /**
  * rpt_common_set_align:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @align:
  *
  */
 void
-rpt_common_set_align (xmlNode *xnode, RptAlign align)
+rpt_common_set_align (xmlNode *xnode, const RptAlign *align)
 {
-	if (align.h_align != RPT_HALIGN_LEFT)
+	if (align != NULL)
 		{
-			switch (align.h_align)
+			if (align->h_align != RPT_HALIGN_LEFT)
 				{
-					case RPT_HALIGN_CENTER:
-						xmlSetProp (xnode, "horizontal-align", "center");
-						break;
+					switch (align->h_align)
+						{
+							case RPT_HALIGN_CENTER:
+								xmlSetProp (xnode, "horizontal-align", "center");
+								break;
 
-					case RPT_HALIGN_RIGHT:
-						xmlSetProp (xnode, "horizontal-align", "right");
-						break;
+							case RPT_HALIGN_RIGHT:
+								xmlSetProp (xnode, "horizontal-align", "right");
+								break;
 
-					case RPT_HALIGN_JUSTIFIED:
-						xmlSetProp (xnode, "horizontal-align", "justified");
-						break;
+							case RPT_HALIGN_JUSTIFIED:
+								xmlSetProp (xnode, "horizontal-align", "justified");
+								break;
+						}
 				}
-		}
-	if (align.v_align != RPT_VALIGN_TOP)
-		{
-			switch (align.v_align)
+			if (align->v_align != RPT_VALIGN_TOP)
 				{
-					case RPT_VALIGN_CENTER:
-						xmlSetProp (xnode, "vertical-align", "center");
-						break;
+					switch (align->v_align)
+						{
+							case RPT_VALIGN_CENTER:
+								xmlSetProp (xnode, "vertical-align", "center");
+								break;
 
-					case RPT_VALIGN_BOTTOM:
-						xmlSetProp (xnode, "vertical-align", "bottom");
-						break;
+							case RPT_VALIGN_BOTTOM:
+								xmlSetProp (xnode, "vertical-align", "bottom");
+								break;
+						}
 				}
 		}
 }
 
 /**
  * rpt_common_get_stroke:
- * @xnode:
- * @stroke:
+ * @xnode: an #xmlNode.
  *
  */
-void
-rpt_common_get_stroke (xmlNode *xnode, RptStroke *stroke)
+RptStroke
+*rpt_common_get_stroke (xmlNode *xnode)
 {
+	RptStroke *stroke = NULL;
 	gchar *prop;
 
+	stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
 	stroke->width = 1.0;
-	stroke->color.r = 0.0;
-	stroke->color.g = 0.0;
-	stroke->color.b = 0.0;
-	stroke->color.a = 1.0;
+
+	stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	stroke->color->r = 0.0;
+	stroke->color->g = 0.0;
+	stroke->color->b = 0.0;
+	stroke->color->a = 1.0;
 
 	prop = xmlGetProp (xnode, "stroke-width");
 	if (prop != NULL)
@@ -453,36 +483,44 @@ rpt_common_get_stroke (xmlNode *xnode, RptStroke *stroke)
 	prop = xmlGetProp (xnode, "stroke-color");
 	if (prop != NULL)
 		{
-			rpt_common_parse_color (prop, &stroke->color);
+			stroke->color = rpt_common_parse_color (prop);
 		}
+
+	return stroke;
 }
 
 /**
  * rpt_common_set_stroke:
- * @xnode:
+ * @xnode: an #xmlNode.
  * @stroke:
  *
  */
 void
-rpt_common_set_stroke (xmlNode *xnode, RptStroke stroke)
+rpt_common_set_stroke (xmlNode *xnode, const RptStroke *stroke)
 {
-	if (stroke.width != 0.0)
+	if (stroke != NULL)
 		{
-			xmlSetProp (xnode, "stroke-width", g_strdup_printf ("%f", stroke.width));
+			if (stroke->width != 0.0)
+				{
+					xmlSetProp (xnode, "stroke-width", g_strdup_printf ("%f", stroke->width));
+				}
+			xmlSetProp (xnode, "stroke-color", rpt_common_convert_to_str_color (stroke->color));
 		}
-	xmlSetProp (xnode, "stroke-color", rpt_common_convert_to_str_color (stroke.color));
 }
 
 /**
  * rpt_common_parse_color:
  * @str_color:
- * @color:
  *
  */
-void
-rpt_common_parse_color (const gchar *str_color, RptColor *color)
+RptColor
+*rpt_common_parse_color (const gchar *str_color)
 {
+	RptColor *color = NULL;
 	gchar *c = g_strstrip (g_strdup (str_color));
+
+	color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	color->a = 1.0;
 
 	if (c[0] == '#')
 		{
@@ -525,17 +563,29 @@ rpt_common_parse_color (const gchar *str_color, RptColor *color)
 						}
 				}
 		}
+
+	return color;
 }
 
-gchar *
-rpt_common_convert_to_str_color (RptColor color)
+/**
+ * rpt_common_convert_to_str_color:
+ * @color:
+ *
+ */
+gchar
+*rpt_common_convert_to_str_color (const RptColor *color)
 {
-	gchar *ret = "#";
+	gchar *ret = NULL;
 
-	ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color.r * 255), NULL);
-	ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color.g * 255), NULL);
-	ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color.b * 255), NULL);
-	ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color.a * 255), NULL);
+	if (color != NULL)
+		{
+			ret = g_strdup  ("#");
+
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->r * 255), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->g * 255), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->b * 255), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->a * 255), NULL);
+		}
 
 	return ret;
 }

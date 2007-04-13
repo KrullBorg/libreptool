@@ -24,6 +24,8 @@
 #include <glib-object.h>
 #include <libxml/tree.h>
 
+#include "rptobject.h"
+
 G_BEGIN_DECLS
 
 
@@ -51,12 +53,56 @@ struct _RptReportClass
 GType rpt_report_get_type (void) G_GNUC_CONST;
 
 
+typedef enum
+{
+	RPTREPORT_SECTION_REPORT_HEADER,
+	RPTREPORT_SECTION_REPORT_FOOTER,
+	RPTREPORT_SECTION_PAGE_HEADER,
+	RPTREPORT_SECTION_PAGE_FOOTER,
+	RPTREPORT_SECTION_BODY
+} RptReportSection;
+
+RptReport *rpt_report_new (void);
+
 RptReport *rpt_report_new_from_xml (xmlDoc *xdoc);
 RptReport *rpt_report_new_from_file (const gchar *filename);
+
+void rpt_report_set_database (RptReport *rpt_report,
+                              const gchar *provider_id,
+                              const gchar *connection_string,
+                              const gchar *sql);
+
+void rpt_report_set_page_size (RptReport *rpt_report,
+                               RptSize size);
+
+void rpt_report_set_section_height (RptReport *rpt_report,
+                                    RptReportSection section,
+                                    gdouble height);
+
+void rpt_report_set_report_header_new_page_after (RptReport *rpt_report,
+                                                  gboolean new_page_after);
+void rpt_report_set_report_footer_new_page_before (RptReport *rpt_report,
+                                                   gboolean new_page_before);
+
+void rpt_report_set_page_header_first_last_page (RptReport *rpt_report,
+                                                 gboolean first_page,
+                                                 gboolean last_page);
+void rpt_report_set_page_footer_first_last_page (RptReport *rpt_report,
+                                                 gboolean first_page,
+                                                 gboolean last_page);
 
 xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
 
 xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
+
+void rpt_report_add_object_to_section (RptReport *rpt_report,
+                                       RptObject *rpt_object,
+                                       RptReportSection section);
+void rpt_report_remove_object (RptReport *rpt_report,
+                               RptObject *rpt_object);
+
+RptObject *rpt_report_get_object_from_name (RptReport *rpt_report,
+                                            const gchar *name);
 
 
 G_END_DECLS

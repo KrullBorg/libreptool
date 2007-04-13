@@ -73,10 +73,22 @@ rpt_object_get_type
 <FILE>rptreport</FILE>
 <TITLE>RptReport</TITLE>
 RptReport
+RptReportSection
+rpt_report_new
 rpt_report_new_from_xml
 rpt_report_new_from_file
+rpt_report_set_database
+rpt_report_set_page_size
+rpt_report_set_section_height
+rpt_report_set_report_header_new_page_after
+rpt_report_set_report_footer_new_page_before
+rpt_report_set_page_header_first_last_page
+rpt_report_set_page_footer_first_last_page
 rpt_report_get_xml
 rpt_report_get_xml_rptprint
+rpt_report_add_object_to_section
+rpt_report_remove_object
+rpt_report_get_object_from_name
 <SUBSECTION Standard>
 TYPE_RPT_REPORT
 RPT_REPORT

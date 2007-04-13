@@ -26,7 +26,8 @@ enum
 	PROP_BORDER,
 	PROP_FONT,
 	PROP_ALIGN,
-	PROP_SOURCE
+	PROP_SOURCE,
+	PROP_BACKGROUND_COLOR
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -52,6 +53,7 @@ struct _RptObjTextPrivate
 		RptFont *font;
 		RptAlign *align;
 		gchar *source;
+		RptColor *background_color;
 	};
 
 GType
@@ -121,6 +123,11 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                      "The source.",
 	                                                      "",
 	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
+	                                 g_param_spec_pointer ("background-color",
+	                                                       "Background Color",
+	                                                       "The text's background color.",
+	                                                       G_PARAM_READWRITE));
 }
 
 static void
@@ -132,9 +139,10 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
-	priv->border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
-	priv->font = (RptFont *)g_malloc0 (sizeof (RptFont));
-	priv->align = (RptAlign *)g_malloc0 (sizeof (RptAlign));
+	priv->border = NULL;
+	priv->font = NULL;
+	priv->align = NULL;
+	priv->background_color = NULL;
 }
 
 /**
@@ -176,32 +184,49 @@ RptObject
 	gchar *name;
 	RptObject *rpt_obj_text = NULL;
 
-	name = g_strdup ((gchar *)xmlGetProp (xnode, "name"));
+	name = (gchar *)xmlGetProp (xnode, "name");
 	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
 		{
-			RptPoint position;
+			RptPoint *position;
 			RptObjTextPrivate *priv;
 
-			rpt_common_get_position (xnode, &position);
+			position = rpt_common_get_position (xnode);
 
-			rpt_obj_text = rpt_obj_text_new ((const gchar *)name, position);
+			rpt_obj_text = rpt_obj_text_new ((const gchar *)name, *position);
 
 			if (rpt_obj_text != NULL)
 				{
+					gchar *prop;
+
 					priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
-					rpt_common_get_size (xnode, priv->size);
-					rpt_common_get_border (xnode, priv->border);
-					rpt_common_get_font (xnode, priv->font);
-					rpt_common_get_align (xnode, priv->align);
+					priv->size = rpt_common_get_size (xnode);
+					priv->border = rpt_common_get_border (xnode);
+					priv->font = rpt_common_get_font (xnode);
+					priv->align = rpt_common_get_align (xnode);
 
 					g_object_set (rpt_obj_text, "source", xmlGetProp (xnode, "source"), NULL);
+
+					prop = (gchar *)xmlGetProp (xnode, "background-color");
+					if (prop != NULL)
+						{
+							RptColor *color;
+
+							color = rpt_common_parse_color (g_strstrip (prop));
+							g_object_set (rpt_obj_text, "background-color", color, NULL);
+						}
 				}
 		}
 
 	return rpt_obj_text;
 }
 
+/**
+ * rpt_obj_text_get_xml:
+ * @rpt_objtext:
+ * @xnode:
+ *
+ */
 void
 rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 {
@@ -209,10 +234,17 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 
 	xmlNodeSetName (xnode, "text");
 
-	rpt_common_set_size (xnode, (RptSize)*priv->size);
-	rpt_common_set_border (xnode, (RptBorder)*priv->border);
-	rpt_common_set_font (xnode, (RptFont)*priv->font);
-	rpt_common_set_align (xnode, (RptAlign)*priv->align);
+	rpt_common_set_size (xnode, priv->size);
+	rpt_common_set_border (xnode, priv->border);
+	rpt_common_set_font (xnode, priv->font);
+	rpt_common_set_align (xnode, priv->align);
+
+	xmlSetProp (xnode, "source", priv->source);
+
+	if (priv->background_color != NULL)
+		{
+			xmlSetProp (xnode, "background-color", rpt_common_convert_to_str_color (priv->background_color));
+		}
 }
 
 static void
@@ -242,6 +274,10 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 
 			case PROP_SOURCE:
 				priv->source = g_strstrip (g_strdup (g_value_get_string (value)));
+				break;
+
+			case PROP_BACKGROUND_COLOR:
+				priv->background_color = g_memdup (g_value_get_pointer (value), sizeof (RptColor));
 				break;
 
 			default:
@@ -277,6 +313,10 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 			case PROP_SOURCE:
 				g_value_set_string (value, priv->source);
+				break;
+
+			case PROP_BACKGROUND_COLOR:
+				g_value_set_pointer (value, g_memdup (priv->background_color, sizeof (RptColor)));
 				break;
 
 			default:

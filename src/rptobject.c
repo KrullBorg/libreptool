@@ -29,13 +29,13 @@ static void rpt_object_class_init (RptObjectClass *klass);
 static void rpt_object_init (RptObject *rpt_object);
 
 static void rpt_object_set_property (GObject *object,
-                                    guint property_id,
-                                    const GValue *value,
-                                    GParamSpec *pspec);
+                                     guint property_id,
+                                     const GValue *value,
+                                     GParamSpec *pspec);
 static void rpt_object_get_property (GObject *object,
-                                    guint property_id,
-                                    GValue *value,
-                                    GParamSpec *pspec);
+                                     guint property_id,
+                                     GValue *value,
+                                     GParamSpec *pspec);
 
 
 #define RPT_OBJECT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_OBJECT, RptObjectPrivate))
@@ -103,6 +103,9 @@ rpt_object_class_init (RptObjectClass *klass)
 static void
 rpt_object_init (RptObject *rpt_object)
 {
+	RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
+
+	priv->position = NULL;
 }
 
 /**
@@ -139,8 +142,10 @@ rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode)
 			RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
 		
 			xmlSetProp (xnode, "name", priv->name);
-			xmlSetProp (xnode, "x", g_strdup_printf ("%f", priv->position->x));
-			xmlSetProp (xnode, "y", g_strdup_printf ("%f", priv->position->y));
+			if (priv->position != NULL)
+				{
+					rpt_common_set_position (xnode, priv->position);
+				}
 
 			RPT_OBJECT_GET_CLASS (rpt_object)->get_xml (rpt_object, xnode);
 		}

@@ -171,19 +171,19 @@ RptObject
 	name = g_strdup ((gchar *)xmlGetProp (xnode, "name"));
 	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
 		{
-			RptPoint position;
+			RptPoint *position;
 			RptObjImagePrivate *priv;
 
-			rpt_common_get_position (xnode, &position);
+			position = rpt_common_get_position (xnode);
 
-			rpt_obj_image = rpt_obj_image_new ((const gchar *)name, position);
+			rpt_obj_image = rpt_obj_image_new ((const gchar *)name, *position);
 
 			if (rpt_obj_image != NULL)
 				{
 					priv = RPT_OBJ_IMAGE_GET_PRIVATE (rpt_obj_image);
 
-					rpt_common_get_size (xnode, priv->size);
-					rpt_common_get_border (xnode, priv->border);
+					priv->size = rpt_common_get_size (xnode);
+					priv->border = rpt_common_get_border (xnode);
 
 					priv->source = (gchar *)xmlGetProp (xnode, "source");
 
@@ -214,10 +214,8 @@ rpt_obj_image_get_xml (RptObject *rpt_objimage, xmlNode *xnode)
 
 	xmlNodeSetName (xnode, "image");
 
-	xmlSetProp (xnode, "width", g_strdup_printf ("%f", priv->size->width));
-	xmlSetProp (xnode, "height", g_strdup_printf ("%f", priv->size->height));
-
-	rpt_common_set_border (xnode, *priv->border);
+	rpt_common_set_size (xnode, priv->size);
+	rpt_common_set_border (xnode, priv->border);
 
 	xmlSetProp (xnode, "source", priv->source);
 

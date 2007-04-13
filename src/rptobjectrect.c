@@ -144,32 +144,32 @@ RptObject
 	name = g_strdup ((gchar *)xmlGetProp (xnode, "name"));
 	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
 		{
-			RptPoint position;
+			RptPoint *position;
 			RptObjRectPrivate *priv;
 
-			rpt_common_get_position (xnode, &position);
+			position = rpt_common_get_position (xnode);
 
-			rpt_obj_rect = rpt_obj_rect_new ((const gchar *)name, position);
+			rpt_obj_rect = rpt_obj_rect_new ((const gchar *)name, *position);
 
 			if (rpt_obj_rect != NULL)
 				{
 					const gchar *prop;
-					RptSize size;
-					RptStroke stroke;
+					RptSize *size;
+					RptStroke *stroke;
 
 					priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
 
-					rpt_common_get_size (xnode, &size);
-					rpt_common_get_stroke (xnode, &stroke);
+					size = rpt_common_get_size (xnode);
+					stroke = rpt_common_get_stroke (xnode);
 					g_object_set (G_OBJECT (rpt_obj_rect),
-					              "size", &size,
-					              "stroke", &stroke,
+					              "size", size,
+					              "stroke", stroke,
 					              NULL);
 
 					prop = (const gchar *)xmlGetProp (xnode, "fill-color");
 					if (prop != NULL)
 						{
-							rpt_common_parse_color (prop, priv->fill_color);
+							priv->fill_color = rpt_common_parse_color (prop);
 						}
 				}
 		}
@@ -194,7 +194,7 @@ rpt_obj_rect_get_xml (RptObject *rpt_object, xmlNode *xnode)
 
 	if (priv->fill_color != NULL)
 		{
-			xmlSetProp (xnode, "fill-color", rpt_common_convert_to_str_color (*priv->fill_color));
+			xmlSetProp (xnode, "fill-color", rpt_common_convert_to_str_color (priv->fill_color));
 		}
 }
 
