@@ -1,3 +1,27 @@
+2007-04-15 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.c:
+	* src/rptprint.c: managed page's margins
+	* src/reptool_marshal.list:
+	* src/rtpmarshal.*: added
+	* src/rptreport.c: added signal "field-request"
+
+2007-04-14 Andrea Zagli <azagli@inwind.it>
+
+	* src/*.c: API documentation
+	* src/rptobjtext.c: added text's attributes padding*
+	* src/rptprint.c: managed text's attributes padding*
+	* src/rptreport.c: static text in text's source attribute must be enclosed
+	into "" (xml entity &quot;);
+	added page's attributes margin*
+
+2007-04-13 Andrea Zagli <azagli@inwind.it>
+
+	* src/Makefile.am: added -no-undefined
+	* tests/test_rptreport_creation.c: added report creation test
+	* src/rptreport.c: changed rpt_report_add_object_to_section()'s prototype
+	* src/rptcommon.c: bugfix on rpt_common_convert_to_str_color
+
 2007-04-08 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.h:

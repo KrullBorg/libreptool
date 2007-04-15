@@ -116,7 +116,9 @@ rpt_obj_line_init (RptObjLine *rpt_obj_line)
 /**
  * rpt_obj_line_new:
  * @name: the #RptObjLine's name.
- * @position:
+ * @position: an #RptPoint.
+ *
+ * Creates a new #RptObjLine object and sets its position to @position.
  *
  * Returns: the newly created #RptObject object.
  */

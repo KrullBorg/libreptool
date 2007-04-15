@@ -27,7 +27,11 @@ enum
 	PROP_FONT,
 	PROP_ALIGN,
 	PROP_SOURCE,
-	PROP_BACKGROUND_COLOR
+	PROP_BACKGROUND_COLOR,
+	PROP_PADDING_TOP,
+	PROP_PADDING_RIGHT,
+	PROP_PADDING_BOTTOM,
+	PROP_PADDING_LEFT
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -54,6 +58,10 @@ struct _RptObjTextPrivate
 		RptAlign *align;
 		gchar *source;
 		RptColor *background_color;
+		gdouble padding_top;
+		gdouble padding_right;
+		gdouble padding_bottom;
+		gdouble padding_left;
 	};
 
 GType
@@ -128,6 +136,30 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                       "Background Color",
 	                                                       "The text's background color.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PADDING_TOP,
+	                                 g_param_spec_double ("padding-top",
+	                                                      "Padding Top",
+	                                                      "Padding Top",
+	                                                      0, G_MAXDOUBLE, 0,
+	                                                      G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PADDING_RIGHT,
+	                                 g_param_spec_double ("padding-right",
+	                                                      "Padding Right",
+	                                                      "Padding Right",
+	                                                      0, G_MAXDOUBLE, 0,
+	                                                      G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PADDING_BOTTOM,
+	                                 g_param_spec_double ("padding-bottom",
+	                                                      "Padding Bottom",
+	                                                      "Padding Bottom",
+	                                                      0, G_MAXDOUBLE, 0,
+	                                                      G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PADDING_LEFT,
+	                                 g_param_spec_double ("padding-left",
+	                                                      "Padding Left",
+	                                                      "Padding Left",
+	                                                      0, G_MAXDOUBLE, 0,
+	                                                      G_PARAM_READWRITE));
 }
 
 static void
@@ -148,7 +180,9 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 /**
  * rpt_obj_text_new:
  * @name: the #RptObjText's name.
- * @position:
+ * @position: an #RptPoint.
+ *
+ * Creates a new #RptObjText object and sets its position to @position.
  *
  * Returns: the newly created #RptObject object.
  */
@@ -174,7 +208,7 @@ RptObject
 
 /**
  * rpt_obj_text_new_from_xml:
- * @xnode:
+ * @xnode: an #xmlNode.
  *
  * Returns: the newly created #RptObject object.
  */
@@ -215,6 +249,27 @@ RptObject
 							color = rpt_common_parse_color (g_strstrip (prop));
 							g_object_set (rpt_obj_text, "background-color", color, NULL);
 						}
+
+					prop = (gchar *)xmlGetProp (xnode, "padding-top");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "padding-top", strtod (prop, NULL), NULL);
+						}
+					prop = (gchar *)xmlGetProp (xnode, "padding-right");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "padding-right", strtod (prop, NULL), NULL);
+						}
+					prop = (gchar *)xmlGetProp (xnode, "padding-bottom");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "padding-bottom", strtod (prop, NULL), NULL);
+						}
+					prop = (gchar *)xmlGetProp (xnode, "padding-left");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "padding-left", strtod (prop, NULL), NULL);
+						}
 				}
 		}
 
@@ -223,8 +278,8 @@ RptObject
 
 /**
  * rpt_obj_text_get_xml:
- * @rpt_objtext:
- * @xnode:
+ * @rpt_objtext: an #RptObjText object.
+ * @xnode: an #xmlNode.
  *
  */
 void
@@ -244,6 +299,23 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 	if (priv->background_color != NULL)
 		{
 			xmlSetProp (xnode, "background-color", rpt_common_convert_to_str_color (priv->background_color));
+		}
+
+	if (priv->padding_top != 0.0)
+		{
+			xmlSetProp (xnode, "padding-top", g_strdup_printf ("%f", priv->padding_top));
+		}
+	if (priv->padding_right != 0.0)
+		{
+			xmlSetProp (xnode, "padding-right", g_strdup_printf ("%f", priv->padding_right));
+		}
+	if (priv->padding_bottom != 0.0)
+		{
+			xmlSetProp (xnode, "padding-bottom", g_strdup_printf ("%f", priv->padding_bottom));
+		}
+	if (priv->padding_left != 0.0)
+		{
+			xmlSetProp (xnode, "padding-left", g_strdup_printf ("%f", priv->padding_left));
 		}
 }
 
@@ -278,6 +350,22 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 
 			case PROP_BACKGROUND_COLOR:
 				priv->background_color = g_memdup (g_value_get_pointer (value), sizeof (RptColor));
+				break;
+
+			case PROP_PADDING_TOP:
+				priv->padding_top = g_value_get_double (value);
+				break;
+
+			case PROP_PADDING_RIGHT:
+				priv->padding_right = g_value_get_double (value);
+				break;
+
+			case PROP_PADDING_BOTTOM:
+				priv->padding_bottom = g_value_get_double (value);
+				break;
+
+			case PROP_PADDING_LEFT:
+				priv->padding_left = g_value_get_double (value);
 				break;
 
 			default:
@@ -317,6 +405,22 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 			case PROP_BACKGROUND_COLOR:
 				g_value_set_pointer (value, g_memdup (priv->background_color, sizeof (RptColor)));
+				break;
+
+			case PROP_PADDING_TOP:
+				g_value_set_double (value, priv->padding_top);
+				break;
+
+			case PROP_PADDING_RIGHT:
+				g_value_set_double (value, priv->padding_right);
+				break;
+
+			case PROP_PADDING_BOTTOM:
+				g_value_set_double (value, priv->padding_bottom);
+				break;
+
+			case PROP_PADDING_LEFT:
+				g_value_set_double (value, priv->padding_left);
 				break;
 
 			default:

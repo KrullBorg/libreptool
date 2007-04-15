@@ -74,8 +74,13 @@ static void rpt_print_border (RptPrint *rpt_print,
 typedef struct _RptPrintPrivate RptPrintPrivate;
 struct _RptPrintPrivate
 	{
-		gint width;
-		gint height;
+		gdouble width;
+		gdouble height;
+		gdouble margin_top;
+		gdouble margin_right;
+		gdouble margin_bottom;
+		gdouble margin_left;
+
 		cairo_surface_t *surface;
 		cairo_t *cr;
 	};
@@ -130,11 +135,14 @@ rpt_print_init (RptPrint *rpt_print)
  * @output_type:
  * @out_filename:
  *
+ * Creates a new #RptPrint object.
+ *
  * Returns: the newly created #RptPrint object.
  */
 RptPrint
 *rpt_print_new_from_xml (xmlDoc *xdoc, RptPrintOutputType output_type, const gchar *out_filename)
 {
+	gchar *prop;
 	RptPrint *rpt_print = NULL;
 
 	xmlNode *cur = xmlDocGetRootElement (xdoc);
@@ -168,8 +176,36 @@ RptPrint
 								{
 									npage++;
 
-									priv->width = atol (xmlGetProp (cur, (const xmlChar *)"width"));
-									priv->height = atol (xmlGetProp (cur, (const xmlChar *)"height"));
+									prop = xmlGetProp (cur, (const xmlChar *)"width");
+									if (prop != NULL)
+										{
+											priv->width = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (cur, (const xmlChar *)"height");
+									if (prop != NULL)
+										{
+											priv->height = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (cur, (const xmlChar *)"margin-top");
+									if (prop != NULL)
+										{
+											priv->margin_top = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (cur, (const xmlChar *)"margin-right");
+									if (prop != NULL)
+										{
+											priv->margin_right = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (cur, (const xmlChar *)"margin-bottom");
+									if (prop != NULL)
+										{
+											priv->margin_bottom = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (cur, (const xmlChar *)"margin-left");
+									if (prop != NULL)
+										{
+											priv->margin_left = strtod (prop, NULL);
+										}
 
 									if (priv->width != 0 && priv->height != 0)
 										{
@@ -178,19 +214,19 @@ RptPrint
 													switch (output_type)
 														{
 															case RPTP_OUTPUT_PNG:
-																priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, priv->width, priv->height);
+																priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)priv->width, (int)priv->height);
 																break;
 														
 															case RPTP_OUTPUT_PDF:
-																priv->surface = cairo_pdf_surface_create (out_filename, (double)priv->width, (double)priv->height);
+																priv->surface = cairo_pdf_surface_create (out_filename, priv->width, priv->height);
 																break;
 		
 															case RPTP_OUTPUT_PS:
-																priv->surface = cairo_ps_surface_create (out_filename, (double)priv->width, (double)priv->height);
+																priv->surface = cairo_ps_surface_create (out_filename, priv->width, priv->height);
 																break;
 		
 															case RPTP_OUTPUT_SVG:
-																priv->surface = cairo_svg_surface_create (out_filename, (double)priv->width, (double)priv->height);
+																priv->surface = cairo_svg_surface_create (out_filename, priv->width, priv->height);
 																break;
 														}
 												}
@@ -273,6 +309,8 @@ RptPrint
  * @output_type:
  * @out_filename:
  *
+ * Creates a new #RptPrint object.
+ *
  * Returns: the newly created #RptPrint object.
  */
 RptPrint
@@ -326,6 +364,14 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 
 	xmlNode *cur = xnode->children;
 
+	/* clipping region for page's margins */
+	cairo_rectangle (priv->cr,
+	                 priv->margin_left,
+					 priv->margin_top,
+					 priv->width - priv->margin_left - priv->margin_right,
+					 priv->height - priv->margin_top - priv->margin_bottom);
+	cairo_clip (priv->cr);
+
 	while (cur != NULL)
 		{
 			cairo_save (priv->cr);
@@ -376,10 +422,10 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	gchar *prop;
 	gchar *str_font;
 
-	gdouble pad_top;
-	gdouble pad_right;
-	gdouble pad_bottom;
-	gdouble pad_left;
+	gdouble padding_top = 0.0;
+	gdouble padding_right = 0.0;
+	gdouble padding_bottom = 0.0;
+	gdouble padding_left = 0.0;
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
@@ -391,29 +437,29 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
 	if (prop != NULL)
 		{
-			pad_top = atof (prop);
+			padding_top = atof (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-right");
 	if (prop != NULL)
 		{
-			pad_right= atof (prop);
+			padding_right= atof (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-bottom");
 	if (prop != NULL)
 		{
-			pad_bottom= atof (prop);
+			padding_bottom= atof (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-left");
 	if (prop != NULL)
 		{
-			pad_left= atof (prop);
+			padding_left= atof (prop);
 		}
 
 	/* creating pango layout */
 	playout = pango_cairo_create_layout (priv->cr);
 	if (size != NULL)
 		{
-			pango_layout_set_width (playout, size->width * PANGO_SCALE);
+			pango_layout_set_width (playout, (size->width - padding_left - padding_right) * PANGO_SCALE);
 		}
 
 	str_font = g_strdup (font->name);
@@ -522,7 +568,11 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	/* setting clipping region */
 	if (position != NULL && size != NULL)
 		{
-			cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
+			cairo_rectangle (priv->cr,
+			                 position->x + padding_left,
+			                 position->y + padding_top,
+			                 size->width - padding_left - padding_right,
+			                 size->height - padding_top - padding_bottom);
 			cairo_clip (priv->cr);
 		}
 
@@ -540,7 +590,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	if (position != NULL)
 		{
-			cairo_move_to (priv->cr, position->x, position->y);
+			cairo_move_to (priv->cr, position->x + padding_left, position->y + padding_top);
 		}
 	pango_layout_set_text (playout, text, -1);
 	pango_cairo_show_layout (priv->cr, playout);

@@ -276,49 +276,49 @@ RptBorder
 	border->left_color->b = 0.0;
 	border->left_color->a = 1.0;
 
-	prop = xmlGetProp (xnode, "border-top-width");
+	prop = (gchar *)xmlGetProp (xnode, "border-top-width");
 	if (prop != NULL)
 		{
 			border->top_width = strtod (prop, NULL);
 		}
 
-	prop = xmlGetProp (xnode, "border-right-width");
+	prop = (gchar *)xmlGetProp (xnode, "border-right-width");
 	if (prop != NULL)
 		{
 			border->right_width = strtod (prop, NULL);
 		}
 
-	prop = xmlGetProp (xnode, "border-bottom-width");
+	prop = (gchar *)xmlGetProp (xnode, "border-bottom-width");
 	if (prop != NULL)
 		{
 			border->bottom_width = strtod (prop, NULL);
 		}
 
-	prop = xmlGetProp (xnode, "border-left-width");
+	prop = (gchar *)xmlGetProp (xnode, "border-left-width");
 	if (prop != NULL)
 		{
 			border->left_width = strtod (prop, NULL);
 		}
 
-	prop = xmlGetProp (xnode, "border-top-color");
+	prop = (gchar *)xmlGetProp (xnode, "border-top-color");
 	if (prop != NULL)
 		{
 			border->top_color = rpt_common_parse_color (prop);
 		}
 
-	prop = xmlGetProp (xnode, "border-right-color");
+	prop = (gchar *)xmlGetProp (xnode, "border-right-color");
 	if (prop != NULL)
 		{
 			border->right_color = rpt_common_parse_color (prop);
 		}
 
-	prop = xmlGetProp (xnode, "border-bottom-color");
+	prop = (gchar *)xmlGetProp (xnode, "border-bottom-color");
 	if (prop != NULL)
 		{
 			border->bottom_color = rpt_common_parse_color (prop);
 		}
 
-	prop = xmlGetProp (xnode, "border-left-color");
+	prop = (gchar *)xmlGetProp (xnode, "border-left-color");
 	if (prop != NULL)
 		{
 			border->left_color = rpt_common_parse_color (prop);
@@ -510,8 +510,9 @@ rpt_common_set_stroke (xmlNode *xnode, const RptStroke *stroke)
 
 /**
  * rpt_common_parse_color:
- * @str_color:
+ * @str_color: a color string.
  *
+ * Returns: an #RptColor.
  */
 RptColor
 *rpt_common_parse_color (const gchar *str_color)
@@ -557,7 +558,7 @@ RptColor
 						{
 							color->b = strtol (g_strndup (&c[5], 2), NULL, 16) / 255.0;
 						}
-					if (strlen (c) == 9)
+					if (strlen (c) == 9 && isxdigit (c[7]) && isxdigit (c[8]))
 						{
 							color->a = strtol (g_strndup (&c[7], 2), NULL, 16) / 255.0;
 						}
@@ -569,8 +570,9 @@ RptColor
 
 /**
  * rpt_common_convert_to_str_color:
- * @color:
+ * @color: an #RptColor value.
  *
+ * Returns: the color string correspondent to @color.
  */
 gchar
 *rpt_common_convert_to_str_color (const RptColor *color)
@@ -581,10 +583,10 @@ gchar
 		{
 			ret = g_strdup  ("#");
 
-			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->r * 255), NULL);
-			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->g * 255), NULL);
-			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->b * 255), NULL);
-			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)color->a * 255), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->r * 255)), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->g * 255)), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->b * 255)), NULL);
+			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->a * 255)), NULL);
 		}
 
 	return ret;

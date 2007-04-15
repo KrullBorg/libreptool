@@ -19,6 +19,31 @@
 #include <rptreport.h>
 #include <rptprint.h>
 
+gchar
+*field_request (RptReport *rpt_report,
+                gchar *field_name,
+                GdaDataModel *data_model,
+                gint row,
+                gpointer user_data)
+{
+	gchar *ret = NULL;
+
+	if (strcmp (field_name, "field_to_request") == 0)
+		{
+			ret = g_strdup ("the field requested");
+		}
+	else if (strcmp (field_name, "nonexistent") == 0 &&
+	         data_model != NULL &&
+	         row > -1)
+		{
+			ret = g_strdup_printf ("%s - %s",
+			                       gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (data_model, 0, row)),
+			                       gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (data_model, 1, row)));
+		}
+
+	return ret;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -28,6 +53,8 @@ main (int argc, char **argv)
 	g_type_init ();
 
 	rptr = rpt_report_new_from_file (argv[1]);
+
+	g_signal_connect (rptr, "field-request", G_CALLBACK (field_request), NULL);
 
 	if (rptr != NULL)
 		{

@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 
 /**
  * RptColor:
- * @r: the red channel
- * @g: the green channel
- * @b: the blue channel
- * @a: the alpha channel
+ * @r: the red channel.
+ * @g: the green channel.
+ * @b: the blue channel.
+ * @a: the alpha channel.
  */
 struct _RptColor
 {

@@ -105,7 +105,9 @@ rpt_obj_rect_init (RptObjRect *rpt_obj_rect)
 /**
  * rpt_obj_rect_new:
  * @name: the #RptObjRect's name.
- * @position:
+ * @position: an #RptPoint.
+ *
+ * Creates a new #RptObjRect object and sets its position to @position.
  *
  * Returns: the newly created #RptObject object.
  */

@@ -23,6 +23,17 @@ Manage report definition files and produces the xml report/print's file.
 </para>
 
 
+<!-- ##### SIGNAL RptReport::field-request ##### -->
+<para>
+
+</para>
+
+@rptreport: the object which received the signal.
+@arg1: 
+@arg2: 
+@arg3: 
+@Returns: 
+
 <!-- ##### ENUM RptReportSection ##### -->
 <para>
 
@@ -154,6 +165,7 @@ Manage report definition files and produces the xml report/print's file.
 @rpt_report: 
 @rpt_object: 
 @section: 
+@Returns: 
 
 
 <!-- ##### FUNCTION rpt_report_remove_object ##### -->

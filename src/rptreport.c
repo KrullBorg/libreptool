@@ -20,7 +20,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <libgda/libgda.h>
 #include <libxml/xpath.h>
 
 #ifdef HAVE_CONFIG_H
@@ -34,6 +33,8 @@
 #include "rptobjectrect.h"
 #include "rptobjectellipse.h"
 #include "rptobjectimage.h"
+
+#include "rptmarshal.h"
 
 typedef struct
 {
@@ -49,6 +50,10 @@ typedef struct
 typedef struct
 {
 	RptSize *size;
+	gdouble margin_top;
+	gdouble margin_right;
+	gdouble margin_bottom;
+	gdouble margin_left;
 } Page;
 
 typedef struct
@@ -181,6 +186,29 @@ rpt_report_class_init (RptReportClass *klass)
 
 	object_class->set_property = rpt_report_set_property;
 	object_class->get_property = rpt_report_get_property;
+
+	/**
+	 * RptReport::field-request:
+	 * @rpt_report: an #RptReport object that recieved the signal.
+	 * @field_name: the name of the field requested.
+	 * @data_model: a #GdaDataModel; or NULL if there's no database source.
+	 * @row: the current @data_model's row; -1 if @data_model is NULL.
+	 *
+	 * The signal is emitted each time there's into text's source
+	 * attribute a field that doesn't exists.
+	 */
+	klass->field_request_signal_id = g_signal_new ("field-request",
+	                                               G_TYPE_FROM_CLASS (object_class),
+	                                               G_SIGNAL_RUN_LAST,
+	                                               0,
+	                                               NULL,
+	                                               NULL,
+	                                               _rpt_marshal_STRING__STRING_POINTER_INT,
+	                                               G_TYPE_STRING,
+	                                               3,
+	                                               G_TYPE_STRING,
+	                                               G_TYPE_POINTER,
+	                                               G_TYPE_INT);
 }
 
 static void
@@ -208,6 +236,8 @@ rpt_report_init (RptReport *rpt_report)
 
 /**
  * rpt_report_new:
+ *
+ * Creates a new #RptReport object.
  *
  * Returns: the newly created #RptReport object.
  */
@@ -319,10 +349,37 @@ RptReport
 							xnodeset = xpresult->nodesetval;
 							if (xnodeset->nodeNr == 1)
 								{
+									gchar *prop;
+									gdouble margin_top = 0.0;
+									gdouble margin_right = 0.0;
+									gdouble margin_bottom = 0.0;
+									gdouble margin_left = 0.0;
 									RptSize *size;
 
 									size = rpt_common_get_size (xnodeset->nodeTab[0]);
 									rpt_report_set_page_size (rpt_report, *size);
+
+									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-top");
+									if (prop != NULL)
+										{
+											margin_top = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-right");
+									if (prop != NULL)
+										{
+											margin_right = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-bottom");
+									if (prop != NULL)
+										{
+											margin_bottom = strtod (prop, NULL);
+										}
+									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-left");
+									if (prop != NULL)
+										{
+											margin_left = strtod (prop, NULL);
+										}
+									rpt_report_set_page_margins (rpt_report, margin_top, margin_right, margin_bottom, margin_left);
 								}
 							else
 								{
@@ -456,6 +513,7 @@ rpt_report_set_database (RptReport *rpt_report,
  * @rpt_report: an #RptReport object.
  * @size: an #RptSize.
  *
+ * Sets page's size.
  */
 void
 rpt_report_set_page_size (RptReport *rpt_report,
@@ -468,11 +526,37 @@ rpt_report_set_page_size (RptReport *rpt_report,
 }
 
 /**
+ * rpt_report_set_page_margins:
+ * @rpt_report:
+ * @top:
+ * @right:
+ * @bottom:
+ * @left:
+ *
+ * Sets page's margins.
+ */
+void
+rpt_report_set_page_margins (RptReport *rpt_report,
+                             gdouble top,
+                             gdouble right,
+                             gdouble bottom,
+                             gdouble left)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->page->margin_top = top;
+	priv->page->margin_right = right;
+	priv->page->margin_bottom = bottom;
+	priv->page->margin_left = left;
+}
+
+/**
  * rpt_report_set_section_height: 
  * @rpt_report: an #RptReport object.
  * @section:
  * @height: the section's height.
  *
+ * Sets @section's height.
  */
 void
 rpt_report_set_section_height (RptReport *rpt_report,
@@ -619,6 +703,22 @@ xmlDoc
 
 	xnode = xmlNewNode (NULL, "page");
 	rpt_common_set_size (xnode, priv->page->size);
+	if (priv->page->margin_top != 0.0)
+		{
+			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin_top));
+		}
+	if (priv->page->margin_right != 0.0)
+		{
+			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin_right));
+		}
+	if (priv->page->margin_bottom != 0.0)
+		{
+			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin_bottom));
+		}
+	if (priv->page->margin_left != 0.0)
+		{
+			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin_left));
+		}
 	xmlAddChild (xroot, xnode);
 
 	xreport = xmlNewNode (NULL, "report");
@@ -700,6 +800,8 @@ xmlDoc
 					priv->db->gda_datamodel = gda_connection_execute_single_command (priv->db->gda_conn, command, NULL);
 					if (priv->db->gda_datamodel == NULL)
 						{
+							/* TO DO */
+							g_warning ("Unable to create the datamodel.");
 							return NULL;
 						}
 
@@ -712,20 +814,20 @@ xmlDoc
 				{
 					if (row == 0 ||
 					    priv->body->new_page_after ||
-					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - (priv->page_footer != NULL ? priv->page_footer->height: 0.0))) ||
-					    cur_y > priv->page->size->height)
+					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height: 0.0))) ||
+					    cur_y > (priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom))
 						{
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
 									if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
 									    priv->cur_page > 1)
 										{
-											cur_y = priv->page->size->height - priv->page_footer->height;
+											cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
 											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 										}
 								}
 
-							cur_y = 0.0;
+							cur_y = priv->page->margin_top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 							if (priv->cur_page == 1 && priv->report_header != NULL)
@@ -752,16 +854,16 @@ xmlDoc
 
 			if (priv->cur_page > 0 && priv->report_footer != NULL)
 				{
-					if ((cur_y + priv->report_footer->height > priv->page->size->height - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
+					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
 					    priv->report_footer->new_page_before)
 						{
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
-									cur_y = priv->page->size->height - priv->page_footer->height;
+									cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 								}
 
-							cur_y = 0.0;
+							cur_y = priv->page->margin_top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 							if (priv->page_header != NULL)
@@ -773,13 +875,14 @@ xmlDoc
 				}
 			if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
 				{
-					cur_y = priv->page->size->height - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 				}
 		}
 	else
 		{
 			priv->cur_page++;
+			cur_y = priv->page->margin_top;
 			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 			if (priv->report_header != NULL)
@@ -799,7 +902,7 @@ xmlDoc
 				}
 			if (priv->page_footer != NULL)
 				{
-					cur_y = priv->page->size->height - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, -1);
 				}
 		}
@@ -813,34 +916,52 @@ xmlDoc
  * @rpt_object: an #RptObject object.
  * @section:
  *
+ * Returns: FALSE if already exists an #RptObject with the same @rpt_object's
+ * name; TRUE otherwise.
  */
-void
+gboolean
 rpt_report_add_object_to_section (RptReport *rpt_report, RptObject *rpt_object, RptReportSection section)
 {
+	gboolean ret = FALSE;
+	gchar *objname;
+
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	switch (section)
+	g_object_get (rpt_object, "name", &objname, NULL);
+	if (rpt_report_get_object_from_name (rpt_report, objname) == NULL)
 		{
-			case RPTREPORT_SECTION_REPORT_HEADER:
-				priv->report_header->objects = g_list_append (priv->report_header->objects, rpt_object);;
-				break;
+			switch (section)
+				{
+					case RPTREPORT_SECTION_REPORT_HEADER:
+						priv->report_header->objects = g_list_append (priv->report_header->objects, rpt_object);;
+						break;
 
-			case RPTREPORT_SECTION_REPORT_FOOTER:
-				priv->report_footer->objects = g_list_append (priv->report_footer->objects, rpt_object);;
-				break;
+					case RPTREPORT_SECTION_REPORT_FOOTER:
+						priv->report_footer->objects = g_list_append (priv->report_footer->objects, rpt_object);;
+						break;
 
-			case RPTREPORT_SECTION_PAGE_HEADER:
-				priv->page_header->objects = g_list_append (priv->page_header->objects, rpt_object);;
-				break;
+					case RPTREPORT_SECTION_PAGE_HEADER:
+						priv->page_header->objects = g_list_append (priv->page_header->objects, rpt_object);;
+						break;
 
-			case RPTREPORT_SECTION_PAGE_FOOTER:
-				priv->page_footer->objects = g_list_append (priv->page_footer->objects, rpt_object);;
-				break;
+					case RPTREPORT_SECTION_PAGE_FOOTER:
+						priv->page_footer->objects = g_list_append (priv->page_footer->objects, rpt_object);;
+						break;
 
-			case RPTREPORT_SECTION_BODY:
-				priv->body->objects = g_list_append (priv->body->objects, rpt_object);;
-				break;
+					case RPTREPORT_SECTION_BODY:
+						priv->body->objects = g_list_append (priv->body->objects, rpt_object);;
+						break;
+				}
+
+			ret = TRUE;
 		}
+	else
+		{
+			/* TO DO */
+			g_warning ("An object with name \"%s\" already exists.", objname);
+		}
+
+	return ret;
 }
 
 /**
@@ -1208,17 +1329,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 
 			if (rptobj != NULL)
 				{
-					g_object_get (rptobj, "name", &objname, NULL);
-
-					if (rpt_report_get_object_from_name (rpt_report, objname) == NULL)
-						{
-							rpt_report_add_object_to_section (rpt_report, rptobj, section);
-						}
-					else
-						{
-							/* TO DO */
-							g_warning ("An object with name \"%s\" already exists.", objname);
-						}
+					rpt_report_add_object_to_section (rpt_report, rptobj, section);
 				}
 
 			cur = cur->next;
@@ -1320,6 +1431,22 @@ static xmlNode
 	xmlAddChild (xroot, xnode);
 
 	rpt_common_set_size (xnode, priv->page->size);
+	if (priv->page->margin_top != 0.0)
+		{
+			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin_top));
+		}
+	if (priv->page->margin_right != 0.0)
+		{
+			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin_right));
+		}
+	if (priv->page->margin_bottom != 0.0)
+		{
+			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin_bottom));
+		}
+	if (priv->page->margin_left != 0.0)
+		{
+			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin_left));
+		}
 
 	priv->cur_page++;
 
@@ -1373,6 +1500,16 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 					xmlRemoveProp (attr);
 				}
 
+			if (priv->page->margin_left != 0.0)
+				{
+					prop = (gchar *)xmlGetProp (xnode, "x");
+					if (prop == NULL)
+						{
+							prop = g_strdup ("0.0");
+						}
+					xmlSetProp (xnode, "x", g_strdup_printf ("%f", strtod (prop, NULL) + priv->page->margin_left));
+				}
+			
 			prop = (gchar *)xmlGetProp (xnode, "y");
 			if (prop == NULL)
 				{
@@ -1448,14 +1585,40 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 				}
 			else
 				{
-					/* TO DO */
 					/* ask value */
+					gchar *ret;
+					RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
+
+					g_signal_emit (rpt_report, klass->field_request_signal_id,
+					               0, field, priv->db->gda_datamodel, row, &ret);
+					if (ret != NULL)
+						{
+							source = g_strdup (ret);
+						}
+					else
+						{
+							source = g_strdup ("");
+						}
 				}
 		}
 	else if (source[0] == '[' && source[strlen (source) - 1] == ']')
 		{
-			/* TO DO */
 			/* ask value */
+			gchar *ret;
+			gchar *field;
+			RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
+
+			field = g_strstrip (g_strndup (source + 1, strlen (source) - 2));
+			g_signal_emit (rpt_report, klass->field_request_signal_id,
+			               0, field, NULL, row, &ret);
+			if (ret != NULL)
+				{
+					source = g_strdup (ret);
+				}
+			else
+				{
+					source = g_strdup ("");
+				}
 		}
 	else if (source[0] == '@')
 		{
@@ -1482,6 +1645,14 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 					strftime (date, 6, "%H:%M", tm);
 					source = g_strdup_printf ("%s", &date);
 				}
+		}
+	else if (source[0] = '"' && source[strlen (source) - 1] == '"')
+		{
+			source = g_strndup (source + 1, strlen (source) - 2);
+		}
+	else
+		{
+			source = g_strdup ("");
 		}
 
 	xmlNodeSetContent (xnode, source);

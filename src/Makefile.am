@@ -4,6 +4,8 @@ AM_CPPFLAGS = $(REPTOOL_CFLAGS)
 
 lib_LTLIBRARIES = libreptool.la
 
+libreptool_la_LDFLAGS = -no-undefined
+
 libreptool_la_SOURCES = \
                         rptobject.c \
                         rptobjecttext.c \
@@ -13,7 +15,8 @@ libreptool_la_SOURCES = \
                         rptobjectimage.c \
                         rptreport.c \
                         rptprint.c \
-                        rptcommon.c
+                        rptcommon.c \
+                        rptmarshal.c
 
 include_HEADERS = \
                   libreptool.h \
@@ -26,3 +29,6 @@ include_HEADERS = \
                   rptreport.h \
                   rptprint.h \
                   rptcommon.h
+
+noinst_HEADERS = \
+                 rptmarshal.h

@@ -132,7 +132,9 @@ rpt_obj_image_init (RptObjImage *rpt_obj_image)
 /**
  * rpt_obj_image_new:
  * @name: the #RptObjImage's name.
- * @position:
+ * @position: an #RptPoint.
+ *
+ * Creates a new #RptObjImage object and sets its position to @position.
  *
  * Returns: the newly created #RptObject object.
  */

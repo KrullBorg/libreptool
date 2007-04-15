@@ -21,6 +21,13 @@
 #define __LIBREPTOOL_H__
 
 #include <rptreport.h>
+#include <rptcommon.h>
+#include <rptobject.h>
+#include <rptobjectellipse.h>
+#include <rptobjectimage.h>
+#include <rptobjectline.h>
+#include <rptobjectrect.h>
+#include <rptobjecttext.h>
 #include <rptprint.h>
 
 #endif /* __LIBREPTOOL_H__ */

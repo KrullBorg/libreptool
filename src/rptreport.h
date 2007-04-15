@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <libgda/libgda.h>
 #include <libxml/tree.h>
 
 #include "rptobject.h"
@@ -48,6 +49,8 @@ struct _RptReport
 struct _RptReportClass
 	{
 		GObjectClass parent_class;
+
+		guint field_request_signal_id;
 	};
 
 GType rpt_report_get_type (void) G_GNUC_CONST;
@@ -74,6 +77,11 @@ void rpt_report_set_database (RptReport *rpt_report,
 
 void rpt_report_set_page_size (RptReport *rpt_report,
                                RptSize size);
+void rpt_report_set_page_margins (RptReport *rpt_report,
+                                  gdouble top,
+                                  gdouble right,
+                                  gdouble bottom,
+                                  gdouble left);
 
 void rpt_report_set_section_height (RptReport *rpt_report,
                                     RptReportSection section,
@@ -95,9 +103,9 @@ xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
 
 xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
 
-void rpt_report_add_object_to_section (RptReport *rpt_report,
-                                       RptObject *rpt_object,
-                                       RptReportSection section);
+gboolean rpt_report_add_object_to_section (RptReport *rpt_report,
+                                           RptObject *rpt_object,
+                                           RptReportSection section);
 void rpt_report_remove_object (RptReport *rpt_report,
                                RptObject *rpt_object);
 
