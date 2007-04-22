@@ -196,7 +196,7 @@ rpt_obj_rect_get_xml (RptObject *rpt_object, xmlNode *xnode)
 
 	if (priv->fill_color != NULL)
 		{
-			xmlSetProp (xnode, "fill-color", rpt_common_convert_to_str_color (priv->fill_color));
+			xmlSetProp (xnode, "fill-color", rpt_common_rptcolor_to_string (priv->fill_color));
 		}
 }
 

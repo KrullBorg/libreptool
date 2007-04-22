@@ -60,7 +60,6 @@
   padding-right      CDATA #IMPLIED
   padding-bottom     CDATA #IMPLIED
   padding-left       CDATA #IMPLIED
-  adapt              (to-text | none) #IMPLIED
 >
 
 <!ELEMENT line EMPTY>

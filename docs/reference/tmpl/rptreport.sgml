@@ -91,6 +91,18 @@ Manage report definition files and produces the xml report/print's file.
 @size: 
 
 
+<!-- ##### FUNCTION rpt_report_set_page_margins ##### -->
+<para>
+
+</para>
+
+@rpt_report: 
+@top: 
+@right: 
+@bottom: 
+@left: 
+
+
 <!-- ##### FUNCTION rpt_report_set_section_height ##### -->
 <para>
 

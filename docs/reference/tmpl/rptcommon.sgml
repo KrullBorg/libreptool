@@ -69,6 +69,10 @@ Usefull functions and struct.
 @right_color: 
 @bottom_color: 
 @left_color: 
+@top_style: 
+@right_style: 
+@bottom_style: 
+@left_style: 
 
 <!-- ##### ENUM eRptHAlign ##### -->
 <para>
@@ -104,6 +108,7 @@ Usefull functions and struct.
 
 @width: 
 @color: 
+@style: 
 
 <!-- ##### FUNCTION rpt_common_get_position ##### -->
 <para>
@@ -222,12 +227,21 @@ Usefull functions and struct.
 @Returns: 
 
 
-<!-- ##### FUNCTION rpt_common_convert_to_str_color ##### -->
+<!-- ##### FUNCTION rpt_common_rptcolor_to_string ##### -->
 <para>
 
 </para>
 
 @color: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_common_style_to_array ##### -->
+<para>
+
+</para>
+
+@style: 
 @Returns: 
 
 

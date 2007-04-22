@@ -1,3 +1,14 @@
+2007-04-22 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: changed rpt_common_convert_to_str_color()'s name in
+	rpt_common_rptcolor_to_string()
+	added function rpt_common_styke_to_array()
+	* src/rptcommon.h:
+	* src/rptcommon.c:
+	* src/rptprint.c:
+	* src/rptreport.c: managed attributes *-style
+
 2007-04-15 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.c:

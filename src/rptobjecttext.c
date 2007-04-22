@@ -298,7 +298,7 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 
 	if (priv->background_color != NULL)
 		{
-			xmlSetProp (xnode, "background-color", rpt_common_convert_to_str_color (priv->background_color));
+			xmlSetProp (xnode, "background-color", rpt_common_rptcolor_to_string (priv->background_color));
 		}
 
 	if (priv->padding_top != 0.0)

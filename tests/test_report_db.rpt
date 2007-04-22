@@ -22,12 +22,12 @@
 			<text name="txt_name" x="200" y="50" width="100" height="50" source="[name]" />
 			<text name="txt_req" x="50" y="100" width="100" height="50" source="[nonexistent]" />
 			<rect name="rect1" x="400" y="10" width="20" height="20" fill-color="#00FF00" />
-			<image name="img1" x="450" y="10" width="60" height="60" source="tests/gnome-globe.png" />
+			<image name="img1" x="450" y="10" width="60" height="60" border-bottom-width="1.0" border-bottom-color="#FF0000" border-bottom-style="10;10" source="tests/gnome-globe.png" />
 		</body>
 		<report-footer height="50">
-			<line name="line3" x="10" y="10" width="500" height="0" stroke-color="#FFFF00" />
+			<line name="line3" x="10" y="10" width="500" height="0" stroke-color="#FFFF00" stroke-style="50;10" />
 			<text name="txt_report_footer" x="10" y="20" width="500" height="30" horizontal-align="center" source="&quot;the report's footer&quot;" />
-			<line name="line4" x="10" y="50" width="500" height="0" stroke-color="#FFFF00" />
+			<line name="line4" x="10" y="50" width="500" height="0" stroke-color="#FFFF00" stroke-style="1;5" />
 		</report-footer>
 		<page-footer height="80" first-page="y" last-page="y">
 			<line name="line2" x="10" y="10" width="500" height="0" />

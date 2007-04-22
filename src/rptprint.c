@@ -800,6 +800,11 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 		{
 			/*cairo_set_line_width (priv->cr, stroke.width);*/
 			cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
+			if (stroke->style != NULL)
+				{
+					gdouble *dash = rpt_common_style_to_array (stroke->style);
+					cairo_set_dash (priv->cr, dash, stroke->style->len, 0.0);
+				}
 		}
 	else
 		{
@@ -808,6 +813,11 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 	cairo_move_to (priv->cr, from_p->x, from_p->y);
 	cairo_line_to (priv->cr, to_p->x, to_p->y);
 	cairo_stroke (priv->cr);
+
+	if (stroke != NULL && stroke->style != NULL)
+		{
+			cairo_set_dash (priv->cr, NULL, 0, 0.0);
+		}
 }
 
 static void
@@ -829,6 +839,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			to_p->y = position->y;
 			stroke->width = border->top_width;
 			stroke->color = border->top_color;
+			stroke->style = border->top_style;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
 	if (border->right_width != 0.0)
@@ -839,6 +850,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			to_p->y = position->y + size->height;
 			stroke->width = border->right_width;
 			stroke->color = border->right_color;
+			stroke->style = border->right_style;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
 	if (border->bottom_width != 0.0)
@@ -849,6 +861,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			to_p->y = position->y + size->height;
 			stroke->width = border->bottom_width;
 			stroke->color = border->bottom_color;
+			stroke->style = border->bottom_style;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
 	if (border->left_width != 0.0)
@@ -859,6 +872,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			to_p->y = position->y + size->height;
 			stroke->width = border->left_width;
 			stroke->color = border->left_color;
+			stroke->style = border->left_style;
 			rpt_print_line (rpt_print, from_p, to_p, stroke);
 		}
 }

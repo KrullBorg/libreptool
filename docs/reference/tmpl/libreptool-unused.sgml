@@ -285,6 +285,14 @@
 </para>
 
 
+<!-- ##### FUNCTION rpt_common_convert_to_str_color ##### -->
+<para>
+
+</para>
+
+@color: 
+@Returns: 
+
 <!-- ##### FUNCTION rpt_obj_image_get_type ##### -->
 <para>
 

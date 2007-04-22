@@ -79,6 +79,7 @@ rpt_report_new_from_xml
 rpt_report_new_from_file
 rpt_report_set_database
 rpt_report_set_page_size
+rpt_report_set_page_margins
 rpt_report_set_section_height
 rpt_report_set_report_header_new_page_after
 rpt_report_set_report_footer_new_page_before
@@ -174,6 +175,7 @@ rpt_common_set_align
 rpt_common_get_stroke
 rpt_common_set_stroke
 rpt_common_parse_color
-rpt_common_convert_to_str_color
+rpt_common_rptcolor_to_string
+rpt_common_style_to_array
 </SECTION>
 

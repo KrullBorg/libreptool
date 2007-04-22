@@ -21,6 +21,9 @@
 
 #include "rptcommon.h"
 
+static GArray *rpt_common_parse_style (const gchar *style);
+static gchar *rpt_common_style_to_string (const GArray *style);
+
 
 /**
  * rpt_common_get_position:
@@ -233,7 +236,7 @@ rpt_common_set_font (xmlNode *xnode, const RptFont *font)
 				}
 			if (font->color != NULL)
 				{
-					xmlSetProp (xnode, "font-color", rpt_common_convert_to_str_color (font->color));
+					xmlSetProp (xnode, "font-color", rpt_common_rptcolor_to_string (font->color));
 				}
 		}
 }
@@ -275,6 +278,10 @@ RptBorder
 	border->left_color->g = 0.0;
 	border->left_color->b = 0.0;
 	border->left_color->a = 1.0;
+	border->top_style = NULL;
+	border->right_style = NULL;
+	border->bottom_style = NULL;
+	border->left_style = NULL;
 
 	prop = (gchar *)xmlGetProp (xnode, "border-top-width");
 	if (prop != NULL)
@@ -324,6 +331,30 @@ RptBorder
 			border->left_color = rpt_common_parse_color (prop);
 		}
 
+	prop = (gchar *)xmlGetProp (xnode, "border-top-style");
+	if (prop != NULL)
+		{
+			border->top_style = rpt_common_parse_style (prop);
+		}
+
+	prop = (gchar *)xmlGetProp (xnode, "border-right-style");
+	if (prop != NULL)
+		{
+			border->right_style = rpt_common_parse_style (prop);
+		}
+
+	prop = (gchar *)xmlGetProp (xnode, "border-bottom-style");
+	if (prop != NULL)
+		{
+			border->bottom_style = rpt_common_parse_style (prop);
+		}
+
+	prop = (gchar *)xmlGetProp (xnode, "border-left-style");
+	if (prop != NULL)
+		{
+			border->left_style = rpt_common_parse_style (prop);
+		}
+
 	return border;
 }
 
@@ -341,22 +372,38 @@ rpt_common_set_border (xmlNode *xnode, const RptBorder *border)
 			if (border->top_width > 0.0 && border->top_color != NULL)
 				{
 					xmlSetProp (xnode, "border-top-width", g_strdup_printf ("%f", border->top_width));
-					xmlSetProp (xnode, "border-top-color", rpt_common_convert_to_str_color (border->top_color));
+					xmlSetProp (xnode, "border-top-color", rpt_common_rptcolor_to_string (border->top_color));
+					if (border->top_style != NULL)
+						{
+							xmlSetProp (xnode, "border-top-style", rpt_common_style_to_string (border->top_style));
+						}
 				}
 			if (border->right_width > 0.0 && border->right_color != NULL)
 				{
 					xmlSetProp (xnode, "border-right-width", g_strdup_printf ("%f", border->right_width));
-					xmlSetProp (xnode, "border-right-color", rpt_common_convert_to_str_color (border->right_color));
+					xmlSetProp (xnode, "border-right-color", rpt_common_rptcolor_to_string (border->right_color));
+					if (border->right_style != NULL)
+						{
+							xmlSetProp (xnode, "border-right-style", rpt_common_style_to_string (border->right_style));
+						}
 				}
 			if (border->bottom_width > 0.0 && border->bottom_color != NULL)
 				{
 					xmlSetProp (xnode, "border-bottom-width", g_strdup_printf ("%f", border->bottom_width));
-					xmlSetProp (xnode, "border-bottom-color", rpt_common_convert_to_str_color (border->bottom_color));
+					xmlSetProp (xnode, "border-bottom-color", rpt_common_rptcolor_to_string (border->bottom_color));
+					if (border->bottom_style != NULL)
+						{
+							xmlSetProp (xnode, "border-bottom-style", rpt_common_style_to_string (border->bottom_style));
+						}
 				}
 			if (border->left_width > 0.0 && border->left_color != NULL)
 				{
 					xmlSetProp (xnode, "border-left-width", g_strdup_printf ("%f", border->left_width));
-					xmlSetProp (xnode, "border-left-color", rpt_common_convert_to_str_color (border->left_color));
+					xmlSetProp (xnode, "border-left-color", rpt_common_rptcolor_to_string (border->left_color));
+					if (border->left_style != NULL)
+						{
+							xmlSetProp (xnode, "border-left-style", rpt_common_style_to_string (border->left_style));
+						}
 				}
 		}
 }
@@ -474,6 +521,8 @@ RptStroke
 	stroke->color->b = 0.0;
 	stroke->color->a = 1.0;
 
+	stroke->style = NULL;
+
 	prop = xmlGetProp (xnode, "stroke-width");
 	if (prop != NULL)
 		{
@@ -484,6 +533,12 @@ RptStroke
 	if (prop != NULL)
 		{
 			stroke->color = rpt_common_parse_color (prop);
+		}
+
+	prop = xmlGetProp (xnode, "stroke-style");
+	if (prop != NULL)
+		{
+			stroke->style = rpt_common_parse_style (prop);
 		}
 
 	return stroke;
@@ -504,7 +559,11 @@ rpt_common_set_stroke (xmlNode *xnode, const RptStroke *stroke)
 				{
 					xmlSetProp (xnode, "stroke-width", g_strdup_printf ("%f", stroke->width));
 				}
-			xmlSetProp (xnode, "stroke-color", rpt_common_convert_to_str_color (stroke->color));
+			xmlSetProp (xnode, "stroke-color", rpt_common_rptcolor_to_string (stroke->color));
+			if (stroke->style != NULL)
+				{
+					xmlSetProp (xnode, "stroke-style", rpt_common_style_to_string (stroke->style));
+				}
 		}
 }
 
@@ -569,13 +628,15 @@ RptColor
 }
 
 /**
- * rpt_common_convert_to_str_color:
+ * rpt_common_rptcolor_to_string:
  * @color: an #RptColor value.
+ *
+ * Converts an #RptColor value to a string.
  *
  * Returns: the color string correspondent to @color.
  */
 gchar
-*rpt_common_convert_to_str_color (const RptColor *color)
+*rpt_common_rptcolor_to_string (const RptColor *color)
 {
 	gchar *ret = NULL;
 
@@ -587,6 +648,73 @@ gchar
 			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->g * 255)), NULL);
 			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->b * 255)), NULL);
 			ret = g_strconcat (ret, g_strdup_printf ("%.2X", (gint)(color->a * 255)), NULL);
+		}
+
+	return ret;
+}
+
+static GArray
+*rpt_common_parse_style (const gchar *style)
+{
+	gint i = 0;
+	gdouble val;
+	GArray *ret = NULL;
+
+	gchar **values = g_strsplit (style, ";", 0);
+
+	if (values != NULL)
+		{
+			ret = g_array_new (FALSE, FALSE, sizeof (gdouble));
+			while (values[i] != NULL)
+				{
+					if (strtod (values[i], NULL) > 0.0)
+						{
+							val = strtod (values[i], NULL);
+							g_array_append_val (ret, val);
+						}
+		
+					i++;
+				}
+			g_strfreev (values);
+		}
+
+	return ret;
+}
+
+static gchar
+*rpt_common_style_to_string (const GArray *style)
+{
+	gint i;
+	gchar *ret = NULL;
+
+	if (style != NULL)
+		{
+			ret = g_strdup ("");
+			for (i = 0; i < style->len; i++)
+				{
+					ret = g_strconcat (ret, g_strdup_printf ("%f;", g_array_index (style, gdouble, i)), NULL);
+				}
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_style_to_array:
+ * @style:
+ *
+ */
+gdouble
+*rpt_common_style_to_array (const GArray *style)
+{
+	gint i;
+	gdouble *ret = NULL;
+
+	ret = (gdouble *)g_malloc (style->len * sizeof (gdouble));
+
+	for (i = 0; i < style->len; i++)
+		{
+			ret[i] = g_array_index (style, gdouble, i);
 		}
 
 	return ret;

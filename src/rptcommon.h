@@ -90,6 +90,10 @@ struct _RptBorder
 	RptColor *right_color;
 	RptColor *bottom_color;
 	RptColor *left_color;
+	GArray *top_style;
+	GArray *right_style;
+	GArray *bottom_style;
+	GArray *left_style;
 };
 typedef struct _RptBorder RptBorder;
 
@@ -119,6 +123,7 @@ struct _RptStroke
 {
 	gdouble width;
 	RptColor *color;
+	GArray *style;
 };
 typedef struct _RptStroke RptStroke;
 
@@ -148,7 +153,9 @@ void rpt_common_set_stroke (xmlNode *xnode,
                             const RptStroke *stroke);
 
 RptColor *rpt_common_parse_color (const gchar *str_color);
-gchar *rpt_common_convert_to_str_color (const RptColor *color);
+gchar *rpt_common_rptcolor_to_string (const RptColor *color);
+
+gdouble *rpt_common_style_to_array (const GArray *style);
 
 
 G_END_DECLS
