@@ -1,0 +1,58 @@
+%{
+#define YYSTYPE char *
+
+#include <glib.h>
+
+#include "parser.tab.h"
+%}
+
+DIGIT	[0-9]
+
+%%
+
+{DIGIT}+	{
+			/*printf("An integer: %d\n", atoi (yytext));*/
+			yylval = g_strdup (yytext);
+			return INTEGER;
+			}
+
+{DIGIT}+"."{DIGIT}*	{
+					/*printf("A float: %f\n", atof (yytext));*/
+					yylval = g_strdup (yytext);
+					return FLOAT;
+					}
+
+"\""[^"]*"\""	{
+			/*printf ("A string: %s\n", yytext);*/
+			yylval = g_strdup (yytext);
+			return STRING;
+			}
+
+"[".+"]"	{
+			/*printf ("A field: %s\n", yytext);*/
+			yylval = g_strdup (yytext);
+			return FIELD;
+			}
+
+"@Page" |
+"@Pages" |
+"@Date" |
+"@Time"	{
+		/*printf ("A special value: %s\n", yytext);*/
+		yylval = g_strdup (yytext);
+		return SPECIAL;
+		}
+
+"+"|"-"|"*"|"/"|"&"|"("|")"	{
+					/*printf ("An operator: %s\n", yytext );*/
+					yylval = NULL;
+					return (int)yytext[0];
+					}
+
+[a-zA-Z][a-zA-Z0-9_]*" "*"("")"	{
+								/*printf ("A function: %s\n", yytext);*/
+								yylval = g_strdup (yytext);
+								return FUNCTION;
+								}
+
+.|" "|\n	/* eat up unmatched chars */

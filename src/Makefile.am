@@ -1,4 +1,5 @@
-LIBS = $(REPTOOL_LIBS)
+LIBS = $(REPTOOL_LIBS) \
+       -lfl
 
 AM_CPPFLAGS = $(REPTOOL_CFLAGS)
 
@@ -16,7 +17,9 @@ libreptool_la_SOURCES = \
                         rptreport.c \
                         rptprint.c \
                         rptcommon.c \
-                        rptmarshal.c
+                        rptmarshal.c \
+                        parser.tab.c \
+                        lexycal.yy.c
 
 include_HEADERS = \
                   libreptool.h \
@@ -31,4 +34,7 @@ include_HEADERS = \
                   rptcommon.h
 
 noinst_HEADERS = \
-                 rptmarshal.h
+                 rptreport_priv.h \
+                 rptmarshal.h \
+                 parser.tab.h \
+                 lexycal.yy.h

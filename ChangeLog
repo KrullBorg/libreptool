@@ -1,3 +1,14 @@
+2007-05-01 Andrea Zagli <azagli@inwind.it>
+
+	* src/lexycal.fl:
+	* src/parser.y:
+	* src/lexycal.yy.h:
+	* src/lexycal.yy.c:
+	* src/parser.tab.h:
+	* src/parser.tab.c:
+	* src/rptreport.c: added parser for text's attribute "source"
+	* src/rptreport.c: added spcial value @Pages for text's attribute "source"
+
 2007-04-22 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptcommon.h:

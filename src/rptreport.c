@@ -27,6 +27,7 @@
 #endif
 
 #include "rptreport.h"
+#include "rptreport_priv.h"
 #include "rptcommon.h"
 #include "rptobjecttext.h"
 #include "rptobjectline.h"
@@ -35,6 +36,8 @@
 #include "rptobjectimage.h"
 
 #include "rptmarshal.h"
+
+#include "parser.tab.h"
 
 typedef struct
 {
@@ -130,6 +133,8 @@ static void rpt_report_rptprint_parse_text_source (RptReport *rpt_report,
                                                    RptObject *rptobj,
                                                    xmlNode *xnode,
                                                    gint row);
+
+static void rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc);
 
 
 #define RPT_REPORT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_REPORT, RptReportPrivate))
@@ -878,6 +883,9 @@ xmlDoc
 					cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 				}
+
+			/* change @Pages */
+			rpt_report_change_specials (rpt_report, xdoc);
 		}
 	else
 		{
@@ -1564,96 +1572,136 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 static void
 rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj, xmlNode *xnode, gint row)
 {
-	/* TO DO */
 	gchar *source;
+	gchar *ret;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	g_object_get (G_OBJECT (rptobj), "source", &source, NULL);
 
-	if (row > -1 && priv->db->gda_datamodel != NULL && source[0] == '[' && source[strlen (source) - 1] == ']')
+	yy_scan_string (source);
+	yyparse (rpt_report, row, &ret);
+
+	if (ret == NULL)
 		{
-			gint col;
-			gchar *field;
-
-			field = g_strstrip (g_strndup (source + 1, strlen (source) - 2));
-			col = gda_data_model_get_column_position (priv->db->gda_datamodel, field);
-
-			if (col > -1)
-				{
-					source = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, row));
-				}
-			else
-				{
-					/* ask value */
-					gchar *ret;
-					RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
-
-					g_signal_emit (rpt_report, klass->field_request_signal_id,
-					               0, field, priv->db->gda_datamodel, row, &ret);
-					if (ret != NULL)
-						{
-							source = g_strdup (ret);
-						}
-					else
-						{
-							source = g_strdup ("");
-						}
-				}
-		}
-	else if (source[0] == '[' && source[strlen (source) - 1] == ']')
-		{
-			/* ask value */
-			gchar *ret;
-			gchar *field;
-			RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
-
-			field = g_strstrip (g_strndup (source + 1, strlen (source) - 2));
-			g_signal_emit (rpt_report, klass->field_request_signal_id,
-			               0, field, NULL, row, &ret);
-			if (ret != NULL)
-				{
-					source = g_strdup (ret);
-				}
-			else
-				{
-					source = g_strdup ("");
-				}
-		}
-	else if (source[0] == '@')
-		{
-			/* TO DO */
-			/* special values */
-
-			if (strcmp (source + 1, "Page") == 0)
-				{
-					source = g_strdup_printf ("%d", priv->cur_page);
-				}
-			else if (strcmp (source + 1, "Date") == 0)
-				{
-					char date[11] = "\0";
-					time_t now = time (NULL);
-					struct tm *tm = localtime (&now);
-					strftime (date, 11, "%F", tm);
-					source = g_strdup_printf ("%s", &date);
-				}
-			else if (strcmp (source + 1, "Time") == 0)
-				{
-					char date[6] = "";
-					time_t now = time (NULL);
-					struct tm *tm = localtime (&now);
-					strftime (date, 6, "%H:%M", tm);
-					source = g_strdup_printf ("%s", &date);
-				}
-		}
-	else if (source[0] = '"' && source[strlen (source) - 1] == '"')
-		{
-			source = g_strndup (source + 1, strlen (source) - 2);
+			xmlNodeSetContent (xnode, "");
 		}
 	else
 		{
-			source = g_strdup ("");
+			xmlNodeSetContent (xnode, ret);
+		}
+}
+
+static void
+rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc)
+{
+	xmlXPathContextPtr xpcontext;
+	xmlXPathObjectPtr xpresult;
+	xmlNodeSetPtr xnodeset;
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	xpcontext = xmlXPathNewContext (xdoc);
+
+	xpcontext->node = xmlDocGetRootElement (xdoc);
+	xpresult = xmlXPathEvalExpression ((const xmlChar *)"//text[contains(node(), \"@Pages\")]", xpcontext);
+	if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+		{
+			gint i;
+			xmlNode *cur;
+			gchar *ref;
+			gchar *cont;
+
+			xnodeset = xpresult->nodesetval;
+
+			for (i = 0; i < xnodeset->nodeNr; i++)
+				{
+					cur = xnodeset->nodeTab[i];
+					cont = g_strdup (xmlNodeGetContent (cur));
+					while ((ref = strstr (cont, "@Pages")) != NULL)
+						{
+							cont = g_strconcat ("",
+							                    g_strndup (cont, strlen (cont) - strlen (ref)),
+							                    g_strdup_printf ("%d", priv->cur_page),
+							                    g_strndup (ref + 6, strlen (ref - 6)),
+							                    NULL);
+						}
+					xmlNodeSetContent (cur, cont);
+				}
+		}
+}
+
+gchar
+*rpt_report_get_field (RptReport *rpt_report, const gchar *field_name, gint row)
+{
+	gint col;
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	col = gda_data_model_get_column_position (priv->db->gda_datamodel, field_name);
+
+	if (col > -1)
+		{
+			ret = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, row));
+		}
+	else
+		{
+			ret = rpt_report_ask_field (rpt_report, field_name, row);
 		}
 
-	xmlNodeSetContent (xnode, source);
+	return ret;
+}
+
+gchar
+*rpt_report_ask_field (RptReport *rpt_report, const gchar *field, gint row)
+{
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
+
+	g_signal_emit (rpt_report, klass->field_request_signal_id,
+				   0, field, priv->db->gda_datamodel, row, &ret);
+	if (ret != NULL)
+		{
+			ret = g_strdup (ret);
+		}
+
+	return ret;
+}
+
+gchar
+*rpt_report_get_special (RptReport *rpt_report, const gchar *special, gint row)
+{
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (strcmp (special, "@Page") == 0)
+		{
+			ret = g_strdup_printf ("%d", priv->cur_page);
+		}
+	else if (strcmp (special, "@Pages") == 0)
+		{
+			ret = g_strdup ("@Pages");
+		}
+	else if (strcmp (special, "@Date") == 0)
+		{
+			char date[11] = "\0";
+			time_t now = time (NULL);
+			struct tm *tm = localtime (&now);
+			strftime (date, 11, "%F", tm);
+			ret = g_strdup_printf ("%s", &date);
+		}
+	else if (strcmp (special, "@Time") == 0)
+		{
+			char date[6] = "";
+			time_t now = time (NULL);
+			struct tm *tm = localtime (&now);
+			strftime (date, 6, "%H:%M", tm);
+			ret = g_strdup_printf ("%s", &date);
+		}
+
+	return ret;
 }
