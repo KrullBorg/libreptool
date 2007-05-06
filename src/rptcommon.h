@@ -58,6 +58,12 @@ struct _RptSize
 };
 typedef struct _RptSize RptSize;
 
+struct _RptRotation
+{
+	gdouble angle;
+};
+typedef struct _RptRotation RptRotation;
+
 /**
  * RptFont:
  * @name: the font's family name.
@@ -135,6 +141,10 @@ void rpt_common_set_position (xmlNode *xnode,
 RptSize *rpt_common_get_size (xmlNode *xnode);
 void rpt_common_set_size (xmlNode *xnode,
                           const RptSize *size);
+
+RptRotation *rpt_common_get_rotation (xmlNode *xnode);
+void rpt_common_set_rotation (xmlNode *xnode,
+                              const RptRotation *rotation);
 
 RptFont *rpt_common_get_font (xmlNode *xnode);
 void rpt_common_set_font (xmlNode *xnode,

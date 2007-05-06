@@ -12,6 +12,10 @@
    height   CDATA #REQUIRED"
 >
 
+<!ENTITY % object_rotation_attrs
+ "rotation   CDATA #IMPLIED"
+>
+
 <!ENTITY % object_border_attrs
  "border-top-width      CDATA #IMPLIED
   border-right-width    CDATA #IMPLIED
@@ -52,6 +56,7 @@
 <!ATTLIST text
   %object_position_attrs;
   %object_size_attrs;
+  %object_rotation_attrs;
   %object_border_attrs;
   %object_font_attrs;
   %object_text_align_attrs;
@@ -66,6 +71,7 @@
 <!ATTLIST line
   %object_poisition_attrs;
   %object_size_attrs;
+  %object_rotation_attrs;
   %object_stroke_attrs;
 >
 
@@ -73,6 +79,7 @@
 <!ATTLIST rect
   %object_poisition_attrs;
   %object_size_attrs;
+  %object_rotation_attrs;
   %object_stroke_attrs;
   fill-color   CDATA #IMPLIED
 >
@@ -81,6 +88,7 @@
 <!ATTLIST ellipse
   %object_poisition_attrs;
   %object_size_attrs;
+  %object_rotation_attrs;
   %object_stroke_attrs;
   fill-color   CDATA #IMPLIED
 >
@@ -89,6 +97,7 @@
 <!ATTLIST image
   %object_position_attrs;
   %object_size_attrs;
+  %object_rotation_attrs;
   %object_border_attrs;
   source   CDATA #REQUIRED
   adapt    (to-box | to-image | none) #IMPLIED

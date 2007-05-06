@@ -23,6 +23,7 @@ enum
 {
 	PROP_0,
 	PROP_SIZE,
+	PROP_ROTATION,
 	PROP_STROKE
 };
 
@@ -45,6 +46,7 @@ typedef struct _RptObjLinePrivate RptObjLinePrivate;
 struct _RptObjLinePrivate
 	{
 		RptSize *size;
+		RptRotation *rotation;
 		RptStroke *stroke;
 	};
 
@@ -94,6 +96,11 @@ rpt_obj_line_class_init (RptObjLineClass *klass)
 	                                                       "Size",
 	                                                       "The object's size.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_ROTATION,
+	                                 g_param_spec_pointer ("rotation",
+	                                                       "Rotation",
+	                                                       "The object's rotation.",
+	                                                       G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_STROKE,
 	                                 g_param_spec_pointer ("stroke",
 	                                                       "Stroke",
@@ -110,7 +117,8 @@ rpt_obj_line_init (RptObjLine *rpt_obj_line)
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
-	priv->stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+	priv->rotation = NULL;
+	priv->stroke = NULL;
 }
 
 /**
@@ -169,6 +177,7 @@ RptObject
 					priv = RPT_OBJ_LINE_GET_PRIVATE (rpt_obj_line);
 
 					priv->size = rpt_common_get_size (xnode);
+					priv->rotation = rpt_common_get_rotation (xnode);
 					priv->stroke = rpt_common_get_stroke (xnode);
 				}
 		}
@@ -190,6 +199,7 @@ rpt_obj_line_get_xml (RptObject *rpt_objline, xmlNode *xnode)
 	xmlNodeSetName (xnode, "line");
 
 	rpt_common_set_size (xnode, priv->size);
+	rpt_common_set_rotation (xnode, priv->rotation);
 	rpt_common_set_stroke (xnode, priv->stroke);
 }
 
@@ -204,6 +214,10 @@ rpt_obj_line_set_property (GObject *object, guint property_id, const GValue *val
 		{
 			case PROP_SIZE:
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_ROTATION:
+				priv->rotation = g_memdup (g_value_get_pointer (value), sizeof (RptRotation));
 				break;
 
 			case PROP_STROKE:
@@ -227,6 +241,10 @@ rpt_obj_line_get_property (GObject *object, guint property_id, GValue *value, GP
 		{
 			case PROP_SIZE:
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_ROTATION:
+				g_value_set_pointer (value, g_memdup (priv->rotation, sizeof (RptRotation)));
 				break;
 
 			case PROP_STROKE:

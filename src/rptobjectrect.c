@@ -157,15 +157,18 @@ RptObject
 				{
 					const gchar *prop;
 					RptSize *size;
+					RptRotation *rotation;
 					RptStroke *stroke;
 
 					priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
 
 					size = rpt_common_get_size (xnode);
+					rotation = rpt_common_get_rotation (xnode);
 					stroke = rpt_common_get_stroke (xnode);
 					g_object_set (G_OBJECT (rpt_obj_rect),
 					              "size", size,
 					              "stroke", stroke,
+					              "rotation", rotation,
 					              NULL);
 
 					prop = (const gchar *)xmlGetProp (xnode, "fill-color");

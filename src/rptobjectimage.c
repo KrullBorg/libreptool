@@ -23,6 +23,7 @@ enum
 {
 	PROP_0,
 	PROP_SIZE,
+	PROP_ROTATION,
 	PROP_BORDER,
 	PROP_SOURCE,
 	PROP_ADAPT
@@ -47,6 +48,7 @@ typedef struct _RptObjImagePrivate RptObjImagePrivate;
 struct _RptObjImagePrivate
 	{
 		RptSize *size;
+		RptRotation *rotation;
 		RptBorder *border;
 		gchar *source;
 		guint adapt;
@@ -98,6 +100,11 @@ rpt_obj_image_class_init (RptObjImageClass *klass)
 	                                                       "Size",
 	                                                       "The object's size.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_ROTATION,
+	                                 g_param_spec_pointer ("rotation",
+	                                                       "Rotation",
+	                                                       "The object's rotation.",
+	                                                       G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_BORDER,
 	                                 g_param_spec_pointer ("border",
 	                                                       "Border",
@@ -126,7 +133,8 @@ rpt_obj_image_init (RptObjImage *rpt_obj_image)
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
-	priv->border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
+	priv->rotation = NULL;
+	priv->border = NULL;
 }
 
 /**
@@ -185,6 +193,7 @@ RptObject
 					priv = RPT_OBJ_IMAGE_GET_PRIVATE (rpt_obj_image);
 
 					priv->size = rpt_common_get_size (xnode);
+					priv->rotation = rpt_common_get_rotation (xnode);
 					priv->border = rpt_common_get_border (xnode);
 
 					priv->source = (gchar *)xmlGetProp (xnode, "source");
@@ -217,6 +226,7 @@ rpt_obj_image_get_xml (RptObject *rpt_objimage, xmlNode *xnode)
 	xmlNodeSetName (xnode, "image");
 
 	rpt_common_set_size (xnode, priv->size);
+	rpt_common_set_rotation (xnode, priv->rotation);
 	rpt_common_set_border (xnode, priv->border);
 
 	xmlSetProp (xnode, "source", priv->source);
@@ -244,6 +254,10 @@ rpt_obj_image_set_property (GObject *object, guint property_id, const GValue *va
 		{
 			case PROP_SIZE:
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_ROTATION:
+				priv->rotation = g_memdup (g_value_get_pointer (value), sizeof (RptRotation));
 				break;
 
 			case PROP_BORDER:
@@ -275,6 +289,10 @@ rpt_obj_image_get_property (GObject *object, guint property_id, GValue *value, G
 		{
 			case PROP_SIZE:
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_ROTATION:
+				g_value_set_pointer (value, g_memdup (priv->rotation, sizeof (RptRotation)));
 				break;
 
 			case PROP_BORDER:

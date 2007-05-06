@@ -1,3 +1,20 @@
+2007-05-06 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptobjecttext.c:
+	* src/rptobjectline.c:
+	* src/rptobjectimage.c:
+	* src/rptobjectrect.c: added attribute "rotation"
+
+2007-05-05 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptprint.c: some bugfixes for png and svg output
+	* src/rptcommon.h:
+	* src/rptcommon.c: added struct RptRotation;
+	managed RptRotation with rpt_common_get_rotation() and
+	rpt_common_set_rotation()
+	* src/rptreport.h:
+	* src/rptreport.c: some bugfixes
+
 2007-05-01 Andrea Zagli <azagli@inwind.it>
 
 	* src/lexycal.fl:
@@ -7,14 +24,14 @@
 	* src/parser.tab.h:
 	* src/parser.tab.c:
 	* src/rptreport.c: added parser for text's attribute "source"
-	* src/rptreport.c: added spcial value @Pages for text's attribute "source"
+	* src/rptreport.c: added special value @Pages for text's attribute
+	"source"
 
 2007-04-22 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptcommon.h:
 	* src/rptcommon.c: changed rpt_common_convert_to_str_color()'s name in
-	rpt_common_rptcolor_to_string()
-	added function rpt_common_styke_to_array()
+	rpt_common_rptcolor_to_string(); added function rpt_common_styke_to_array()
 	* src/rptcommon.h:
 	* src/rptcommon.c:
 	* src/rptprint.c:
@@ -34,8 +51,7 @@
 	* src/rptobjtext.c: added text's attributes padding*
 	* src/rptprint.c: managed text's attributes padding*
 	* src/rptreport.c: static text in text's source attribute must be enclosed
-	into "" (xml entity &quot;);
-	added page's attributes margin*
+	into "" (xml entity &quot;); added page's attributes margin*
 
 2007-04-13 Andrea Zagli <azagli@inwind.it>
 
@@ -61,16 +77,17 @@
 2007-04-04 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.h:
-	* src/rptreport.c: added rpt_report_set_database(), rpt_report_set_section_height(),
-	rpt_report_set_page_size()
+	* src/rptreport.c: added rpt_report_set_database(),
+	rpt_report_set_section_height(), rpt_report_set_page_size()
 	* src/rptreport.c: changed rpt_report_object_is_in_section()'s prototype;
 	added special source's text objects values @Date and @Time
 
 2007-04-02 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.h:
-	* src/rptreport.c: added rpt_report_new(), rpt_report_add_object_to_section(),
-	rpt_report_remove_object() and rpt_report_get_object_from_name()
+	* src/rptreport.c: added rpt_report_new(),
+	rpt_report_add_object_to_section(), rpt_report_remove_object() and
+	rpt_report_get_object_from_name()
 
 2007-04-01 Andrea Zagli <azagli@inwind.it>
 
@@ -99,5 +116,5 @@
 	* src/rptcommon.h: moved some functions from rpt_print to rpt_common
 	* src/rptobjtext.c:
 	* src/rptobjtext.h: extended RptObjText (border, font and align attributes)
-	* src/rptobjtext.c: RptObjText's source attribute now read values from db (if
-	there's a connection)
+	* src/rptobjtext.c: RptObjText's source attribute now read values from db,
+	if	there's a connection

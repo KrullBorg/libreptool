@@ -107,6 +107,42 @@ rpt_common_set_size (xmlNode *xnode, const RptSize *size)
 }
 
 /**
+ * rpt_common_get_rotation:
+ * @xnode: an #xmlNode.
+ *
+ */
+RptRotation
+*rpt_common_get_rotation (xmlNode *xnode)
+{
+	gchar *prop;
+	RptRotation *rotation = NULL;
+
+	prop = xmlGetProp (xnode, "rotation");
+	if (prop != NULL)
+		{
+			rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
+			rotation->angle = strtod (prop, NULL);
+		}
+
+	return rotation;
+}
+
+/**
+ * rpt_common_set_rotation:
+ * @xnode: an #xmlNode.
+ * @rotation:
+ *
+ */
+void
+rpt_common_set_rotation (xmlNode *xnode, const RptRotation *rotation)
+{
+	if (rotation != NULL)
+		{
+			xmlSetProp (xnode, "rotation", g_strdup_printf ("%f", rotation->angle));
+		}
+}
+
+/**
  * rpt_common_get_font:
  * @xnode: an #xmlNode.
  *

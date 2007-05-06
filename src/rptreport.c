@@ -1638,13 +1638,17 @@ gchar
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	col = gda_data_model_get_column_position (priv->db->gda_datamodel, field_name);
-
-	if (col > -1)
+	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
 		{
-			ret = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, row));
+			col = gda_data_model_get_column_position (priv->db->gda_datamodel, field_name);
+		
+			if (col > -1)
+				{
+					ret = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, row));
+				}
 		}
-	else
+
+	if (ret == NULL)
 		{
 			ret = rpt_report_ask_field (rpt_report, field_name, row);
 		}
@@ -1661,8 +1665,16 @@ gchar
 
 	RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
 
-	g_signal_emit (rpt_report, klass->field_request_signal_id,
-				   0, field, priv->db->gda_datamodel, row, &ret);
+	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
+		{
+			g_signal_emit (rpt_report, klass->field_request_signal_id,
+			               0, field, priv->db->gda_datamodel, row, &ret);
+		}
+	else
+		{
+			g_signal_emit (rpt_report, klass->field_request_signal_id,
+			               0, field, NULL, row, &ret);
+		}
 	if (ret != NULL)
 		{
 			ret = g_strdup (ret);

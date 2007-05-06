@@ -25,7 +25,7 @@ main (int argc, char **argv)
 
 	g_type_init ();
 
-	rptp = rpt_print_new_from_file (argv[1], RPTP_OUTPUT_PDF, "test.pdf");
+	rptp = rpt_print_new_from_file (argv[1], RPTP_OUTPUT_PNG, "test.png");
 
 	if (rptp != NULL)
 		{

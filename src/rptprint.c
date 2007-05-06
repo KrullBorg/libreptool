@@ -62,11 +62,17 @@ static void rpt_print_image_xml (RptPrint *rpt_print,
 static void rpt_print_line (RptPrint *rpt_print,
                             const RptPoint *from_p,
                             const RptPoint *to_p,
-                            const RptStroke *stroke);
+                            const RptStroke *stroke,
+							const RptRotation *rotation);
 static void rpt_print_border (RptPrint *rpt_print,
                               const RptPoint *position,
                               const RptSize *size,
-                              const RptBorder *border);
+                              const RptBorder *border,
+                              const RptRotation *rotation);
+
+
+static gchar *rpt_print_new_numbered_filename (const gchar *filename, int number);
+static void rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, gdouble angle);
 
 
 #define RPT_PRINT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_PRINT, RptPrintPrivate))
@@ -154,12 +160,12 @@ RptPrint
 					RptPrintPrivate *priv;
 
 					gint npage = 0;
-				
+
 					rpt_print = RPT_PRINT (g_object_new (rpt_print_get_type (), NULL));
 
 					priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-					if (output_type != RPTP_OUTPUT_PNG)
+					if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG)
 						{
 							fout = fopen (out_filename, "w");
 							if (fout == NULL)
@@ -209,40 +215,43 @@ RptPrint
 
 									if (priv->width != 0 && priv->height != 0)
 										{
-											if (npage == 1)
+											if (output_type == RPTP_OUTPUT_PNG)
 												{
-													switch (output_type)
+													priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)priv->width, (int)priv->height);
+												}
+											else if (output_type == RPTP_OUTPUT_PDF && npage == 1)
+												{
+													priv->surface = cairo_pdf_surface_create (out_filename, priv->width, priv->height);
+												}
+											else if (output_type == RPTP_OUTPUT_PS && npage == 1)
+												{
+													priv->surface = cairo_ps_surface_create (out_filename, priv->width, priv->height);
+												}
+											else if (output_type == RPTP_OUTPUT_SVG)
+												{
+													gchar *new_out_filename = rpt_print_new_numbered_filename (out_filename, npage);
+													fout = fopen (new_out_filename, "w");
+													if (fout == NULL)
 														{
-															case RPTP_OUTPUT_PNG:
-																priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)priv->width, (int)priv->height);
-																break;
-														
-															case RPTP_OUTPUT_PDF:
-																priv->surface = cairo_pdf_surface_create (out_filename, priv->width, priv->height);
-																break;
-		
-															case RPTP_OUTPUT_PS:
-																priv->surface = cairo_ps_surface_create (out_filename, priv->width, priv->height);
-																break;
-		
-															case RPTP_OUTPUT_SVG:
-																priv->surface = cairo_svg_surface_create (out_filename, priv->width, priv->height);
-																break;
+															/* TO DO */
+															return NULL;
 														}
+
+													priv->surface = cairo_svg_surface_create (new_out_filename, priv->width, priv->height);
 												}
 
 											if (cairo_surface_status (priv->surface) == CAIRO_STATUS_SUCCESS)
 												{
-													if (npage == 1)
+													if (output_type == RPTP_OUTPUT_PNG || output_type == RPTP_OUTPUT_SVG)
 														{
 															priv->cr = cairo_create (priv->surface);
 														}
-													else
+													else if (npage == 1)
 														{
-															/* TO DO */
+															priv->cr = cairo_create (priv->surface);
 														}
 
-													if (npage == 1 && output_type != RPTP_OUTPUT_PNG)
+													if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG && npage == 1)
 														{
 															cairo_surface_destroy (priv->surface);
 														}
@@ -250,18 +259,32 @@ RptPrint
 													if (cairo_status (priv->cr) == CAIRO_STATUS_SUCCESS)
 														{
 															rpt_print_page (rpt_print, cur);
+
 															if (output_type == RPTP_OUTPUT_PNG)
 																{
-																	cairo_surface_write_to_png (priv->surface, out_filename);
+																	gchar *new_out_filename = rpt_print_new_numbered_filename (out_filename, npage);
+																
+																	cairo_surface_write_to_png (priv->surface,
+																	                            new_out_filename);
 																	cairo_surface_destroy (priv->surface);
+																	cairo_destroy (priv->cr);
+																}
+															else
+																{
+																	cairo_show_page (priv->cr);
 																}
 
-															cairo_show_page (priv->cr);
+															if (output_type == RPTP_OUTPUT_SVG)
+																{
+																	cairo_surface_destroy (priv->surface);
+																	cairo_destroy (priv->cr);
+																	fclose (fout);
+																}
 														}
 													else
 														{
 															/* TO DO */
-															g_warning ("cairo status not sucess: %d",cairo_status (priv->cr));
+															g_warning ("cairo status not sucess: %d", cairo_status (priv->cr));
 														}												
 												}
 											else
@@ -285,10 +308,10 @@ RptPrint
 						}
 
 					if (priv->cr != NULL)
-						{						
+						{
 							cairo_destroy (priv->cr);
 						}
-					if (output_type != RPTP_OUTPUT_PNG)
+					if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG)
 						{
 							fclose (fout);
 						}
@@ -408,6 +431,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	RptPoint *position;
 	RptSize *size;
+	RptRotation *rotation;
 	RptAlign *align;
 	RptBorder *border;
 	RptFont *font;
@@ -429,9 +453,16 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
+	rotation = rpt_common_get_rotation (xnode);
 	align = rpt_common_get_align (xnode);
 	border = rpt_common_get_border (xnode);
 	font = rpt_common_get_font (xnode);
+
+	if (position == NULL)
+		{
+			/* TO DO */
+			return;
+		}
 
 	/* padding */
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
@@ -520,6 +551,11 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			pango_layout_set_attributes (playout, lpattr);
 		}
 
+	if (rotation != NULL)
+		{
+			rpt_print_rotate (rpt_print, position, size, rotation->angle);
+		}
+
 	/* background */
 	prop = xmlGetProp (xnode, (const xmlChar *)"background-color");
 	if (prop != NULL && position != NULL && size != NULL)
@@ -532,9 +568,9 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 
 	/* drawing border */
-	rpt_print_border (rpt_print, position, size, border);
+	rpt_print_border (rpt_print, position, size, border, rotation);
 
-	/* setting alignment */
+	/* setting horizontal alignment */
 	switch (align->h_align)
 		{
 			case RPT_HALIGN_LEFT:
@@ -553,6 +589,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 				break;
 		}
 
+	/* TO DO */
+	/* setting vertical alignment */
 	switch (align->v_align)
 		{
 	 		case RPT_VALIGN_TOP:
@@ -566,7 +604,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 
 	/* setting clipping region */
-	if (position != NULL && size != NULL)
+	if (size != NULL)
 		{
 			cairo_rectangle (priv->cr,
 			                 position->x + padding_left,
@@ -588,10 +626,9 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 					cairo_set_source_rgba (priv->cr, 0.0, 0.0, 0.0, 1.0);
 				}
 		}
-	if (position != NULL)
-		{
-			cairo_move_to (priv->cr, position->x + padding_left, position->y + padding_top);
-		}
+
+	cairo_move_to (priv->cr, position->x + padding_left, position->y + padding_top);
+
 	pango_layout_set_text (playout, text, -1);
 	pango_cairo_show_layout (priv->cr, playout);
 
@@ -608,10 +645,12 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
 	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
 	RptSize *size;
+	RptRotation *rotation;
 	RptStroke *stroke;
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
+	rotation = rpt_common_get_rotation (xnode);
 	stroke = rpt_common_get_stroke (xnode);
 
 	from_p->x = position->x;
@@ -619,7 +658,7 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 	to_p->x = position->x + size->width;
 	to_p->y = position->y + size->height;
 
-	rpt_print_line (rpt_print, from_p, to_p, stroke);
+	rpt_print_line (rpt_print, from_p, to_p, stroke, rotation);
 }
 
 static void
@@ -627,6 +666,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
 	RptPoint *position;
 	RptSize *size;
+	RptRotation *rotation;
 	RptStroke *stroke;
 	RptColor *fill_color;
 	gchar *prop;
@@ -635,6 +675,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
+	rotation = rpt_common_get_rotation (xnode);
 	stroke = rpt_common_get_stroke (xnode);
 
 	if (position == NULL || size == NULL)
@@ -647,6 +688,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 			stroke->width = 1.0;
 			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
 			stroke->color->a = 1.0;
+			stroke->style = NULL;
 		}
 
 	prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
@@ -655,6 +697,12 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 			fill_color = rpt_common_parse_color (prop);
 		}
 
+	if (rotation != NULL)
+		{
+			rpt_print_rotate (rpt_print, position, size, rotation->angle);
+		}
+
+	/* TO DO */
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
 	cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
 
@@ -662,6 +710,12 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 		{
 			cairo_set_source_rgba (priv->cr, fill_color->r, fill_color->g, fill_color->b, fill_color->a);
 			cairo_fill_preserve (priv->cr);
+		}
+
+	if (stroke->style != NULL)
+		{
+			gdouble *dash = rpt_common_style_to_array (stroke->style);
+			cairo_set_dash (priv->cr, dash, stroke->style->len, 0.0);
 		}
 
 	cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
@@ -693,6 +747,7 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 			stroke->width = 1.0;
 			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
 			stroke->color->a = 1.0;
+			stroke->style = NULL;
 		}
 
 	prop = xmlGetProp (xnode, (const xmlChar *)"fill-color");
@@ -724,6 +779,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
 	RptPoint *position;
 	RptSize *size;
+	RptRotation *rotation;
 	RptBorder *border;
 
 	cairo_surface_t *image;
@@ -753,11 +809,17 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
+	rotation = rpt_common_get_rotation (xnode);
 	border = rpt_common_get_border (xnode);
 
 	image = cairo_image_surface_create_from_png (filename);
 
 	pattern = cairo_pattern_create_for_surface (image);
+
+	if (rotation != NULL)
+		{
+			rpt_print_rotate (rpt_print, position, size, rotation->angle);
+		}
 
 	cairo_matrix_init_identity (&matrix);
 	if (strcmp (adapt, "none") != 0)
@@ -783,14 +845,14 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	cairo_rectangle (priv->cr, position->x, position->y, size->width, size->height);
 	cairo_fill (priv->cr);
 
-	rpt_print_border (rpt_print, position, size, border);
+	rpt_print_border (rpt_print, position, size, border, rotation);
 	
 	cairo_pattern_destroy (pattern);
 	cairo_surface_destroy (image);
 }
 
 static void
-rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_p, const RptStroke *stroke)
+rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_p, const RptStroke *stroke, const RptRotation *rotation)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
@@ -798,6 +860,7 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 
 	if (stroke != NULL)
 		{
+			/* TO DO */
 			/*cairo_set_line_width (priv->cr, stroke.width);*/
 			cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
 			if (stroke->style != NULL)
@@ -810,6 +873,17 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 		{
 			cairo_set_source_rgba (priv->cr, 0.0, 0.0, 0.0, 1.0);
 		}
+
+	if (rotation != NULL)
+		{
+			RptSize size;
+
+			size.width = to_p->x - from_p->x;
+			size.height = to_p->y - from_p->y;
+
+			rpt_print_rotate (rpt_print, from_p, &size, rotation->angle);
+		}
+
 	cairo_move_to (priv->cr, from_p->x, from_p->y);
 	cairo_line_to (priv->cr, to_p->x, to_p->y);
 	cairo_stroke (priv->cr);
@@ -821,7 +895,7 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 }
 
 static void
-rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, const RptBorder *border)
+rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, const RptBorder *border, const RptRotation *rotation)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
@@ -840,7 +914,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			stroke->width = border->top_width;
 			stroke->color = border->top_color;
 			stroke->style = border->top_style;
-			rpt_print_line (rpt_print, from_p, to_p, stroke);
+			rpt_print_line (rpt_print, from_p, to_p, stroke, NULL);
 		}
 	if (border->right_width != 0.0)
 		{
@@ -851,7 +925,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			stroke->width = border->right_width;
 			stroke->color = border->right_color;
 			stroke->style = border->right_style;
-			rpt_print_line (rpt_print, from_p, to_p, stroke);
+			rpt_print_line (rpt_print, from_p, to_p, stroke, NULL);
 		}
 	if (border->bottom_width != 0.0)
 		{
@@ -862,7 +936,7 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			stroke->width = border->bottom_width;
 			stroke->color = border->bottom_color;
 			stroke->style = border->bottom_style;
-			rpt_print_line (rpt_print, from_p, to_p, stroke);
+			rpt_print_line (rpt_print, from_p, to_p, stroke, NULL);
 		}
 	if (border->left_width != 0.0)
 		{
@@ -873,6 +947,40 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			stroke->width = border->left_width;
 			stroke->color = border->left_color;
 			stroke->style = border->left_style;
-			rpt_print_line (rpt_print, from_p, to_p, stroke);
+			rpt_print_line (rpt_print, from_p, to_p, stroke, NULL);
 		}
+}
+
+static gchar
+*rpt_print_new_numbered_filename (const gchar *filename, int number)
+{
+	gchar *new_out_filename = NULL;
+
+	gchar *filename_ext = g_strrstr (filename, ".");
+	if (filename_ext == NULL)
+		{
+			new_out_filename = g_strdup_printf ("%s%d", filename, number);
+		}
+	else
+		{
+			new_out_filename = g_strdup_printf ("%s%d%s",
+												g_strndup (filename, strlen (filename) - strlen (filename_ext)),
+												number,
+												filename_ext);
+		}
+
+	return new_out_filename;
+}
+
+static void
+rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, gdouble angle)
+{
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	gdouble tx = position->x + size->width / 2;
+	gdouble ty = position->y + size->height / 2;
+
+	cairo_translate (priv->cr, tx, ty);
+	cairo_rotate (priv->cr, angle * G_PI / 180.);
+	cairo_translate (priv->cr, -tx, -ty);
 }

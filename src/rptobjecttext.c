@@ -23,6 +23,7 @@ enum
 {
 	PROP_0,
 	PROP_SIZE,
+	PROP_ROTATION,
 	PROP_BORDER,
 	PROP_FONT,
 	PROP_ALIGN,
@@ -53,6 +54,7 @@ typedef struct _RptObjTextPrivate RptObjTextPrivate;
 struct _RptObjTextPrivate
 	{
 		RptSize *size;
+		RptRotation *rotation;
 		RptBorder *border;
 		RptFont *font;
 		RptAlign *align;
@@ -109,6 +111,11 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                 g_param_spec_pointer ("size",
 	                                                       "Size",
 	                                                       "The object's size.",
+	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_ROTATION,
+	                                 g_param_spec_pointer ("rotation",
+	                                                       "Rotation",
+	                                                       "The object's rotation.",
 	                                                       G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_BORDER,
 	                                 g_param_spec_pointer ("border",
@@ -171,6 +178,7 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
+	priv->rotation = NULL;
 	priv->border = NULL;
 	priv->font = NULL;
 	priv->align = NULL;
@@ -235,6 +243,7 @@ RptObject
 					priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
 					priv->size = rpt_common_get_size (xnode);
+					priv->rotation = rpt_common_get_rotation (xnode);
 					priv->border = rpt_common_get_border (xnode);
 					priv->font = rpt_common_get_font (xnode);
 					priv->align = rpt_common_get_align (xnode);
@@ -290,6 +299,7 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 	xmlNodeSetName (xnode, "text");
 
 	rpt_common_set_size (xnode, priv->size);
+	rpt_common_set_rotation (xnode, priv->rotation);
 	rpt_common_set_border (xnode, priv->border);
 	rpt_common_set_font (xnode, priv->font);
 	rpt_common_set_align (xnode, priv->align);
@@ -330,6 +340,10 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 		{
 			case PROP_SIZE:
 				priv->size = g_memdup (g_value_get_pointer (value), sizeof (RptSize));
+				break;
+
+			case PROP_ROTATION:
+				priv->rotation = g_memdup (g_value_get_pointer (value), sizeof (RptRotation));
 				break;
 
 			case PROP_BORDER:
@@ -385,6 +399,10 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 		{
 			case PROP_SIZE:
 				g_value_set_pointer (value, g_memdup (priv->size, sizeof (RptSize)));
+				break;
+
+			case PROP_ROTATION:
+				g_value_set_pointer (value, g_memdup (priv->rotation, sizeof (RptRotation)));
 				break;
 
 			case PROP_BORDER:
