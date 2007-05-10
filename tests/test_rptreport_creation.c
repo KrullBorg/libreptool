@@ -22,6 +22,7 @@ int
 main (int argc, char **argv)
 {
 	RptReport *rptr;
+	RptPrint *rptp;
 	RptObject *obj;
 	RptPoint point;
 	RptSize size;
@@ -105,7 +106,13 @@ main (int argc, char **argv)
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
 			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
 		
-			rpt_print_new_from_xml (rptprint, RPTP_OUTPUT_PDF, "test.pdf");
+			rptp = rpt_print_new_from_xml (rptprint);
+			if (rptp != NULL)
+				{
+					rpt_print_set_output_type (rptp, RPTP_OUTPUT_PDF);
+					rpt_print_set_output_filename (rptp, "test.pdf");
+					rpt_print_print (rptp);
+				}
 		}
 
 	return 0;

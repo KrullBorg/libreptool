@@ -56,11 +56,17 @@ typedef enum
 	RPTP_OUTPUT_PNG,
 	RPTP_OUTPUT_PDF,
 	RPTP_OUTPUT_PS,
-	RPTP_OUTPUT_SVG
+	RPTP_OUTPUT_SVG,
+	RPTP_OUTPUT_GTK
 } RptPrintOutputType;
 
-RptPrint *rpt_print_new_from_xml (xmlDoc *xdoc, RptPrintOutputType output_type, const gchar *out_filename);
-RptPrint *rpt_print_new_from_file (const gchar *filename, RptPrintOutputType output_type, const gchar *out_filename);
+RptPrint *rpt_print_new_from_xml (xmlDoc *xdoc);
+RptPrint *rpt_print_new_from_file (const gchar *filename);
+
+void rpt_print_set_output_type (RptPrint *rpt_print, RptPrintOutputType output_type);
+void rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename);
+
+void rpt_print_print (RptPrint *rpt_print);
 
 
 G_END_DECLS

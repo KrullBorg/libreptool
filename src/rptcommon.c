@@ -29,6 +29,8 @@ static gchar *rpt_common_style_to_string (const GArray *style);
  * rpt_common_get_position:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptPoint struct that represent the object's position specified
+ * on @xnode.
  */
 RptPoint
 *rpt_common_get_position (xmlNode *xnode)
@@ -70,6 +72,8 @@ rpt_common_set_position (xmlNode *xnode, const RptPoint *position)
  * rpt_common_get_size:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptSize struct that represent the object's size specified
+ * on @xnode.
  */
 RptSize
 *rpt_common_get_size (xmlNode *xnode)
@@ -110,6 +114,8 @@ rpt_common_set_size (xmlNode *xnode, const RptSize *size)
  * rpt_common_get_rotation:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptRotation struct that represent the object's rotation
+ * specified on @xnode.
  */
 RptRotation
 *rpt_common_get_rotation (xmlNode *xnode)
@@ -146,6 +152,8 @@ rpt_common_set_rotation (xmlNode *xnode, const RptRotation *rotation)
  * rpt_common_get_font:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptFont struct that represent the object's font
+ * specified on @xnode.
  */
 RptFont
 *rpt_common_get_font (xmlNode *xnode)
@@ -281,6 +289,8 @@ rpt_common_set_font (xmlNode *xnode, const RptFont *font)
  * rpt_common_get_border:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptBorder struct that represent the object's border
+ * specified on @xnode.
  */
 RptBorder
 *rpt_common_get_border (xmlNode *xnode)
@@ -448,6 +458,8 @@ rpt_common_set_border (xmlNode *xnode, const RptBorder *border)
  * rpt_common_get_align:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptAlign struct that represent the object's alignment
+ * specified on @xnode.
  */
 RptAlign
 *rpt_common_get_align (xmlNode *xnode)
@@ -541,6 +553,8 @@ rpt_common_set_align (xmlNode *xnode, const RptAlign *align)
  * rpt_common_get_stroke:
  * @xnode: an #xmlNode.
  *
+ * Returns: an #RptStroke struct that represent the object's stroke
+ * specified on @xnode.
  */
 RptStroke
 *rpt_common_get_stroke (xmlNode *xnode)

@@ -13,27 +13,46 @@ AC_LIBTOOL_WIN32_DLL
 AC_CANONICAL_SYSTEM
 
 # Checks for programs.
+AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_LEX
 AC_PROG_LIBTOOL
 GTK_DOC_CHECK
 
 # Checks for libraries.
-PKG_CHECK_MODULES([REPTOOL], [glib-2.0 >= 2.6.0
-                              gobject-2.0 >= 2.6.0
+PKG_CHECK_MODULES([REPTOOL], [gtk+-2.0 >= 2.10.0
                               libxml-2.0 >= 2.6.0
-                              libgda >= 1.2.3
-                              cairo >= 1.0.0
-                              pangocairo >= 1.12])
+                              libgda >= 1.2.3])
 
 AC_SUBST(REPTOOL_CFLAGS)
 AC_SUBST(REPTOOL_LIBS)
 
 # Checks for header files.
+AC_FUNC_ALLOCA
+AC_HEADER_STDC
+AC_CHECK_HEADERS([inttypes.h libintl.h malloc.h stddef.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT8_T
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
 
 # Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STRFTIME
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS([memset strcasecmp strstr strtol])
 
 AC_CONFIG_FILES([
   libreptool.pc

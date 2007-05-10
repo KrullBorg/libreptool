@@ -25,10 +25,13 @@ main (int argc, char **argv)
 
 	g_type_init ();
 
-	rptp = rpt_print_new_from_file (argv[1], RPTP_OUTPUT_PNG, "test.png");
+	rptp = rpt_print_new_from_file (argv[1]);
 
 	if (rptp != NULL)
 		{
+			rpt_print_set_output_type (rptp, RPTP_OUTPUT_PNG);
+			rpt_print_set_output_filename (rptp, "test.png");
+			rpt_print_print (rptp);
 		}
 
 	return 0;

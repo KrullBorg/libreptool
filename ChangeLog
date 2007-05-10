@@ -1,9 +1,22 @@
+2007-05-10 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptprint.c: some code adjustments
+
+2007-05-07 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptprint.c: integration with GtkPrint
+
 2007-05-06 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptobjecttext.c:
 	* src/rptobjectline.c:
 	* src/rptobjectimage.c:
 	* src/rptobjectrect.c: added attribute "rotation"
+	* configure.ac: some adjustments
+	* src/rptprint.h:
+	* src/rptprint.c: changed prototype of rpt_print_new_from_xml() and
+	rpt_print_new_from_file(); added rpt_print_set_output_type(),
+	rpt_print_set_output_filename() and respective properties
 
 2007-05-05 Andrea Zagli <azagli@inwind.it>
 

@@ -19,20 +19,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <locale.h>
 
+#include <gtk/gtk.h>
 #include <cairo.h>
 #include <cairo-pdf.h>
 #include <cairo-ps.h>
 #include <cairo-svg.h>
 #include <pango/pangocairo.h>
 #include <pango/pango-attributes.h>
+#include <libxml/xpath.h>
 
 #include "rptprint.h"
 #include "rptcommon.h"
 
 enum
 {
-	PROP_0
+	PROP_0,
+	PROP_OUTPUT_TYPE,
+	PROP_OUTPUT_FILENAME
 };
 
 static void rpt_print_class_init (RptPrintClass *klass);
@@ -46,6 +51,9 @@ static void rpt_print_get_property (GObject *object,
                                     guint property_id,
                                     GValue *value,
                                     GParamSpec *pspec);
+
+static void rpt_print_get_xml_page_attributes (RptPrint *rpt_print,
+                                               xmlNode *xml_page);
 
 static void rpt_print_page (RptPrint *rpt_print,
                             xmlNode *xnode);
@@ -75,6 +83,20 @@ static gchar *rpt_print_new_numbered_filename (const gchar *filename, int number
 static void rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, gdouble angle);
 
 
+static void rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
+                                       GtkPrintContext *context,
+                                       gpointer user_data);
+static void rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
+                                              GtkPrintContext *context,
+                                              gint page_nr,
+                                              GtkPageSetup *setup,
+                                              gpointer user_data);
+static void rpt_print_gtk_draw_page (GtkPrintOperation *operation,
+                                     GtkPrintContext *context,
+                                     gint page_nr,
+                                     gpointer user_data);
+
+
 #define RPT_PRINT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), TYPE_RPT_PRINT, RptPrintPrivate))
 
 typedef struct _RptPrintPrivate RptPrintPrivate;
@@ -87,8 +109,16 @@ struct _RptPrintPrivate
 		gdouble margin_bottom;
 		gdouble margin_left;
 
+		xmlDoc *xdoc;
+
+		RptPrintOutputType output_type;
+		gchar *output_filename;
+
+		xmlNodeSet *pages;
+
 		cairo_surface_t *surface;
 		cairo_t *cr;
+		GtkPrintContext *gtk_print_context;
 	};
 
 GType
@@ -128,27 +158,40 @@ rpt_print_class_init (RptPrintClass *klass)
 
 	object_class->set_property = rpt_print_set_property;
 	object_class->get_property = rpt_print_get_property;
+
+	g_object_class_install_property (object_class, PROP_OUTPUT_TYPE,
+	                                 g_param_spec_int ("output-type",
+	                                                   "Output Type",
+	                                                   "The output type.",
+	                                                   RPTP_OUTPUT_PNG, RPTP_OUTPUT_GTK, RPTP_OUTPUT_PDF,
+	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_OUTPUT_FILENAME,
+	                                 g_param_spec_string ("output-filename",
+	                                                      "Output File Name",
+	                                                      "The output file's name.",
+	                                                      "",
+	                                                      G_PARAM_READWRITE));
 }
 
 static void
 rpt_print_init (RptPrint *rpt_print)
 {
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->output_filename = g_strdup ("");
 }
 
 /**
  * rpt_print_new_from_xml:
  * @xdoc: an #xmlDoc.
- * @output_type:
- * @out_filename:
  *
  * Creates a new #RptPrint object.
  *
  * Returns: the newly created #RptPrint object.
  */
 RptPrint
-*rpt_print_new_from_xml (xmlDoc *xdoc, RptPrintOutputType output_type, const gchar *out_filename)
+*rpt_print_new_from_xml (xmlDoc *xdoc)
 {
-	gchar *prop;
 	RptPrint *rpt_print = NULL;
 
 	xmlNode *cur = xmlDocGetRootElement (xdoc);
@@ -156,170 +199,18 @@ RptPrint
 		{
 			if (strcmp (cur->name, "reptool_report") == 0)
 				{
-					FILE *fout;
 					RptPrintPrivate *priv;
-
-					gint npage = 0;
 
 					rpt_print = RPT_PRINT (g_object_new (rpt_print_get_type (), NULL));
 
 					priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-					if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG)
-						{
-							fout = fopen (out_filename, "w");
-							if (fout == NULL)
-								{
-									/* TO DO */
-									return NULL;
-								}
-						}
-
-					cur = cur->children;
-					while (cur != NULL)
-						{
-							if (strcmp (cur->name, "page") == 0)
-								{
-									npage++;
-
-									prop = xmlGetProp (cur, (const xmlChar *)"width");
-									if (prop != NULL)
-										{
-											priv->width = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (cur, (const xmlChar *)"height");
-									if (prop != NULL)
-										{
-											priv->height = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (cur, (const xmlChar *)"margin-top");
-									if (prop != NULL)
-										{
-											priv->margin_top = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (cur, (const xmlChar *)"margin-right");
-									if (prop != NULL)
-										{
-											priv->margin_right = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (cur, (const xmlChar *)"margin-bottom");
-									if (prop != NULL)
-										{
-											priv->margin_bottom = strtod (prop, NULL);
-										}
-									prop = xmlGetProp (cur, (const xmlChar *)"margin-left");
-									if (prop != NULL)
-										{
-											priv->margin_left = strtod (prop, NULL);
-										}
-
-									if (priv->width != 0 && priv->height != 0)
-										{
-											if (output_type == RPTP_OUTPUT_PNG)
-												{
-													priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)priv->width, (int)priv->height);
-												}
-											else if (output_type == RPTP_OUTPUT_PDF && npage == 1)
-												{
-													priv->surface = cairo_pdf_surface_create (out_filename, priv->width, priv->height);
-												}
-											else if (output_type == RPTP_OUTPUT_PS && npage == 1)
-												{
-													priv->surface = cairo_ps_surface_create (out_filename, priv->width, priv->height);
-												}
-											else if (output_type == RPTP_OUTPUT_SVG)
-												{
-													gchar *new_out_filename = rpt_print_new_numbered_filename (out_filename, npage);
-													fout = fopen (new_out_filename, "w");
-													if (fout == NULL)
-														{
-															/* TO DO */
-															return NULL;
-														}
-
-													priv->surface = cairo_svg_surface_create (new_out_filename, priv->width, priv->height);
-												}
-
-											if (cairo_surface_status (priv->surface) == CAIRO_STATUS_SUCCESS)
-												{
-													if (output_type == RPTP_OUTPUT_PNG || output_type == RPTP_OUTPUT_SVG)
-														{
-															priv->cr = cairo_create (priv->surface);
-														}
-													else if (npage == 1)
-														{
-															priv->cr = cairo_create (priv->surface);
-														}
-
-													if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG && npage == 1)
-														{
-															cairo_surface_destroy (priv->surface);
-														}
-
-													if (cairo_status (priv->cr) == CAIRO_STATUS_SUCCESS)
-														{
-															rpt_print_page (rpt_print, cur);
-
-															if (output_type == RPTP_OUTPUT_PNG)
-																{
-																	gchar *new_out_filename = rpt_print_new_numbered_filename (out_filename, npage);
-																
-																	cairo_surface_write_to_png (priv->surface,
-																	                            new_out_filename);
-																	cairo_surface_destroy (priv->surface);
-																	cairo_destroy (priv->cr);
-																}
-															else
-																{
-																	cairo_show_page (priv->cr);
-																}
-
-															if (output_type == RPTP_OUTPUT_SVG)
-																{
-																	cairo_surface_destroy (priv->surface);
-																	cairo_destroy (priv->cr);
-																	fclose (fout);
-																}
-														}
-													else
-														{
-															/* TO DO */
-															g_warning ("cairo status not sucess: %d", cairo_status (priv->cr));
-														}												
-												}
-											else
-												{
-													/* TO DO */
-													g_warning ("cairo surface status not sucess");
-												}
-										}
-									else
-										{
-											/* TO DO */
-											g_warning ("page width or height cannot be zero");
-										}
-								}
-							else
-								{
-									/* TO DO */
-								}
-
-							cur = cur->next;
-						}
-
-					if (priv->cr != NULL)
-						{
-							cairo_destroy (priv->cr);
-						}
-					if (output_type != RPTP_OUTPUT_PNG && output_type != RPTP_OUTPUT_SVG)
-						{
-							fclose (fout);
-						}
+					priv->xdoc = xdoc;
 				}
 			else
 				{
 					/* TO DO */
-					g_warning ("Not a valid reptool print report format");
+					g_warning ("Not a valid RepTool print report format");
 				}
 		}
 
@@ -329,25 +220,266 @@ RptPrint
 /**
  * rpt_print_new_from_file:
  * @filename: the path of the xml file to load.
- * @output_type:
- * @out_filename:
  *
  * Creates a new #RptPrint object.
  *
  * Returns: the newly created #RptPrint object.
  */
 RptPrint
-*rpt_print_new_from_file (const gchar *filename, RptPrintOutputType output_type, const gchar *out_filename)
+*rpt_print_new_from_file (const gchar *filename)
 {
 	RptPrint *rpt_print = NULL;
 
 	xmlDoc *xdoc = xmlParseFile (filename);
 	if (xdoc != NULL)
 		{
-			rpt_print = rpt_print_new_from_xml (xdoc, output_type, out_filename);
+			rpt_print = rpt_print_new_from_xml (xdoc);
 		}
 
 	return rpt_print;
+}
+
+/**
+ * rpt_print_set_output_type:
+ * @rpt_print: an #RptPrint object.
+ * @output_type:
+ *
+ */
+void
+rpt_print_set_output_type (RptPrint *rpt_print, RptPrintOutputType output_type)
+{
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->output_type = output_type;
+}
+
+/**
+ * rpt_print_set_output_filename:
+ * @rpt_print: an #RptPrint object.
+ * @out_filename:
+ *
+ */
+void
+rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename)
+{
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->output_filename = g_strdup (output_filename);
+}
+
+/**
+ * rpt_print_print:
+ * @rpt_print: an #RptPrint object.
+ *
+ */
+void
+rpt_print_print (RptPrint *rpt_print)
+{
+	xmlXPathContextPtr xpcontext;
+	xmlXPathObjectPtr xpresult;
+	xmlNodeSetPtr xnodeset;
+
+	FILE *fout;
+	gchar *prop;
+	gint npage = 0;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	xmlNode *cur = xmlDocGetRootElement (priv->xdoc);
+	if (cur == NULL)
+		{
+			/* TO DO */
+			g_warning ("Xml isn't a valid reptool print definition.");
+			return;
+		}
+	else
+		{
+			if (xmlStrcmp (cur->name, (const xmlChar *)"reptool_report") != 0)
+				{
+					/* TO DO */
+					g_warning ("Xml isn't a valid reptool print definition.");
+					return;
+				}
+		}
+
+	/* find number of pages */
+	xpcontext = xmlXPathNewContext (priv->xdoc);
+
+	xpcontext->node = xmlDocGetRootElement (priv->xdoc);
+	xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page", xpcontext);
+	if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+		{
+			xnodeset = xpresult->nodesetval;
+			priv->pages = xnodeset;
+		}
+	else
+		{
+			/* TO DO */
+			g_warning ("No pages found in xml.");
+			return;
+		}
+
+	if (priv->output_type == RPTP_OUTPUT_GTK)
+		{
+			gchar *locale_old;
+			gchar *locale_num;
+			GtkPrintOperation *operation;
+
+			locale_old = setlocale (LC_ALL, NULL);
+			gtk_init (0, NULL);
+
+			operation = gtk_print_operation_new ();
+			g_signal_connect (G_OBJECT (operation), "begin-print",
+			                  G_CALLBACK (rpt_print_gtk_begin_print), (gpointer)rpt_print);
+			g_signal_connect (G_OBJECT (operation), "request-page-setup",
+			                  G_CALLBACK (rpt_print_gtk_request_page_setup), (gpointer)rpt_print);
+			g_signal_connect (G_OBJECT (operation), "draw-page",
+			                  G_CALLBACK (rpt_print_gtk_draw_page), (gpointer)rpt_print);
+
+			locale_num = setlocale (LC_NUMERIC, "C");
+			gtk_print_operation_run (operation, GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG, NULL, NULL);
+			setlocale (LC_NUMERIC, locale_num);
+			setlocale (LC_ALL, locale_old);
+		}
+	else
+		{
+			if (strcmp (g_strstrip (priv->output_filename), "") == 0)
+				{
+					switch (priv->output_type)
+						{
+							case RPTP_OUTPUT_PNG:
+								priv->output_filename = g_strdup ("reptool.png");
+								break;
+							case RPTP_OUTPUT_PDF:
+								priv->output_filename = g_strdup ("reptool.pdf");
+								break;
+							case RPTP_OUTPUT_PS:
+								priv->output_filename = g_strdup ("reptool.ps");
+								break;
+							case RPTP_OUTPUT_SVG:
+								priv->output_filename = g_strdup ("reptool.svg");
+								break;
+						}
+				}
+			if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG)
+				{
+					fout = fopen (priv->output_filename, "w");
+					if (fout == NULL)
+						{
+							/* TO DO */
+							return;
+						}
+				}
+
+			for (npage = 0; npage < priv->pages->nodeNr; npage++)
+				{
+					cur = priv->pages->nodeTab[npage];
+					if (strcmp (cur->name, "page") == 0)
+						{
+							rpt_print_get_xml_page_attributes (rpt_print, cur);
+							if (priv->width != 0 && priv->height != 0)
+								{
+									if (priv->output_type == RPTP_OUTPUT_PNG)
+										{
+											priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)priv->width, (int)priv->height);
+										}
+									else if (priv->output_type == RPTP_OUTPUT_PDF && npage == 0)
+										{
+											priv->surface = cairo_pdf_surface_create (priv->output_filename, priv->width, priv->height);
+										}
+									else if (priv->output_type == RPTP_OUTPUT_PS && npage == 0)
+										{
+											priv->surface = cairo_ps_surface_create (priv->output_filename, priv->width, priv->height);
+										}
+									else if (priv->output_type == RPTP_OUTPUT_SVG)
+										{
+											gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
+											fout = fopen (new_out_filename, "w");
+											if (fout == NULL)
+												{
+													/* TO DO */
+													return;
+												}
+		
+											priv->surface = cairo_svg_surface_create (new_out_filename, priv->width, priv->height);
+										}
+		
+									if (cairo_surface_status (priv->surface) == CAIRO_STATUS_SUCCESS)
+										{
+											if (priv->output_type == RPTP_OUTPUT_PNG || priv->output_type == RPTP_OUTPUT_SVG)
+												{
+													priv->cr = cairo_create (priv->surface);
+												}
+											else if (npage == 0)
+												{
+													priv->cr = cairo_create (priv->surface);
+												}
+		
+											if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG && npage == 0)
+												{
+													cairo_surface_destroy (priv->surface);
+												}
+		
+											if (cairo_status (priv->cr) == CAIRO_STATUS_SUCCESS)
+												{
+													rpt_print_page (rpt_print, cur);
+		
+													if (priv->output_type == RPTP_OUTPUT_PNG)
+														{
+															gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
+														
+															cairo_surface_write_to_png (priv->surface,
+																						new_out_filename);
+															cairo_surface_destroy (priv->surface);
+															cairo_destroy (priv->cr);
+														}
+													else
+														{
+															cairo_show_page (priv->cr);
+														}
+		
+													if (priv->output_type == RPTP_OUTPUT_SVG)
+														{
+															cairo_surface_destroy (priv->surface);
+															cairo_destroy (priv->cr);
+															fclose (fout);
+														}
+												}
+											else
+												{
+													/* TO DO */
+													g_warning ("Cairo status not sucess: %d", cairo_status (priv->cr));
+												}												
+										}
+									else
+										{
+											/* TO DO */
+											g_warning ("Cairo surface status not sucess");
+										}
+								}
+							else
+								{
+									/* TO DO */
+									g_warning ("Page width or height cannot be zero");
+								}
+						}
+					else
+						{
+							/* TO DO */
+						}
+		
+					cur = cur->next;
+				}
+		
+			if (priv->cr != NULL)
+				{
+					cairo_destroy (priv->cr);
+				}
+			if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG)
+				{
+					fclose (fout);
+				}
+		}
 }
 
 static void
@@ -359,6 +491,14 @@ rpt_print_set_property (GObject *object, guint property_id, const GValue *value,
 
 	switch (property_id)
 		{
+			case PROP_OUTPUT_TYPE:
+				rpt_print_set_output_type (rpt_print, g_value_get_int (value));
+				break;
+
+			case PROP_OUTPUT_FILENAME:
+				rpt_print_set_output_filename (rpt_print, g_value_get_string (value));
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -374,9 +514,56 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 
 	switch (property_id)
 		{
+			case PROP_OUTPUT_TYPE:
+				g_value_set_int (value, priv->output_type);
+				break;
+
+			case PROP_OUTPUT_FILENAME:
+				g_value_set_string (value, priv->output_filename);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
+		}
+}
+
+static void
+rpt_print_get_xml_page_attributes (RptPrint *rpt_print, xmlNode *xml_page)
+{
+	gchar *prop;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	prop = xmlGetProp (xml_page, (const xmlChar *)"width");
+	if (prop != NULL)
+		{
+			priv->width = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xml_page, (const xmlChar *)"height");
+	if (prop != NULL)
+		{
+			priv->height = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-top");
+	if (prop != NULL)
+		{
+			priv->margin_top = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-right");
+	if (prop != NULL)
+		{
+			priv->margin_right = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-bottom");
+	if (prop != NULL)
+		{
+			priv->margin_bottom = strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-left");
+	if (prop != NULL)
+		{
+			priv->margin_left = strtod (prop, NULL);
 		}
 }
 
@@ -487,7 +674,14 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 
 	/* creating pango layout */
-	playout = pango_cairo_create_layout (priv->cr);
+	/*if (priv->output_type == RPTP_OUTPUT_GTK)
+		{
+			playout = gtk_print_context_create_pango_layout (priv->gtk_print_context);
+		}
+	else
+		{*/
+			playout = pango_cairo_create_layout (priv->cr);
+		/*}*/
 	if (size != NULL)
 		{
 			pango_layout_set_width (playout, (size->width - padding_left - padding_right) * PANGO_SCALE);
@@ -983,4 +1177,65 @@ rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 	cairo_translate (priv->cr, tx, ty);
 	cairo_rotate (priv->cr, angle * G_PI / 180.);
 	cairo_translate (priv->cr, -tx, -ty);
+}
+static void
+rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
+                           GtkPrintContext *context,
+                           gpointer user_data)
+{
+	RptPrint *rpt_print = (RptPrint *)user_data;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	GtkPageSetup *page_set = gtk_page_setup_new ();
+	gtk_page_setup_set_top_margin (page_set, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_bottom_margin (page_set, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_left_margin (page_set, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_right_margin (page_set, 0.0, GTK_UNIT_POINTS);
+
+	gtk_print_operation_set_default_page_setup (operation, page_set);
+	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
+	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
+}
+
+static void
+rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
+                                  GtkPrintContext *context,
+                                  gint page_nr,
+                                  GtkPageSetup *setup,
+                                  gpointer user_data)
+{
+	GtkPaperSize *paper_size;
+
+	RptPrint *rpt_print = (RptPrint *)user_data;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	rpt_print_get_xml_page_attributes (rpt_print, priv->pages->nodeTab[page_nr]);
+	paper_size = gtk_paper_size_new_custom ("reptool",
+	                                        "RepTool",
+	                                        priv->width,
+	                                        priv->height,
+	                                        GTK_UNIT_POINTS);
+
+	gtk_page_setup_set_paper_size (setup, paper_size);
+}
+
+static void
+rpt_print_gtk_draw_page (GtkPrintOperation *operation,
+                         GtkPrintContext *context,
+                         gint page_nr,
+                         gpointer user_data)
+{
+	RptPrint *rpt_print = (RptPrint *)user_data;
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->cr = gtk_print_context_get_cairo_context (context);
+	priv->gtk_print_context = context;
+
+	if (priv->width != 0 && priv->height != 0)
+		{
+			rpt_print_page (rpt_print, priv->pages->nodeTab[page_nr]);
+		}
 }

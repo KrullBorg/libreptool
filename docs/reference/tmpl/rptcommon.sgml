@@ -43,6 +43,13 @@ Usefull functions and struct.
 @width: 
 @height: 
 
+<!-- ##### STRUCT RptRotation ##### -->
+<para>
+
+</para>
+
+@angle: 
+
 <!-- ##### STRUCT RptFont ##### -->
 <para>
 
@@ -144,6 +151,24 @@ Usefull functions and struct.
 
 @xnode: 
 @size: 
+
+
+<!-- ##### FUNCTION rpt_common_get_rotation ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION rpt_common_set_rotation ##### -->
+<para>
+
+</para>
+
+@xnode: 
+@rotation: 
 
 
 <!-- ##### FUNCTION rpt_common_get_font ##### -->

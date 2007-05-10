@@ -86,6 +86,21 @@ struct _RptFont
 };
 typedef struct _RptFont RptFont;
 
+/**
+ * RptBorder:
+ * @top_width:
+ * @right_width:
+ * @bottom_width:
+ * @left_width:
+ * @top_color: an #RptColor
+ * @right_color: an #RptColor
+ * @bottom_color: an #RptColor
+ * @left_color: an #RptColor
+ * @top_style: a #GArray of #gdouble values representing dashes sequence
+ * @right_style: a #GArray of #gdouble values representing dashes sequence
+ * @bottom_style: a #GArray of #gdouble values representing dashes sequence
+ * @left_style: a #GArray of #gdouble values representing dashes sequence
+ */
 struct _RptBorder
 {
 	gdouble top_width;
@@ -125,6 +140,12 @@ struct _RptAlign
 };
 typedef struct _RptAlign RptAlign;
 
+/**
+ * RptStroke:
+ * @width:
+ * @color: an #RptColor
+ * @style: a #GArray of #gdouble values representing dashes sequence
+ */
 struct _RptStroke
 {
 	gdouble width;

@@ -23,6 +23,16 @@ Produces the report/print.
 </para>
 
 
+<!-- ##### ARG RptPrint:output-filename ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG RptPrint:output-type ##### -->
+<para>
+
+</para>
+
 <!-- ##### ENUM RptPrintOutputType ##### -->
 <para>
 
@@ -32,6 +42,7 @@ Produces the report/print.
 @RPTP_OUTPUT_PDF: 
 @RPTP_OUTPUT_PS: 
 @RPTP_OUTPUT_SVG: 
+@RPTP_OUTPUT_GTK: 
 
 <!-- ##### FUNCTION rpt_print_new_from_xml ##### -->
 <para>
@@ -39,8 +50,6 @@ Produces the report/print.
 </para>
 
 @xdoc: 
-@output_type: 
-@out_filename: 
 @Returns: 
 
 
@@ -50,8 +59,32 @@ Produces the report/print.
 </para>
 
 @filename: 
-@output_type: 
-@out_filename: 
 @Returns: 
+
+
+<!-- ##### FUNCTION rpt_print_print ##### -->
+<para>
+
+</para>
+
+@rpt_print: 
+
+
+<!-- ##### FUNCTION rpt_print_set_output_filename ##### -->
+<para>
+
+</para>
+
+@rpt_print: 
+@output_filename: 
+
+
+<!-- ##### FUNCTION rpt_print_set_output_type ##### -->
+<para>
+
+</para>
+
+@rpt_print: 
+@output_type: 
 
 

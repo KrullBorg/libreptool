@@ -22,6 +22,9 @@ RptPrint
 RptPrintOutputType
 rpt_print_new_from_xml
 rpt_print_new_from_file
+rpt_print_print
+rpt_print_set_output_filename
+rpt_print_set_output_type
 <SUBSECTION Standard>
 TYPE_RPT_PRINT
 RPT_PRINT
@@ -156,6 +159,7 @@ rpt_obj_ellipse_get_type
 RptColor
 RptPoint
 RptSize
+RptRotation
 RptFont
 RptBorder
 eRptHAlign
@@ -166,6 +170,8 @@ rpt_common_get_position
 rpt_common_set_position
 rpt_common_get_size
 rpt_common_set_size
+rpt_common_get_rotation
+rpt_common_set_rotation
 rpt_common_get_font
 rpt_common_set_font
 rpt_common_get_border
