@@ -117,9 +117,11 @@ static void rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode,
 
 static RptObject *rpt_report_get_object_from_name_in_list (GList *list, const gchar *name);
 
-static RptReportSection rpt_report_get_section_object (RptReport *rpt_report, RptObject *rpt_object);
+static RptReportSection rpt_report_object_get_section (RptReport *rpt_report, RptObject *rpt_object);
 static gboolean rpt_report_object_is_in_section (RptReport *rpt_report, RptObject *rpt_object, RptReportSection section);
-static xmlNode *rpt_report_get_xml_section (RptReport *rpt_report , RptReportSection section);
+
+static void rpt_report_section_create (RptReport *rpt_report, RptReportSection section);
+static xmlNode *rpt_report_section_get_xml (RptReport *rpt_report, RptReportSection section);
 
 static xmlNode *rpt_report_rptprint_new_page (RptReport *rpt_report,
                                               xmlNode *xroot);
@@ -199,8 +201,8 @@ rpt_report_class_init (RptReportClass *klass)
 	 * @data_model: a #GdaDataModel; or NULL if there's no database source.
 	 * @row: the current @data_model's row; -1 if @data_model is NULL.
 	 *
-	 * The signal is emitted each time there's into text's source
-	 * attribute a field that doesn't exists.
+	 * The signal is emitted each time there's into text's attribute source
+	 * a field that doesn't exists.
 	 */
 	klass->field_request_signal_id = g_signal_new ("field-request",
 	                                               G_TYPE_FROM_CLASS (object_class),
@@ -413,8 +415,7 @@ RptReport
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::report-header", xpcontext);
 									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
 										{
-											priv->report_header = (ReportHeader *)g_malloc0 (sizeof (ReportHeader));
-											priv->report_header->objects = NULL;
+											rpt_report_section_create (rpt_report, RPTREPORT_SECTION_REPORT_HEADER);
 											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_REPORT_HEADER);
 										}
 
@@ -423,8 +424,7 @@ RptReport
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::report-footer", xpcontext);
 									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
 										{
-											priv->report_footer = (ReportFooter *)g_malloc0 (sizeof (ReportFooter));
-											priv->report_footer->objects = NULL;
+											rpt_report_section_create (rpt_report, RPTREPORT_SECTION_REPORT_FOOTER);
 											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_REPORT_FOOTER);
 										}
 
@@ -433,8 +433,7 @@ RptReport
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page-header", xpcontext);
 									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
 										{
-											priv->page_header = (PageHeader *)g_malloc0 (sizeof (PageHeader));	
-											priv->page_header->objects = NULL;
+											rpt_report_section_create (rpt_report, RPTREPORT_SECTION_PAGE_HEADER);
 											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_PAGE_HEADER);
 										}
 
@@ -443,8 +442,7 @@ RptReport
 									xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::page-footer", xpcontext);
 									if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval) && xpresult->nodesetval->nodeNr == 1)
 										{
-											priv->page_footer = (PageFooter *)g_malloc0 (sizeof (PageFooter));
-											priv->page_footer->objects = NULL;
+											rpt_report_section_create (rpt_report, RPTREPORT_SECTION_PAGE_FOOTER);
 											rpt_report_xml_parse_section (rpt_report, xpresult->nodesetval->nodeTab[0], RPTREPORT_SECTION_PAGE_FOOTER);
 										}
 
@@ -487,6 +485,66 @@ RptReport
 }
 
 /**
+ * rpt_report_database_get_provider:
+ * @rpt_report:
+ *
+ */
+const gchar
+*rpt_report_database_get_provider (RptReport *rpt_report)
+{
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->db != NULL)
+		{
+			ret = g_strdup (priv->db->provider_id);
+		}
+
+	return (const gchar *)ret;
+}
+
+/**
+ * rpt_report_database_get_connection_string:
+ * @rpt_report:
+ *
+ */
+const gchar
+*rpt_report_database_get_connection_string (RptReport *rpt_report)
+{
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->db != NULL)
+		{
+			ret = g_strdup (priv->db->connection_string);
+		}
+
+	return (const gchar *)ret;
+}
+
+/**
+ * rpt_report_database_get_sql:
+ * @rpt_report:
+ *
+ */
+const gchar
+*rpt_report_database_get_sql (RptReport *rpt_report)
+{
+	gchar *ret = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->db != NULL)
+		{
+			ret = g_strdup (priv->db->sql);
+		}
+
+	return (const gchar *)ret;
+}
+
+/**
  * rpt_report_set_database:
  * @rpt_report: an #RptReport object.
  * @provider_id: a libgda's provider_id.
@@ -526,8 +584,35 @@ rpt_report_set_page_size (RptReport *rpt_report,
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	priv->page->size->width = size.width;
-	priv->page->size->height = size.height;
+	if (size.width <= 0.0 ||
+	    size.height <= 0.0)
+		{
+			/* TO DO */
+			g_warning ("Page's width and height must be greater than zero.");
+		}
+	else
+		{
+			priv->page->size->width = size.width;
+			priv->page->size->height = size.height;
+		}
+}
+
+/**
+ * rpt_report_get_page_size:
+ * @rpt_report:
+ *
+ */
+RptSize
+*rpt_report_get_page_size (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	RptSize *size = (RptSize *)g_malloc0 (sizeof (RptSize));
+
+	size->width = priv->page->size->width;
+	size->height = priv->page->size->height;
+
+	return size;
 }
 
 /**
@@ -556,6 +641,82 @@ rpt_report_set_page_margins (RptReport *rpt_report,
 }
 
 /**
+ * rpt_report_get_page_margins:
+ * @rpt_report:
+ * @top:
+ * @right:
+ * @bottom:
+ * @left:
+ *
+ */
+void
+rpt_report_get_page_margins (RptReport *rpt_report,
+                             gdouble *top,
+                             gdouble *right,
+                             gdouble *bottom,
+                             gdouble *left)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	*top = priv->page->margin_top;
+	*right = priv->page->margin_right;
+	*bottom = priv->page->margin_bottom;
+	*left = priv->page->margin_left;
+}
+
+/**
+ * rpt_report_get_section_height:
+ * @rpt_report:
+ * @section:
+ *
+ */
+gdouble
+rpt_report_get_section_height (RptReport *rpt_report,
+                               RptReportSection section)
+{
+	gdouble ret = -1;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				if (priv->report_header != NULL)
+					{
+						ret = priv->report_header->height;
+					}
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				if (priv->report_footer != NULL)
+					{
+						ret = priv->report_footer->height;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				if (priv->page_header != NULL)
+					{
+						ret = priv->page_header->height;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				if (priv->page_footer != NULL)
+					{
+						ret = priv->page_footer->height;
+					}
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				ret = priv->body->height;
+				break;
+		}
+
+	return ret;
+}
+
+/**
  * rpt_report_set_section_height: 
  * @rpt_report: an #RptReport object.
  * @section:
@@ -569,6 +730,8 @@ rpt_report_set_section_height (RptReport *rpt_report,
                                gdouble height)
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	rpt_report_section_create (rpt_report, section);
 
 	switch (section)
 		{
@@ -595,6 +758,123 @@ rpt_report_set_section_height (RptReport *rpt_report,
 }
 
 /**
+ * rpt_report_section_get_objects:
+ * @rpt_report:
+ * @section:
+ *
+ */
+GList
+*rpt_report_section_get_objects (RptReport *rpt_report,
+                                 RptReportSection section)
+{
+	GList *objects = NULL;
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				if (priv->report_header != NULL)
+					{
+						objects = g_list_copy (priv->report_header->objects);
+					}
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				if (priv->report_footer != NULL)
+					{
+						objects = g_list_copy (priv->report_footer->objects);
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				if (priv->page_header != NULL)
+					{
+						objects = g_list_copy (priv->page_header->objects);
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				if (priv->page_footer != NULL)
+					{
+						objects = g_list_copy (priv->page_footer->objects);
+					}
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				objects = g_list_copy (priv->body->objects);
+				break;
+		}
+
+	return objects;
+}
+
+/**
+ * rpt_report_section_remove:
+ * @rpt_report:
+ * @section:
+ *
+ */
+void
+rpt_report_section_remove (RptReport *rpt_report, RptReportSection section)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				if (priv->report_header != NULL)
+					{
+						g_free (priv->report_header);
+						priv->report_header = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				if (priv->report_footer != NULL)
+					{
+						g_free (priv->report_footer);
+						priv->report_footer = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				if (priv->page_header != NULL)
+					{
+						g_free (priv->page_header);
+						priv->page_header = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				if (priv->page_footer != NULL)
+					{
+						g_free (priv->page_footer);
+						priv->page_footer = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				/* TO DO */
+				g_warning ("Body cannot be removed.");
+				break;
+		}
+}
+
+/**
+ * rpt_report_get_report_header_new_page_after:
+ * @rpt_report:
+ *
+ */
+gboolean
+rpt_report_get_report_header_new_page_after (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->report_header == NULL ? FALSE : priv->report_header->new_page_after);
+}
+
+/**
  * rpt_report_set_report_header_new_page_after:
  * @rpt_report: an #RptReport object.
  * @new_page_after:
@@ -612,6 +892,19 @@ rpt_report_set_report_header_new_page_after (RptReport *rpt_report, gboolean new
 }
 
 /**
+ * rpt_report_get_report_footer_new_page_before:
+ * @rpt_report:
+ *
+ */
+gboolean
+rpt_report_get_report_footer_new_page_before (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->report_footer == NULL ? FALSE : priv->report_footer->new_page_before);
+}
+
+/**
  * rpt_report_set_report_footer_new_page_before:
  * @rpt_report: an #RptReport object.
  * @new_page_before:
@@ -626,6 +919,32 @@ rpt_report_set_report_footer_new_page_before (RptReport *rpt_report, gboolean ne
 		{
 			priv->report_footer->new_page_before = new_page_before;
 		}
+}
+
+/**
+ * rpt_report_get_page_header_first_page:
+ * @rpt_report: an #RptReport object.
+ *
+ */
+gboolean
+rpt_report_get_page_header_first_page (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->page_header == NULL ? FALSE : priv->page_header->first_page);
+}
+
+/**
+ * rpt_report_get_page_header_last_page:
+ * @rpt_report: an #RptReport object.
+ *
+ */
+gboolean
+rpt_report_get_page_header_last_page (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->page_header == NULL ? FALSE : priv->page_header->last_page);
 }
 
 /**
@@ -648,6 +967,32 @@ rpt_report_set_page_header_first_last_page (RptReport *rpt_report, gboolean firs
 }
 
 /**
+ * rpt_report_get_page_footer_first_page:
+ * @rpt_report: an #RptReport object.
+ *
+ */
+gboolean
+rpt_report_get_page_footer_first_page (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->page_footer ? FALSE : priv->page_footer->first_page);
+}
+
+/**
+ * rpt_report_get_page_footer_last_page:
+ * @rpt_report: an #RptReport object.
+ *
+ */
+gboolean
+rpt_report_get_page_footer_last_page (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return (priv->page_footer == NULL ? FALSE : priv->page_footer->last_page);
+}
+
+/**
  * rpt_report_set_page_footer_first_last_page:
  * @rpt_report: an #RptReport object.
  * @first_page:
@@ -667,6 +1012,33 @@ rpt_report_set_page_footer_first_last_page (RptReport *rpt_report, gboolean firs
 }
 
 /**
+ * rpt_report_body_get_new_page_after:
+ * @rpt_report:
+ *
+ */
+gboolean
+rpt_report_body_get_new_page_after (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return priv->body->new_page_after;
+}
+
+/**
+ * rpt_report_body_set_new_page_after:
+ * @rpt_report:
+ * @new_page_after:
+ *
+ */
+void
+rpt_report_body_set_new_page_after (RptReport *rpt_report, gboolean new_page_after)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->body->new_page_after = new_page_after;
+}
+
+/**
  * rpt_report_get_xml:
  * @rpt_report: an #RptReport object.
  *
@@ -680,8 +1052,6 @@ xmlDoc
 	xmlNode *xnode;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
-
-	/* TO DO */
 
 	xdoc = xmlNewDoc ("1.0");
 
@@ -731,26 +1101,26 @@ xmlDoc
 
 	if (priv->report_header != NULL)
 		{
-			xnode = rpt_report_get_xml_section (rpt_report, RPTREPORT_SECTION_REPORT_HEADER);
+			xnode = rpt_report_section_get_xml (rpt_report, RPTREPORT_SECTION_REPORT_HEADER);
 			xmlAddChild (xreport, xnode);
 		}
 	if (priv->page_header != NULL)
 		{
-			xnode = rpt_report_get_xml_section (rpt_report, RPTREPORT_SECTION_PAGE_HEADER);
+			xnode = rpt_report_section_get_xml (rpt_report, RPTREPORT_SECTION_PAGE_HEADER);
 			xmlAddChild (xreport, xnode);
 		}
 
-	xnode = rpt_report_get_xml_section (rpt_report, RPTREPORT_SECTION_BODY);
+	xnode = rpt_report_section_get_xml (rpt_report, RPTREPORT_SECTION_BODY);
 	xmlAddChild (xreport, xnode);
 
 	if (priv->report_footer != NULL)
 		{
-			xnode = rpt_report_get_xml_section (rpt_report, RPTREPORT_SECTION_REPORT_FOOTER);
+			xnode = rpt_report_section_get_xml (rpt_report, RPTREPORT_SECTION_REPORT_FOOTER);
 			xmlAddChild (xreport, xnode);
 		}
 	if (priv->page_footer != NULL)
 		{
-			xnode = rpt_report_get_xml_section (rpt_report, RPTREPORT_SECTION_PAGE_FOOTER);
+			xnode = rpt_report_section_get_xml (rpt_report, RPTREPORT_SECTION_PAGE_FOOTER);
 			xmlAddChild (xreport, xnode);
 		}
 
@@ -984,7 +1354,7 @@ rpt_report_remove_object (RptReport *rpt_report, RptObject *rpt_object)
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	RptReportSection section = rpt_report_get_section_object (rpt_report, rpt_object);
+	RptReportSection section = rpt_report_object_get_section (rpt_report, rpt_object);
 
 	switch (section)
 		{
@@ -1105,14 +1475,14 @@ static RptObject
 }
 
 /**
- * rpt_report_get_section_object:
+ * rpt_report_object_get_section:
  * @rpt_report: an #RptReport object.
  * @rpt_object: an #RptObject object.
  *
  * Returns: the #RptReportSection in which @rpt_object is contained.
  */
 static RptReportSection
-rpt_report_get_section_object (RptReport *rpt_report, RptObject *rpt_object)
+rpt_report_object_get_section (RptReport *rpt_report, RptObject *rpt_object)
 {
 	RptReportSection section = -1;
 
@@ -1140,6 +1510,57 @@ rpt_report_get_section_object (RptReport *rpt_report, RptObject *rpt_object)
 		}
 
 	return section;
+}
+
+/**
+ * rpt_report_section_create:
+ * @rpt_report:
+ * @section:
+ *
+ */
+static void
+rpt_report_section_create (RptReport *rpt_report, RptReportSection section)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	switch (section)
+		{
+			case RPTREPORT_SECTION_REPORT_HEADER:
+				if (priv->report_header == NULL)
+					{
+						priv->report_header = (ReportHeader *)g_malloc0 (sizeof (ReportHeader));
+						priv->report_header->objects = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_REPORT_FOOTER:
+				if (priv->report_footer == NULL)
+					{
+						priv->report_footer = (ReportFooter *)g_malloc0 (sizeof (ReportFooter));
+						priv->report_footer->objects = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_HEADER:
+				if (priv->page_header == NULL)
+					{
+						priv->page_header = (PageHeader *)g_malloc0 (sizeof (PageHeader));
+						priv->page_header->objects = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_PAGE_FOOTER:
+				if (priv->page_footer == NULL)
+					{
+						priv->page_footer = (PageFooter *)g_malloc0 (sizeof (PageFooter));
+						priv->page_footer->objects = NULL;
+					}
+				break;
+
+			case RPTREPORT_SECTION_BODY:
+				g_warning ("Body cannot be created.");
+				break;
+		}
 }
 
 /** 
@@ -1200,13 +1621,13 @@ rpt_report_object_is_in_section (RptReport *rpt_report, RptObject *rpt_object, R
 }
 
 /**
- * rpt_report_get_xml_section:
+ * rpt_report_section_get_xml:
  * @rpt_report: an #RptReport object.
  * @section:
  *
  */
 static xmlNode
-*rpt_report_get_xml_section (RptReport *rpt_report , RptReportSection section)
+*rpt_report_section_get_xml (RptReport *rpt_report , RptReportSection section)
 {
 	xmlNode *xnode = NULL;
 	xmlNode *xnodechild;

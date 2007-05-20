@@ -1,3 +1,26 @@
+2007-05-20 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.h:
+	* src/rptreport.c: added functions rpt_report_database_get_provider(),
+	rpt_report_database_get_connection_string(),
+	rpt_report_database_get_sql()
+
+
+2007-05-12 Andrea Zagli <azagli@inwind.it>
+
+	* libreptool.pc.in: libgda missing
+	* src/rptreport.h:
+	* src/rptreport.c: added rpt_report_get_page_size(),
+	rpt_report_get_page_margins(), rpt_report_get_section_height(),
+	rpt_report_get_report_header_new_page_after(),
+	rpt_report_get_report_footer_new_page_before(),
+	rpt_report_get_page_header_first_page(),
+	rpt_report_get_page_header_last_page(),
+	rpt_report_get_page_footer_first_page(),
+	rpt_report_get_page_footer_last_page(), rpt_report_section_get_objects(),
+	rpt_report_body_get_new_page_after(), rpt_report_body_set_new_page_after(),
+	rpt_report_section_remove()
+
 2007-05-10 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptprint.c: some code adjustments

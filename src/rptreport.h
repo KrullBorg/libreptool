@@ -70,34 +70,60 @@ RptReport *rpt_report_new (void);
 RptReport *rpt_report_new_from_xml (xmlDoc *xdoc);
 RptReport *rpt_report_new_from_file (const gchar *filename);
 
+const gchar *rpt_report_database_get_provider (RptReport *rpt_report);
+const gchar *rpt_report_database_get_connection_string (RptReport *rpt_report);
+const gchar *rpt_report_database_get_sql (RptReport *rpt_report);
 void rpt_report_set_database (RptReport *rpt_report,
                               const gchar *provider_id,
                               const gchar *connection_string,
                               const gchar *sql);
 
+RptSize *rpt_report_get_page_size (RptReport *rpt_report);
 void rpt_report_set_page_size (RptReport *rpt_report,
                                RptSize size);
+
+void rpt_report_get_page_margins (RptReport *rpt_report,
+                                  gdouble *top,
+                                  gdouble *right,
+                                  gdouble *bottom,
+                                  gdouble *left);
 void rpt_report_set_page_margins (RptReport *rpt_report,
                                   gdouble top,
                                   gdouble right,
                                   gdouble bottom,
                                   gdouble left);
 
+gdouble rpt_report_get_section_height (RptReport *rpt_report,
+                                       RptReportSection section);
 void rpt_report_set_section_height (RptReport *rpt_report,
                                     RptReportSection section,
                                     gdouble height);
+GList *rpt_report_section_get_objects (RptReport *rpt_report,
+                                       RptReportSection section);
+void rpt_report_section_remove (RptReport *rpt_report, RptReportSection section);
 
+gboolean rpt_report_get_report_header_new_page_after (RptReport *rpt_report);
 void rpt_report_set_report_header_new_page_after (RptReport *rpt_report,
                                                   gboolean new_page_after);
+												  
+gboolean rpt_report_get_report_footer_new_page_before (RptReport *rpt_report);
 void rpt_report_set_report_footer_new_page_before (RptReport *rpt_report,
                                                    gboolean new_page_before);
 
+gboolean rpt_report_get_page_header_first_page (RptReport *rpt_report);
+gboolean rpt_report_get_page_header_last_page (RptReport *rpt_report);
 void rpt_report_set_page_header_first_last_page (RptReport *rpt_report,
                                                  gboolean first_page,
                                                  gboolean last_page);
+
+gboolean rpt_report_get_page_footer_first_page (RptReport *rpt_report);
+gboolean rpt_report_get_page_footer_last_page (RptReport *rpt_report);
 void rpt_report_set_page_footer_first_last_page (RptReport *rpt_report,
                                                  gboolean first_page,
                                                  gboolean last_page);
+
+gboolean rpt_report_body_get_new_page_after (RptReport *rpt_report);
+void rpt_report_body_set_new_page_after (RptReport *rpt_report, gboolean new_page_after);
 
 xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
 

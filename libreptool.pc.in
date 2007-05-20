@@ -4,9 +4,9 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: @PACKAGE_NAME@
-Description: Library to manage Reptool files
+Description: Library to manage RepTool files
 Version: @PACKAGE_VERSION@
-Requires: glib-2.0 gobject-2.0 libxml-2.0
+Requires: glib-2.0 gobject-2.0 libxml-2.0 libgda
 Libs: -L${libdir} -lreptool
 Cflags: -I${includedir}
 
