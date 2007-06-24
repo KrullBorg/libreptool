@@ -1,7 +1,8 @@
 LIBS = $(REPTOOL_LIBS) \
        -lfl
 
-AM_CPPFLAGS = $(REPTOOL_CFLAGS)
+AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
+              -DG_LOG_DOMAIN=\"libreptool\"
 
 lib_LTLIBRARIES = libreptool.la
 

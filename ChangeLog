@@ -1,3 +1,10 @@
+2007-06-24 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptobjtext.c: setted default font
+	* src/rptcommon.h:
+	* src/rptcommon.c:
+	* src/rptprint.c: changed font->size to gint
+
 2007-05-20 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptreport.h:

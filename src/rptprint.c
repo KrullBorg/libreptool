@@ -698,7 +698,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	if (font->size > 0)
 		{
-			str_font = g_strconcat (str_font, g_strdup_printf (" %f", font->size), NULL);
+			str_font = g_strconcat (str_font, g_strdup_printf (" %d", font->size), NULL);
 		}
 	else
 		{
@@ -1056,7 +1056,14 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 		{
 			/* TO DO */
 			/*cairo_set_line_width (priv->cr, stroke.width);*/
-			cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
+			if (stroke->color != NULL)
+				{
+					cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
+				}
+			else
+				{
+					cairo_set_source_rgba (priv->cr, 0.0, 0.0, 0.0, 1.0);
+				}
 			if (stroke->style != NULL)
 				{
 					gdouble *dash = rpt_common_style_to_array (stroke->style);

@@ -77,7 +77,7 @@ typedef struct _RptRotation RptRotation;
 struct _RptFont
 {
 	gchar *name;
-	gdouble size;
+	gint size;
 	gboolean bold;
 	gboolean italic;
 	PangoUnderline underline;

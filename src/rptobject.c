@@ -118,7 +118,7 @@ rpt_object_init (RptObject *rpt_object)
 RptObject
 *rpt_object_new (const gchar *name, RptPoint position)
 {
-	RptObject *rpt_object = RPT_OBJECT (g_object_new (rpt_object_get_type (), NULL));;
+	RptObject *rpt_object = RPT_OBJECT (g_object_new (rpt_object_get_type (), NULL));
 
 	g_object_set (rpt_object,
 	              "name", name,

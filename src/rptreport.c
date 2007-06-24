@@ -1558,7 +1558,7 @@ rpt_report_section_create (RptReport *rpt_report, RptReportSection section)
 				break;
 
 			case RPTREPORT_SECTION_BODY:
-				g_warning ("Body cannot be created.");
+				/*g_warning ("Body cannot be created.");*/
 				break;
 		}
 }

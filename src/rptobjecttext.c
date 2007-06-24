@@ -174,13 +174,24 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 {
 	RptObjTextPrivate *priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
-	priv->size = (RptSize *)g_malloc0 (sizeof (RptSize));
+	RptFont *font;
+	RptColor *color;
+
+	priv->size = g_new0 (RptSize, 1);
 	priv->size->width = 0.0;
 	priv->size->height = 0.0;
 
+	color = g_new0 (RptColor, 1);
+	color->a = 1.0;
+
+	font = g_new0 (RptFont, 1);
+	font->name = g_strdup ("Sans");
+	font->size = 12;
+	font->color = color;
+
 	priv->rotation = NULL;
 	priv->border = NULL;
-	priv->font = NULL;
+	priv->font = font;
 	priv->align = NULL;
 	priv->background_color = NULL;
 }

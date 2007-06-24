@@ -164,7 +164,7 @@ RptFont
 	font = (RptFont *)g_malloc0 (sizeof (RptFont));
 
 	font->name = g_strdup ("sans");
-	font->size = 12.0;
+	font->size = 12;
 	font->bold = FALSE;
 	font->italic = FALSE;
 	font->underline = PANGO_UNDERLINE_NONE;
