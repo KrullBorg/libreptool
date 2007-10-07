@@ -1575,26 +1575,38 @@ static gboolean
 rpt_report_object_is_in_section (RptReport *rpt_report, RptObject *rpt_object, RptReportSection section)
 {
 	gboolean ret = FALSE;
-	GList *list;
+	GList *list = NULL;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	switch (section)
 		{
 			case RPTREPORT_SECTION_REPORT_HEADER:
-				list = priv->report_header->objects;
+				if (priv->report_header != NULL)
+					{
+						list = priv->report_header->objects;
+					}
 				break;
 
 			case RPTREPORT_SECTION_REPORT_FOOTER:
-				list = priv->report_footer->objects;
+				if (priv->report_footer != NULL)
+					{
+						list = priv->report_footer->objects;
+					}
 				break;
 
 			case RPTREPORT_SECTION_PAGE_HEADER:
-				list = priv->page_header->objects;
+				if (priv->page_header != NULL)
+					{
+						list = priv->page_header->objects;
+					}
 				break;
 
 			case RPTREPORT_SECTION_PAGE_FOOTER:
-				list = priv->page_footer->objects;
+				if (priv->page_footer != NULL)
+					{
+						list = priv->page_footer->objects;
+					}
 				break;
 
 			case RPTREPORT_SECTION_BODY:
@@ -1605,16 +1617,19 @@ rpt_report_object_is_in_section (RptReport *rpt_report, RptObject *rpt_object, R
 				return FALSE;
 		}
 
-	list = g_list_first (list);
-	while (list != NULL)
+	if (list != NULL)
 		{
-			if ((RptObject *)list->data == rpt_object)
+			list = g_list_first (list);
+			while (list != NULL)
 				{
-					ret = TRUE;
-					break;
+					if ((RptObject *)list->data == rpt_object)
+						{
+							ret = TRUE;
+							break;
+						}
+
+					list = g_list_next (list);
 				}
-		
-			list = g_list_next (list);
 		}
 
 	return ret;

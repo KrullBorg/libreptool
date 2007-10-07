@@ -1,3 +1,46 @@
+2007-10-07 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: bugfixes
+
+2007-10-05 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: changed RptFont->size to gdouble from gint
+
+2007-09-30 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: added function
+	rpt_common_rptfont_from_pango_description()
+
+2007-09-13 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: added functions rpt_common_rptpoint_new(),
+	rpt_common_rptsize_new(), rpt_common_rtprotation_new(),
+	rpt_common_rptfont_new(), rpt_common_rptborder_new(),
+	rpt_common_rptalign_new(), rpt_common_rptstroke_new(),
+	rpt_common_rptcolor_new()
+
+2007-09-13 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: added function rpt_common_gdkcolor_to_rptcolor()
+
+2007-09-11 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptcommon.h:
+	* src/rptcommon.c: added function rpt_common_rptcolor_to_gdkcolor()
+
+2007-07-26 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptobjectrect.c: fill-color default to NULL
+
+2007-07-01 Andrea Zagli <azagli@inwind.it>
+
+	* src/rptreport.c: bug fix on rpt_object_is_in_section()
+
 2007-06-24 Andrea Zagli <azagli@inwind.it>
 
 	* src/rptobjtext.c: setted default font

@@ -248,7 +248,20 @@ rpt_obj_line_get_property (GObject *object, guint property_id, GValue *value, GP
 				break;
 
 			case PROP_STROKE:
-				g_value_set_pointer (value, g_memdup (priv->stroke, sizeof (RptStroke)));
+				if (priv->stroke == NULL)
+					{
+						RptStroke *stroke = rpt_common_rptstroke_new ();
+
+						stroke->width = 1.0;
+						stroke->color = rpt_common_rptcolor_new ();
+						stroke->color->a = 1.0;
+
+						g_value_set_pointer (value, g_memdup (stroke, sizeof (RptStroke)));
+					}
+				else
+					{
+						g_value_set_pointer (value, g_memdup (priv->stroke, sizeof (RptStroke)));
+					}
 				break;
 
 			default:

@@ -21,16 +21,18 @@
 #define __RPT_COMMON_H__
 
 #include <glib.h>
+#include <gdk/gdkcolor.h>
 #include <libxml/tree.h>
 
 #include <pango/pango-attributes.h>
+#include <pango/pango-font.h>
 
 G_BEGIN_DECLS
 
 
 /**
  * RptColor:
- * @r: the red channel.
+ * @r: the red channel; value from 0 to 1.
  * @g: the green channel.
  * @b: the blue channel.
  * @a: the alpha channel.
@@ -77,7 +79,7 @@ typedef struct _RptRotation RptRotation;
 struct _RptFont
 {
 	gchar *name;
-	gint size;
+	gdouble size;
 	gboolean bold;
 	gboolean italic;
 	PangoUnderline underline;
@@ -155,36 +157,47 @@ struct _RptStroke
 typedef struct _RptStroke RptStroke;
 
 
+RptPoint *rpt_common_rptpoint_new (void);
 RptPoint *rpt_common_get_position (xmlNode *xnode);
 void rpt_common_set_position (xmlNode *xnode,
                               const RptPoint *position);
 
+RptSize *rpt_common_rptsize_new (void);
 RptSize *rpt_common_get_size (xmlNode *xnode);
 void rpt_common_set_size (xmlNode *xnode,
                           const RptSize *size);
 
+RptRotation *rpt_common_rptrotation_new (void);
 RptRotation *rpt_common_get_rotation (xmlNode *xnode);
 void rpt_common_set_rotation (xmlNode *xnode,
                               const RptRotation *rotation);
 
+RptFont *rpt_common_rptfont_new (void);
 RptFont *rpt_common_get_font (xmlNode *xnode);
 void rpt_common_set_font (xmlNode *xnode,
                           const RptFont *font);
+RptFont *rpt_common_rptfont_from_pango_description (const PangoFontDescription *description);
 
+RptBorder *rpt_common_rptborder_new (void);
 RptBorder *rpt_common_get_border (xmlNode *xnode);
 void rpt_common_set_border (xmlNode *xnode,
                             const RptBorder *border);
 
+RptAlign *rpt_common_rptalign_new (void);
 RptAlign *rpt_common_get_align (xmlNode *xnode);
 void rpt_common_set_align (xmlNode *xnode,
                            const RptAlign *align);
 
+RptStroke *rpt_common_rptstroke_new (void);
 RptStroke *rpt_common_get_stroke (xmlNode *xnode);
 void rpt_common_set_stroke (xmlNode *xnode,
                             const RptStroke *stroke);
 
+RptColor *rpt_common_rptcolor_new (void);
 RptColor *rpt_common_parse_color (const gchar *str_color);
 gchar *rpt_common_rptcolor_to_string (const RptColor *color);
+GdkColor *rpt_common_rptcolor_to_gdkcolor (const RptColor *color);
+RptColor *rpt_common_gdkcolor_to_rptcolor (const GdkColor *gdk_color, guint16 alpha);
 
 gdouble *rpt_common_style_to_array (const GArray *style);
 

@@ -99,7 +99,7 @@ rpt_obj_rect_init (RptObjRect *rpt_obj_rect)
 {
 	RptObjRectPrivate *priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
 
-	priv->fill_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	priv->fill_color = NULL;
 }
 
 /**
@@ -232,7 +232,21 @@ rpt_obj_rect_get_property (GObject *object, guint property_id, GValue *value, GP
 	switch (property_id)
 		{
 			case PROP_FILL_COLOR:
-				g_value_set_pointer (value, g_memdup (priv->fill_color, sizeof (RptColor)));
+				if (priv->fill_color == NULL)
+					{
+						RptColor *color = rpt_common_rptcolor_new ();
+
+						color->r = 1.0;
+						color->g = 1.0;
+						color->b = 1.0;
+						color->a = 1.0;
+
+						g_value_set_pointer (value, g_memdup (color, sizeof (RptColor)));
+					}
+				else
+					{
+						g_value_set_pointer (value, g_memdup (priv->fill_color, sizeof (RptColor)));
+					}
 				break;
 
 			default:

@@ -931,6 +931,9 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 	size = rpt_common_get_size (xnode);
 	stroke = rpt_common_get_stroke (xnode);
 
+	/* TO DO */
+	/* rotation */
+
 	if (position == NULL || size == NULL)
 		{
 			return;

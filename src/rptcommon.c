@@ -26,6 +26,21 @@ static gchar *rpt_common_style_to_string (const GArray *style);
 
 
 /**
+ * rpt_common_rptpoint_new:
+ *
+ * Returns: an new allocated #RptPoint struct.
+ */
+RptPoint
+*rpt_common_rptpoint_new (void)
+{
+	RptPoint *point;
+
+	point = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+
+	return point;
+}
+
+/**
  * rpt_common_get_position:
  * @xnode: an #xmlNode.
  *
@@ -44,7 +59,7 @@ RptPoint
 
 	if (x != NULL || y != NULL)
 		{
-			position = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+			position = rpt_common_rptpoint_new ();
 			position->x = (x == NULL ? 0.0 : strtod (x, NULL));
 			position->y = (y == NULL ? 0.0 : strtod (y, NULL));
 		}
@@ -69,6 +84,21 @@ rpt_common_set_position (xmlNode *xnode, const RptPoint *position)
 }
 
 /**
+ * rpt_common_rptsize_new:
+ *
+ * Returns: an new allocated #RptSize struct.
+ */
+RptSize
+*rpt_common_rptsize_new (void)
+{
+	RptSize *size;
+
+	size = (RptSize *)g_malloc0 (sizeof (RptSize));
+
+	return size;
+}
+
+/**
  * rpt_common_get_size:
  * @xnode: an #xmlNode.
  *
@@ -86,7 +116,7 @@ RptSize
 	height = xmlGetProp (xnode, (const xmlChar *)"height");
 	if (width != NULL && height != NULL)
 		{
-			size = (RptSize *)g_malloc0 (sizeof (RptSize));
+			size = rpt_common_rptsize_new ();
 			size->width = strtod (width, NULL);
 			size->height = strtod (height, NULL);
 		}
@@ -111,6 +141,21 @@ rpt_common_set_size (xmlNode *xnode, const RptSize *size)
 }
 
 /**
+ * rpt_common_rptrotation_new:
+ *
+ * Returns: an new allocated #RptRotation struct.
+ */
+RptRotation
+*rpt_common_rptrotation_new (void)
+{
+	RptRotation *rotation;
+
+	rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
+
+	return rotation;
+}
+
+/**
  * rpt_common_get_rotation:
  * @xnode: an #xmlNode.
  *
@@ -126,7 +171,7 @@ RptRotation
 	prop = xmlGetProp (xnode, "rotation");
 	if (prop != NULL)
 		{
-			rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
+			rotation = rpt_common_rptrotation_new ();
 			rotation->angle = strtod (prop, NULL);
 		}
 
@@ -149,6 +194,21 @@ rpt_common_set_rotation (xmlNode *xnode, const RptRotation *rotation)
 }
 
 /**
+ * rpt_common_rptfont_new:
+ *
+ * Returns: an new allocated #RptFont struct.
+ */
+RptFont
+*rpt_common_rptfont_new (void)
+{
+	RptFont *font;
+
+	font = (RptFont *)g_malloc0 (sizeof (RptFont));
+
+	return font;
+}
+
+/**
  * rpt_common_get_font:
  * @xnode: an #xmlNode.
  *
@@ -161,10 +221,10 @@ RptFont
 	RptFont *font = NULL;
 	gchar *prop;
 
-	font = (RptFont *)g_malloc0 (sizeof (RptFont));
+	font = rpt_common_rptfont_new ();
 
-	font->name = g_strdup ("sans");
-	font->size = 12;
+	font->name = g_strdup ("Sans");
+	font->size = 12.0;
 	font->bold = FALSE;
 	font->italic = FALSE;
 	font->underline = PANGO_UNDERLINE_NONE;
@@ -286,6 +346,47 @@ rpt_common_set_font (xmlNode *xnode, const RptFont *font)
 }
 
 /**
+ * rpt_common_rptfont_from_pango_description:
+ * @description: a #PangoFontDescription.
+ *
+ * Returns: a new allocated #RptFont from a #PangoFontDescription.
+ */
+RptFont
+*rpt_common_rptfont_from_pango_description (const PangoFontDescription *description)
+{
+	RptFont *font;
+
+	font = rpt_common_rptfont_new ();
+
+	font->name = (gchar *)pango_font_description_get_family (description);
+	font->size = pango_font_description_get_size (description) / PANGO_SCALE;
+	font->bold = (pango_font_description_get_weight (description) == PANGO_WEIGHT_BOLD);
+	font->italic = (pango_font_description_get_style (description) == PANGO_STYLE_ITALIC);
+	font->underline = PANGO_UNDERLINE_NONE;
+	font->strike = FALSE;
+
+	font->color = rpt_common_rptcolor_new ();
+	font->color->a = 1.0;
+
+	return font;
+}
+
+/**
+ * rpt_common_rptborder_new:
+ *
+ * Returns: a new allocated #RptBorder struct.
+ */
+RptBorder
+*rpt_common_rptborder_new (void)
+{
+	RptBorder *border;
+
+	border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
+
+	return border;
+}
+
+/**
  * rpt_common_get_border:
  * @xnode: an #xmlNode.
  *
@@ -298,28 +399,28 @@ RptBorder
 	RptBorder *border = NULL;
 	gchar *prop;
 
-	border = (RptBorder *)g_malloc0 (sizeof (RptBorder));
+	border = rpt_common_rptborder_new ();
 
 	border->top_width = 0.0;
 	border->right_width = 0.0;
 	border->bottom_width = 0.0;
 	border->left_width = 0.0;
-	border->top_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->top_color = rpt_common_rptcolor_new ();
 	border->top_color->r = 0.0;
 	border->top_color->g = 0.0;
 	border->top_color->b = 0.0;
 	border->top_color->a = 1.0;
-	border->right_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->right_color = rpt_common_rptcolor_new ();
 	border->right_color->r = 0.0;
 	border->right_color->g = 0.0;
 	border->right_color->b = 0.0;
 	border->right_color->a = 1.0;
-	border->bottom_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->bottom_color = rpt_common_rptcolor_new ();
 	border->bottom_color->r = 0.0;
 	border->bottom_color->g = 0.0;
 	border->bottom_color->b = 0.0;
 	border->bottom_color->a = 1.0;
-	border->left_color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	border->left_color = rpt_common_rptcolor_new ();
 	border->left_color->r = 0.0;
 	border->left_color->g = 0.0;
 	border->left_color->b = 0.0;
@@ -455,6 +556,21 @@ rpt_common_set_border (xmlNode *xnode, const RptBorder *border)
 }
 
 /**
+ * rpt_common_rptalign_new:
+ *
+ * Returns: an new allocated #RptAlign struct.
+ */
+RptAlign
+*rpt_common_rptalign_new (void)
+{
+	RptAlign *align;
+
+	align = (RptAlign *)g_malloc0 (sizeof (RptAlign));
+
+	return align;
+}
+
+/**
  * rpt_common_get_align:
  * @xnode: an #xmlNode.
  *
@@ -467,7 +583,7 @@ RptAlign
 	RptAlign *align = NULL;
 	gchar *prop;
 
-	align = (RptAlign *)g_malloc0 (sizeof (RptAlign));
+	align = rpt_common_rptalign_new ();
 
 	align->h_align = RPT_HALIGN_LEFT;
 	align->v_align = RPT_VALIGN_TOP;
@@ -550,6 +666,21 @@ rpt_common_set_align (xmlNode *xnode, const RptAlign *align)
 }
 
 /**
+ * rpt_common_rptstroke_new:
+ *
+ * Returns: an new allocated #RptStroke struct.
+ */
+RptStroke
+*rpt_common_rptstroke_new (void)
+{
+	RptStroke *stroke;
+
+	stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+
+	return stroke;
+}
+
+/**
  * rpt_common_get_stroke:
  * @xnode: an #xmlNode.
  *
@@ -562,10 +693,10 @@ RptStroke
 	RptStroke *stroke = NULL;
 	gchar *prop;
 
-	stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+	stroke = rpt_common_rptstroke_new ();
 	stroke->width = 1.0;
 
-	stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	stroke->color = rpt_common_rptcolor_new ();
 	stroke->color->r = 0.0;
 	stroke->color->g = 0.0;
 	stroke->color->b = 0.0;
@@ -618,6 +749,21 @@ rpt_common_set_stroke (xmlNode *xnode, const RptStroke *stroke)
 }
 
 /**
+ * rpt_common_rptcolor_new:
+ *
+ * Returns: an new allocated #RptColor struct.
+ */
+RptColor
+*rpt_common_rptcolor_new (void)
+{
+	RptColor *color;
+
+	color = (RptColor *)g_malloc0 (sizeof (RptColor));
+
+	return color;
+}
+
+/**
  * rpt_common_parse_color:
  * @str_color: a color string.
  *
@@ -629,7 +775,7 @@ RptColor
 	RptColor *color = NULL;
 	gchar *c = g_strstrip (g_strdup (str_color));
 
-	color = (RptColor *)g_malloc0 (sizeof (RptColor));
+	color = rpt_common_rptcolor_new ();
 	color->a = 1.0;
 
 	if (c[0] == '#')
@@ -701,6 +847,52 @@ gchar
 		}
 
 	return ret;
+}
+
+/**
+ * rpt_common_rptcolor_to_gdkcolor:
+ * @color: an #RptColor value.
+ *
+ * Converts an #RptColor value to a #GdkColor.
+ *
+ * Returns: the #GdkColor correspondent to @color.
+ */
+GdkColor
+*rpt_common_rptcolor_to_gdkcolor (const RptColor *color)
+{
+	GdkColor *gdk_color;
+
+	gdk_color = (GdkColor *)g_malloc0 (sizeof (GdkColor));
+	
+	gdk_color->red = color->r * 65535;
+	gdk_color->green = color->g * 65535;
+	gdk_color->blue = color->b * 65535;
+
+	return gdk_color;
+}
+
+/**
+ * rpt_common_gdkcolor_to_rptcolor:
+ * @gdk_color: a #GdkColor.
+ * @alpha: the alpha value.
+ *
+ * Converts an #GdkColor value to a #RptColor.
+ *
+ * Returns: the #GdkColor correspondent to @color.
+ */
+RptColor
+*rpt_common_gdkcolor_to_rptcolor (const GdkColor *gdk_color, guint16 alpha)
+{
+	RptColor *color;
+
+	color = rpt_common_rptcolor_new ();
+
+	color->r = gdk_color->red / 65535.0;
+	color->g = gdk_color->green / 65535.0;
+	color->b = gdk_color->blue / 65535.0;
+	color->a = alpha / 65535.0;
+
+	return color;
 }
 
 static GArray
