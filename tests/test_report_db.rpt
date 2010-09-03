@@ -5,7 +5,7 @@
 	<database>
 		<provider>SQLite</provider>
 		<!-- connection-string must be changed to your libretool source directory because SQLite wants an absolute path -->
-		<connection-string>URI=///home/andreaz/files/c/reptool/libreptool/tests/db_test.db</connection-string>
+		<connection-string>DB_DIR=.;DB_NAME=db_test.db</connection-string>
 		<sql>SELECT * FROM articles ORDER BY name</sql>
 	</database>
 

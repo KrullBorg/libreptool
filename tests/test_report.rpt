@@ -1,29 +1,42 @@
-<?xml version="1.0" ?>
+<?xml version="1.0"?>
 <reptool>
-	<page width="595" height="842" margin-top="50" margin-left="100" margin-right="10" />
-
-	<report>
-		<body height="800">
-			<text name="text4" x="-50" y="10" width="500" height="150" source="&quot;text outside from left&quot;" />
-			<text name="text1" x="100" y="50" width="500" height="150" source="&quot;the text's content&quot;" />
-			<text name="date" x="100" y="150" width="500" height="150" source="@Date" />
-			<text name="time" x="100" y="250" width="500" height="150" source="@Time" />
-			<text name="text2" x="100" y="350" width="200" height="100"
-				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
-				padding-top="20" padding-right="20" padding-bottom="20" padding-left="10"
-				source="&quot;text very very long to try padding and border&quot;" />
-			<text name="text3" x="400" y="350" width="200" height="50" source="&quot;another long text to test page margins&quot;" />
-			<text name="text5" x="50" y="460" width="200" height="50" source="[field_to_request]" />
-			<text name="text6" x="50" y="600" width="200" height="50"
-				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
-				border-bottom-style="10"
-				rotation="45" source="&quot;Rotated text&quot;" />
-			<line name="line1" x="350" y="50" width="200" height="0" rotation="-45" />
-			<rect name="rect1" x="350" y="250" width="200" height="50" fill-color="#FFFF00" rotation="45" stroke-style="10" />
-			<image name="image1" x="200" y="460" width="200" height="150" 
-				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
-				border-top-color="#FF0000" border-right-color="#FF0000" border-bottom-color="#FF0000" border-left-color="#FF0000"
-				rotation="135" source="tests/city.png" />
-		</body>
-	</report>
+  <database>
+    <provider>
+SQLite
+    </provider>
+    <connection-string>
+DB_DIR=.;DB_NAME=db_test.db
+    </connection-string>
+    <sql>
+SELECT * FROM articles ORDER BY name
+    </sql>
+  </database>
+  <page width="595.000000" height="842.000000"/>
+  <report>
+    <report-header height="80.000000">
+      <text name="rephead" x="10.000000" y="10.000000" width="300.000000" height="70.000000" font-name="Verdana" font-size="16.000000" font-bold="y" font-color="#0000FFFF" source="&quot;the report's header&quot;"/>
+    </report-header>
+    <page-header first-page="y" height="80.000000">
+      <text name="title" x="10.000000" y="10.000000" width="300.000000" height="50.000000" font-name="Courier New" font-size="10.000000" font-bold="y" source="&quot;the page's title&quot; &amp; &quot; - &quot; &amp; @Page"/>
+      <line name="line1" x="10.000000" y="65.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#000000FF"/>
+    </page-header>
+    <body height="200.000000">
+      <text name="txt_id" x="50.000000" y="50.000000" width="100.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="[id]"/>
+      <text name="txt_name" x="200.000000" y="50.000000" width="100.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="[name]"/>
+      <text name="txt_req" x="50.000000" y="100.000000" width="100.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="[nonexistent]"/>
+      <rect name="rect1" x="400.000000" y="10.000000" width="20.000000" height="20.000000" stroke-width="1.000000" stroke-color="#000000FF" fill-color="#00FF00FF"/>
+      <image name="img1" x="450.000000" y="10.000000" width="60.000000" height="60.000000" border-bottom-width="1.000000" border-bottom-color="#FF0000FF" border-bottom-style="10.000000;10.000000;" source="tests/gnome-globe.png"/>
+    </body>
+    <report-footer height="50.000000">
+      <line name="line3" x="10.000000" y="10.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#FFFF00FF" stroke-style="50.000000;10.000000;"/>
+      <text name="txt_report_footer" x="10.000000" y="20.000000" width="500.000000" height="30.000000" font-name="Sans" font-size="12.000000" horizontal-align="center" source="&quot;the report's footer&quot;"/>
+      <line name="line4" x="10.000000" y="50.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#FFFF00FF" stroke-style="1.000000;5.000000;"/>
+    </report-footer>
+    <page-footer first-page="y" last-page="y" height="80.000000">
+      <line name="line2" x="10.000000" y="10.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#000000FF"/>
+      <text name="footer" x="10.000000" y="20.000000" width="300.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="&quot;the page's footer&quot;"/>
+      <ellipse name="ellipse1" x="400.000000" y="50.000000" width="20.000000" height="10.000000" stroke-width="1.000000" stroke-color="#FF0000FF" fill-color="#00FF00FF"/>
+      <text name="page_n" x="500.000000" y="20.000000" width="50.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="@Page &amp; &quot;/&quot; &amp; @Pages"/>
+    </page-footer>
+  </report>
 </reptool>

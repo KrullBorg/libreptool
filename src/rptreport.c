@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,8 @@
 #include <time.h>
 
 #include <libxml/xpath.h>
+
+#include <sql-parser/gda-sql-parser.h>
 
 #ifdef HAVE_CONFIG_H
 	#include <config.h>
@@ -45,7 +47,6 @@ typedef struct
 	gchar *connection_string;
 	gchar *sql;
 
-	GdaClient *gda_client;
 	GdaConnection *gda_conn;
 	GdaDataModel *gda_datamodel;
 } Database;
@@ -1137,6 +1138,8 @@ xmlDoc
 xmlDoc
 *rpt_report_get_xml_rptprint (RptReport *rpt_report)
 {
+	GError *error;
+
 	xmlDoc *xdoc;
 	xmlNode *xroot;
 	xmlNode *xpage;
@@ -1156,12 +1159,13 @@ xmlDoc
 			gint rows;
 
 			/* database connection */
-			gda_init (PACKAGE_NAME, PACKAGE_VERSION, 0, NULL);
-			priv->db->gda_client = gda_client_new ();
-			priv->db->gda_conn = gda_client_open_connection_from_string (priv->db->gda_client,
-			                                                             priv->db->provider_id,
-			                                                             priv->db->connection_string,
-			                                                             0);
+			gda_init ();
+			error = NULL;
+			priv->db->gda_conn = gda_connection_open_from_string (priv->db->provider_id,
+			                                                      priv->db->connection_string,
+			                                                      NULL,
+			                                                      GDA_CONNECTION_OPTIONS_NONE,
+			                                                      &error);
 			if (priv->db->gda_conn == NULL)
 				{
 					/* TO DO */
@@ -1170,17 +1174,18 @@ xmlDoc
 				}
 			else
 				{
-					GdaCommand *command = gda_command_new (priv->db->sql, GDA_COMMAND_TYPE_SQL, GDA_COMMAND_OPTION_STOP_ON_ERRORS);
+					GdaSqlParser *parser = gda_sql_parser_new ();
+					error = NULL;
+					GdaStatement *stmt = gda_sql_parser_parse_string (parser, priv->db->sql, NULL, &error);
 
-					priv->db->gda_datamodel = gda_connection_execute_single_command (priv->db->gda_conn, command, NULL);
+					error = NULL;
+					priv->db->gda_datamodel = gda_connection_statement_execute_select (priv->db->gda_conn, stmt, NULL, &error);
 					if (priv->db->gda_datamodel == NULL)
 						{
 							/* TO DO */
 							g_warning ("Unable to create the datamodel.");
 							return NULL;
 						}
-
-					gda_command_free (command);
 				}
 
 			rows = gda_data_model_get_n_rows (priv->db->gda_datamodel);
@@ -2069,6 +2074,7 @@ rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc)
 gchar
 *rpt_report_get_field (RptReport *rpt_report, const gchar *field_name, gint row)
 {
+	GError *error;
 	gint col;
 	gchar *ret = NULL;
 
@@ -2076,11 +2082,12 @@ gchar
 
 	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
 		{
-			col = gda_data_model_get_column_position (priv->db->gda_datamodel, field_name);
+			col = gda_data_model_get_column_index (priv->db->gda_datamodel, field_name);
 		
 			if (col > -1)
 				{
-					ret = gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, row));
+					error = NULL;
+					ret = gda_value_stringify (gda_data_model_get_value_at (priv->db->gda_datamodel, col, row, &error));
 				}
 		}
 

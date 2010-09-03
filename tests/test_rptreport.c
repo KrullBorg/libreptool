@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ gchar
 	         row > -1)
 		{
 			ret = g_strdup_printf ("%s - %s",
-			                       gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (data_model, 0, row)),
-			                       gda_value_stringify ((GdaValue *)gda_data_model_get_value_at (data_model, 1, row)));
+			                       gda_value_stringify (gda_data_model_get_value_at (data_model, 0, row, NULL)),
+			                       gda_value_stringify (gda_data_model_get_value_at (data_model, 1, row, NULL)));
 		}
 
 	return ret;

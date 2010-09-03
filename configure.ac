@@ -2,15 +2,20 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([libreptool], [0.0.5], [azagli@inwind.it])
+AC_INIT([libreptool], [0.1.0], [azagli@libero.it])
 AC_CONFIG_SRCDIR([src/rptprint.c])
 AC_CONFIG_HEADER([config.h])
 
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
-AC_LIBTOOL_WIN32_DLL
+
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_SYSTEM
+
+LT_INIT
+
+AC_LIBTOOL_WIN32_DLL
 
 # Checks for programs.
 AC_PROG_CXX
@@ -26,7 +31,7 @@ GTK_DOC_CHECK
 # Checks for libraries.
 PKG_CHECK_MODULES([REPTOOL], [gtk+-2.0 >= 2.10.0
                               libxml-2.0 >= 2.6.0
-                              libgda >= 1.2.3])
+                              libgda-4.0 >= 4.0.0])
 
 AC_SUBST(REPTOOL_CFLAGS)
 AC_SUBST(REPTOOL_LIBS)
