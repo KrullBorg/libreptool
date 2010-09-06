@@ -37,7 +37,8 @@ enum
 {
 	PROP_0,
 	PROP_OUTPUT_TYPE,
-	PROP_OUTPUT_FILENAME
+	PROP_OUTPUT_FILENAME,
+	PROP_PATH_RELATIVES_TO
 };
 
 static void rpt_print_class_init (RptPrintClass *klass);
@@ -114,6 +115,8 @@ struct _RptPrintPrivate
 		RptPrintOutputType output_type;
 		gchar *output_filename;
 
+		gchar *path_relatives_to;
+
 		xmlNodeSet *pages;
 
 		cairo_surface_t *surface;
@@ -165,20 +168,26 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                                   "The output type.",
 	                                                   RPTP_OUTPUT_PNG, RPTP_OUTPUT_GTK, RPTP_OUTPUT_PDF,
 	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
 	g_object_class_install_property (object_class, PROP_OUTPUT_FILENAME,
 	                                 g_param_spec_string ("output-filename",
 	                                                      "Output File Name",
 	                                                      "The output file's name.",
 	                                                      "",
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+	g_object_class_install_property (object_class, PROP_PATH_RELATIVES_TO,
+	                                 g_param_spec_string ("path-relatives-to",
+	                                                      "Path are relatives to",
+	                                                      "Path are relatives to this property's content.",
+	                                                      "",
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
 rpt_print_init (RptPrint *rpt_print)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
-
-	priv->output_filename = g_strdup ("");
 }
 
 /**
@@ -501,6 +510,10 @@ rpt_print_set_property (GObject *object, guint property_id, const GValue *value,
 				rpt_print_set_output_filename (rpt_print, g_value_get_string (value));
 				break;
 
+			case PROP_PATH_RELATIVES_TO:
+				priv->path_relatives_to = g_strstrip (g_strdup (g_value_get_string (value)));
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -522,6 +535,10 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 
 			case PROP_OUTPUT_FILENAME:
 				g_value_set_string (value, priv->output_filename);
+				break;
+
+			case PROP_PATH_RELATIVES_TO:
+				g_value_set_string (value, priv->path_relatives_to);
 				break;
 
 			default:
@@ -1004,6 +1021,8 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 			g_warning ("Image node source is mandatory.");
 			return;
 		}
+
+	filename = g_build_filename (priv->path_relatives_to, filename, NULL);
 
 	adapt = xmlGetProp (xnode, (const xmlChar *)"adapt");
 	if (adapt == NULL)
