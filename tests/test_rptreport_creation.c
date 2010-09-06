@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ main (int argc, char **argv)
 			size.width = 480;
 			size.height = 50;
 			g_object_set (obj,
-			              "source", "The first object inserted.",
+			              "source", "\"The first object inserted.\"",
 			              "size", &size,
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
@@ -56,6 +56,7 @@ main (int argc, char **argv)
 			size.width = 480;
 			size.height = 0;
 			stroke.color = rpt_common_parse_color ("#FF0000");
+			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
 						  "stroke", &stroke,
@@ -68,6 +69,7 @@ main (int argc, char **argv)
 			size.width = 500;
 			size.height = 500;
 			stroke.color = rpt_common_parse_color ("#000000AA");
+			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
 						  "stroke", &stroke,
@@ -93,6 +95,7 @@ main (int argc, char **argv)
 			size.height = 100;
 			color = rpt_common_parse_color ("#00FF0099");
 			stroke.color = rpt_common_parse_color ("#00FF00AA");
+			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
 						  "stroke", &stroke,
@@ -101,16 +104,16 @@ main (int argc, char **argv)
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
 			xmlDoc *report = rpt_report_get_xml (rptr);
-			xmlSaveFormatFile ("test_report.rpt", report, 2);
+			xmlSaveFormatFileEnc ("test_report_created.rpt", report, "UTF-8", 2);
 
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
-			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
+			xmlSaveFormatFileEnc ("test_report_created.rptr", rptprint, "UTF-8", 2);
 		
 			rptp = rpt_print_new_from_xml (rptprint);
 			if (rptp != NULL)
 				{
 					rpt_print_set_output_type (rptp, RPTP_OUTPUT_PDF);
-					rpt_print_set_output_filename (rptp, "test.pdf");
+					rpt_print_set_output_filename (rptp, "test_report_created.pdf");
 					rpt_print_print (rptp);
 				}
 		}

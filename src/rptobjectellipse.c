@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,7 @@ static void rpt_obj_ellipse_get_property (GObject *object,
 typedef struct _RptObjEllipsePrivate RptObjEllipsePrivate;
 struct _RptObjEllipsePrivate
 	{
+		gpointer foo;
 	};
 
 GType

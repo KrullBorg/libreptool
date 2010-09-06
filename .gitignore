@@ -46,6 +46,7 @@ tests/test_report.rptr
 tests/test_rptprint
 tests/test_rptreport
 tests/test_rptreport_creation
+tests/test_report_created*
 POTFILES
 mkinstalldirs
 stamp-it

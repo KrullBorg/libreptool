@@ -4,6 +4,12 @@ LIBS = $(REPTOOL_LIBS) \
 AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
               -DG_LOG_DOMAIN=\"libreptool\"
 
+parser.tab.c, parser.tab.h: parser.y
+	bison -d parser.y
+
+laxycal.yy.c, lexycal.yy.h: lexycal.fl
+	flex -o lexycal.yy.c --header-file=lexycal.yy.h lexycal.fl
+
 lib_LTLIBRARIES = libreptool.la
 
 libreptool_la_LDFLAGS = -no-undefined
@@ -39,3 +45,7 @@ noinst_HEADERS = \
                  rptmarshal.h \
                  parser.tab.h \
                  lexycal.yy.h
+
+EXTRA_DIST = \
+             parser.y \
+             lexycal.fl

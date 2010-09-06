@@ -54,5 +54,5 @@ exp:      INTEGER           { $$ = $1; }
 void
 yyerror (RptReport *rpt_report, gint row, gchar **ret, char const *s)
 {
-	fprintf (stderr, "BISON ERROR: %s\n", s);
+	g_warning ("Bison error: %s", s);
 }
