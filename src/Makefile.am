@@ -4,10 +4,10 @@ LIBS = $(REPTOOL_LIBS) \
 AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
               -DG_LOG_DOMAIN=\"libreptool\"
 
-parser.tab.c, parser.tab.h: parser.y
+parser.tab.c parser.tab.h: parser.y
 	bison -d parser.y
 
-laxycal.yy.c, lexycal.yy.h: lexycal.fl
+laxycal.yy.c lexycal.yy.h: lexycal.fl
 	flex -o lexycal.yy.c --header-file=lexycal.yy.h lexycal.fl
 
 lib_LTLIBRARIES = libreptool.la
@@ -28,7 +28,7 @@ libreptool_la_SOURCES = \
                         parser.tab.c \
                         lexycal.yy.c
 
-include_HEADERS = \
+libreptool_include_HEADERS = \
                   libreptool.h \
                   rptobject.h \
                   rptobjecttext.h \
@@ -49,3 +49,5 @@ noinst_HEADERS = \
 EXTRA_DIST = \
              parser.y \
              lexycal.fl
+
+libreptool_includedir = $(includedir)/libreptool
