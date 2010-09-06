@@ -20,14 +20,14 @@
 #ifndef __LIBREPTOOL_H__
 #define __LIBREPTOOL_H__
 
-#include <rptreport.h>
-#include <rptcommon.h>
-#include <rptobject.h>
-#include <rptobjectellipse.h>
-#include <rptobjectimage.h>
-#include <rptobjectline.h>
-#include <rptobjectrect.h>
-#include <rptobjecttext.h>
-#include <rptprint.h>
+#include <libreptool/rptreport.h>
+#include <libreptool/rptcommon.h>
+#include <libreptool/rptobject.h>
+#include <libreptool/rptobjectellipse.h>
+#include <libreptool/rptobjectimage.h>
+#include <libreptool/rptobjectline.h>
+#include <libreptool/rptobjectrect.h>
+#include <libreptool/rptobjecttext.h>
+#include <libreptool/rptprint.h>
 
 #endif /* __LIBREPTOOL_H__ */

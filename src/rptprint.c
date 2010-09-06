@@ -367,6 +367,7 @@ rpt_print_print (RptPrint *rpt_print)
 					if (fout == NULL)
 						{
 							/* TO DO */
+							g_warning ("Unable to write to the output file.");
 							return;
 						}
 				}
@@ -398,6 +399,7 @@ rpt_print_print (RptPrint *rpt_print)
 											if (fout == NULL)
 												{
 													/* TO DO */
+													g_warning ("Unable to write to the output file.");
 													return;
 												}
 		
@@ -647,7 +649,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	if (position == NULL)
 		{
-			/* TO DO */
+			g_warning ("Text node position is mandatory.");
 			return;
 		}
 
@@ -696,9 +698,9 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		{
 			str_font = g_strconcat (str_font, " italic", NULL);
 		}
-	if (font->size > 0)
+	if (font->size > 0.0f)
 		{
-			str_font = g_strconcat (str_font, g_strdup_printf (" %d", font->size), NULL);
+			str_font = g_strconcat (str_font, g_strdup_printf (" %f", font->size), NULL);
 		}
 	else
 		{
@@ -707,6 +709,12 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	/* creating pango font description */
 	pfdesc = pango_font_description_from_string (str_font);
+	if (pfdesc == NULL)
+		{
+			g_warning ("Unable to create a PangoFontDescription from the string: %s", str_font);
+			return;
+		}
+
 	pango_layout_set_font_description (playout, pfdesc);
 	pango_font_description_free (pfdesc);
 
@@ -874,6 +882,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	if (position == NULL || size == NULL)
 		{
+			g_warning ("Rect node position and size are mandatories.");
 			return;
 		}
 	if (stroke == NULL)
@@ -936,6 +945,7 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	if (position == NULL || size == NULL)
 		{
+			g_warning ("Ellipse node position and size are mandatories.");
 			return;
 		}
 	if (stroke == NULL)
@@ -991,6 +1001,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	gchar *filename= xmlGetProp (xnode, (const xmlChar *)"source");
 	if (filename == NULL)
 		{
+			g_warning ("Image node source is mandatory.");
 			return;
 		}
 
@@ -1010,6 +1021,11 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	border = rpt_common_get_border (xnode);
 
 	image = cairo_image_surface_create_from_png (filename);
+	if (cairo_surface_status (image) != CAIRO_STATUS_SUCCESS)
+		{
+			g_warning ("Unable to create the cairo surface from the image «%s».", filename);
+			return;
+		}
 
 	pattern = cairo_pattern_create_for_surface (image);
 
@@ -1053,7 +1069,11 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	if (from_p == NULL || to_p == NULL) return;
+	if (from_p == NULL || to_p == NULL)
+		{
+			g_warning ("Line node from point and to point are mandatories.");
+			return;
+		}
 
 	if (stroke != NULL)
 		{
@@ -1103,7 +1123,11 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	if (position == NULL || size == NULL || border == NULL) return;
+	if (position == NULL || size == NULL || border == NULL)
+		{
+			g_warning ("Border position and size are mandatories.");
+			return;
+		}
 
 	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
 	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
