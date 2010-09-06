@@ -37,7 +37,9 @@ DIGIT	[0-9]
 "@Page" |
 "@Pages" |
 "@Date" |
-"@Time"	{
+"@Date{"[^}]*"}" |
+"@Time" |
+"@Time{"[^}]*"}"	{
 		/*printf ("A special value: %s\n", yytext);*/
 		yylval = g_strdup (yytext);
 		return SPECIAL;

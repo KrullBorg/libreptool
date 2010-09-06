@@ -2126,36 +2126,136 @@ gchar
 	return ret;
 }
 
+/**
+ * rpt_report_replace_str:
+ * @string: the string where make the replace.
+ * @origin: the string to replace.
+ * @replace: the string to insert.
+ *
+ * Returns: a string with replaced string. Must be freed.
+ */
+static gchar
+*rpt_report_str_replace (const gchar *string,
+                         const gchar *origin,
+                         const gchar *replace)
+{
+	gchar *ret;
+	gchar *p;
+
+	p = g_strstr_len (string, -1, origin);
+
+	if (p == NULL)
+		{
+			return g_strdup (string);
+		}
+
+	ret = g_strndup (string, p - string);
+
+	ret = g_strdup_printf ("%s%s%s", ret, replace, p + strlen (origin));
+
+	return ret;
+}
+
+/**
+ * rpt_report_get_str_from_tm:
+ * @datetime: a tm struct.
+ * @format:
+ *
+ * Returns: a string representation of @datetime based on the format in @format.
+ * It interprets a very little subset of format identifiers from strftime.
+ * %Y: the year with 4 digits.
+ * %m: the month with 2 digits.
+ * %d: the day with 2 digits.
+ * %H: the hours with 2 digits 00-24.
+ * %M: the minutes with 2 digits 00-59.
+ * %S: the seconds with 2 digits 00-59.
+ */
+gchar
+*rpt_report_get_str_from_tm (struct tm *datetime,
+                             const gchar *format)
+{
+	gchar *ret;
+
+	ret = g_strdup ("");
+
+	g_return_val_if_fail (datetime != NULL, ret);
+
+	ret = rpt_report_str_replace (format, "%Y",
+	                              g_strdup_printf ("%04u", datetime->tm_year + 1900));
+	ret = rpt_report_str_replace (ret, "%m",
+	                              g_strdup_printf ("%02u", datetime->tm_mon + 1));
+	ret = rpt_report_str_replace (ret, "%d",
+	                              g_strdup_printf ("%02u", datetime->tm_mday));
+	ret = rpt_report_str_replace (ret, "%H",
+	                              g_strdup_printf ("%02u", datetime->tm_hour));
+	ret = rpt_report_str_replace (ret, "%M",
+	                              g_strdup_printf ("%02u", datetime->tm_min));
+	ret = rpt_report_str_replace (ret, "%S",
+	                              g_strdup_printf ("%02u", datetime->tm_sec));
+
+	return ret;
+}
+
 gchar
 *rpt_report_get_special (RptReport *rpt_report, const gchar *special, gint row)
 {
-	gchar *ret = NULL;
+	gchar *ret;
+	gchar *real_special;
+
+	if (special == NULL) return "";
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	if (strcmp (special, "@Page") == 0)
+	ret = g_strdup ("");
+	real_special = g_strstrip (g_strdup (special));
+
+	if (strncmp (real_special, "@Page", 5) == 0)
 		{
 			ret = g_strdup_printf ("%d", priv->cur_page);
 		}
-	else if (strcmp (special, "@Pages") == 0)
+	else if (strncmp (real_special, "@Pages", 6) == 0)
 		{
 			ret = g_strdup ("@Pages");
 		}
-	else if (strcmp (special, "@Date") == 0)
+	else if (strncmp (real_special, "@Date", 5) == 0)
 		{
-			char date[11] = "\0";
+			gchar *format;
 			time_t now = time (NULL);
 			struct tm *tm = localtime (&now);
-			strftime (date, 11, "%F", tm);
-			ret = g_strdup_printf ("%s", &date);
+
+			if (strlen (real_special) > 5
+			    && real_special[5] == '{'
+			    && real_special[strlen (real_special) - 1] == '}')
+				{
+					format = g_strndup (real_special + 6, strlen (real_special + 6) - 1);
+				}
+			else
+				{
+					/* TODO get from locale */
+					format = g_strdup ("%Y-%m-%d");
+				}
+
+			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
 		}
-	else if (strcmp (special, "@Time") == 0)
+	else if (strncmp (real_special, "@Time", 5) == 0)
 		{
-			char date[6] = "";
+			gchar *format;
 			time_t now = time (NULL);
 			struct tm *tm = localtime (&now);
-			strftime (date, 6, "%H:%M", tm);
-			ret = g_strdup_printf ("%s", &date);
+
+			if (strlen (real_special) > 5
+			    && real_special[5] == '{'
+			    && real_special[strlen (real_special) - 1] == '}')
+				{
+					format = g_strndup (real_special + 6, strlen (real_special + 6) - 1);
+				}
+			else
+				{
+					/* TODO get from locale */
+					format = g_strdup ("%H:%M:%S");
+				}
+
+			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
 		}
 
 	return ret;
