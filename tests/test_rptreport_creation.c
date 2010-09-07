@@ -35,14 +35,16 @@ main (int argc, char **argv)
 
 	if (rptr != NULL)
 		{
-			size.width = 500;
-			size.height = 500;
+			g_object_set (G_OBJECT (rptr), "unit-length", 3, NULL);
+
+			size.width = 210;
+			size.height = 297;
 			rpt_report_set_page_size (rptr, size);
 
 			point.x = 10;
 			point.y = 10;
 			obj = rpt_obj_text_new ("text1", point);
-			size.width = 480;
+			size.width = 210;
 			size.height = 50;
 			g_object_set (obj,
 			              "source", "\"The first object inserted.\"",
@@ -53,7 +55,7 @@ main (int argc, char **argv)
 			point.x = 10;
 			point.y = 60;
 			obj = rpt_obj_line_new ("line1", point);
-			size.width = 480;
+			size.width = 210;
 			size.height = 0;
 			stroke.color = rpt_common_parse_color ("#FF0000");
 			stroke.style = NULL;
@@ -66,8 +68,8 @@ main (int argc, char **argv)
 			point.x = 0;
 			point.y = 0;
 			obj = rpt_obj_line_new ("line2", point);
-			size.width = 500;
-			size.height = 500;
+			size.width = 210;
+			size.height = 297;
 			stroke.color = rpt_common_parse_color ("#000000AA");
 			stroke.style = NULL;
 			g_object_set (obj,
@@ -76,11 +78,11 @@ main (int argc, char **argv)
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
-			point.x = 500;
+			point.x = 210;
 			point.y = 0;
 			obj = rpt_obj_line_new ("line3", point);
-			size.width = -500;
-			size.height = 500;
+			size.width = -210;
+			size.height = 297;
 			stroke.color = rpt_common_parse_color ("#000000AA");
 			g_object_set (obj,
 			              "size", &size,
@@ -88,11 +90,11 @@ main (int argc, char **argv)
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
-			point.x = 250;
-			point.y = 250;
+			point.x = 105;
+			point.y = 148.5;
 			obj = rpt_obj_ellipse_new ("circle1", point);
-			size.width = 100;
-			size.height = 100;
+			size.width = 50;
+			size.height = 50;
 			color = rpt_common_parse_color ("#00FF0099");
 			stroke.color = rpt_common_parse_color ("#00FF00AA");
 			stroke.style = NULL;

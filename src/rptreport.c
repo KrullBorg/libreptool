@@ -99,7 +99,8 @@ typedef struct
 
 enum
 {
-	PROP_0
+	PROP_0,
+	PROP_UNIT_LENGTH
 };
 
 static void rpt_report_class_init (RptReportClass *klass);
@@ -145,6 +146,8 @@ static void rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc);
 typedef struct _RptReportPrivate RptReportPrivate;
 struct _RptReportPrivate
 	{
+		eRptUnitLength unit;
+
 		Database *db;
 
 		Page *page;
@@ -194,6 +197,14 @@ rpt_report_class_init (RptReportClass *klass)
 
 	object_class->set_property = rpt_report_set_property;
 	object_class->get_property = rpt_report_get_property;
+
+	g_object_class_install_property (object_class, PROP_UNIT_LENGTH,
+	                                 g_param_spec_int ("unit-length",
+	                                                   "Unit length",
+	                                                   "The unit length.",
+	                                                   RPT_UNIT_POINTS, RPT_UNIT_MILLIMETRE,
+	                                                   RPT_UNIT_POINTS,
+	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 	/**
 	 * RptReport::field-request:
@@ -304,6 +315,27 @@ RptReport
 
 					priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 					xpcontext = xmlXPathNewContext (xdoc);
+
+					/* search for node "properties" */
+					xpcontext->node = cur;
+					xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::properties", xpcontext);
+					if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+						{
+							xnodeset = xpresult->nodesetval;
+							if (xnodeset->nodeNr == 1)
+								{
+									xmlNode *cur_property = xnodeset->nodeTab[0]->children;
+									while (cur_property != NULL)
+										{
+											if (strcmp (cur_property->name, "unit-length") == 0)
+												{
+													g_object_set (G_OBJECT (rpt_report), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
+												}
+
+											cur_property = cur_property->next;
+										}
+								}
+						}
 
 					/* search for node "database" */
 					xpcontext->node = cur;
@@ -1059,6 +1091,13 @@ xmlDoc
 	xroot = xmlNewNode (NULL, "reptool");
 	xmlDocSetRootElement (xdoc, xroot);
 
+	xmlNode *xnodeprop = xmlNewNode (NULL, "properties");
+	xmlAddChild (xroot, xnodeprop);
+
+	xnode = xmlNewNode (NULL, "unit-length");
+	xmlNodeSetContent (xnode, rpt_common_enum_to_strunit (priv->unit));
+	xmlAddChild (xnodeprop, xnode);
+
 	if (priv->db != NULL)
 		{
 			xmlNode *xnodedb = xmlNewNode (NULL, "database");
@@ -1152,6 +1191,14 @@ xmlDoc
 	xmlDocSetRootElement (xdoc, xroot);
 
 	priv->cur_page = 0;
+
+	/* properties */
+	xmlNode *xnodeprop = xmlNewNode (NULL, "properties");
+	xmlAddChild (xroot, xnodeprop);
+
+	xmlNode *xnode = xmlNewNode (NULL, "unit-length");
+	xmlNodeSetContent (xnode, rpt_common_enum_to_strunit (priv->unit));
+	xmlAddChild (xnodeprop, xnode);
 
 	if (priv->db != NULL)
 		{
@@ -1427,6 +1474,10 @@ rpt_report_set_property (GObject *object, guint property_id, const GValue *value
 
 	switch (property_id)
 		{
+			case PROP_UNIT_LENGTH:
+				priv->unit = g_value_get_int (value);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -1442,6 +1493,10 @@ rpt_report_get_property (GObject *object, guint property_id, GValue *value, GPar
 
 	switch (property_id)
 		{
+			case PROP_UNIT_LENGTH:
+				g_value_set_int (value, priv->unit);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;

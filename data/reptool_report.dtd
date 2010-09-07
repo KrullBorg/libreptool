@@ -103,7 +103,11 @@
   adapt    (to-box | to-image | none) #IMPLIED
 >
 
-<!ELEMENT reptool_report (page*)>
+<!ELEMENT reptool_report (properties?, page*)>
+
+<!ELEMENT properties (unit-length?)>
+
+<!ELEMENT unit-length (pt | in | cm | mm) #IMPLIED>
 
 <!ELEMENT page (%objects;)>
 <!ATTLIST page

@@ -109,7 +109,11 @@
   adapt    (to-box | to-image | none) #IMPLIED
 >
 
-<!ELEMENT reptool (database?, page, report)>
+<!ELEMENT reptool (properties?, database?, page, report)>
+
+<!ELEMENT properties (unit-length?)>
+
+<!ELEMENT unit-length (pt | in | cm | mm) #IMPLIED>
 
 <!ELEMENT database (provider, connection_string, sql)>
 <!ELEMENT provider (#PCDATA)>

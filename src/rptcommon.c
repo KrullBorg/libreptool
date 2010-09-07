@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,165 @@
 static GArray *rpt_common_parse_style (const gchar *style);
 static gchar *rpt_common_style_to_string (const GArray *style);
 
+
+/**
+ * rpt_common_value_to_points:
+ * @unit: unit of length.
+ * @value: the value to convert.
+ *
+ * Returns: the @value converted in points.
+ */
+gdouble
+rpt_common_value_to_points (eRptUnitLength unit, gdouble value)
+{
+	gdouble ret;
+
+	switch (unit)
+		{
+			case RPT_UNIT_POINTS:
+				ret = value;
+				break;
+
+			case RPT_UNIT_INCHES:
+				ret = value * 72;
+				break;
+
+			case RPT_UNIT_CENTIMETRE:
+				ret = value / 2.54 * 72;
+				break;
+
+			case RPT_UNIT_MILLIMETRE:
+				ret = value / 25.4 * 72;
+				break;
+
+			default:
+				g_warning ("Unit length «%d» not available.", unit);
+				ret = value;
+				break;
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_points_to_value:
+ * @unit: unit of length.
+ * @value: the value to convert to.
+ *
+ * Returns: the points from the @value.
+ */
+gdouble
+rpt_common_points_to_value (eRptUnitLength unit, gdouble value)
+{
+	gdouble ret;
+
+	switch (unit)
+		{
+			case RPT_UNIT_POINTS:
+				ret = value;
+				break;
+
+			case RPT_UNIT_INCHES:
+				ret = value / 72;
+				break;
+
+			case RPT_UNIT_CENTIMETRE:
+				ret = value / 72 * 2.54;
+				break;
+
+			case RPT_UNIT_MILLIMETRE:
+				ret = value / 72 * 25.4;
+				break;
+
+			default:
+				g_warning ("Unit length «%d» not available.", unit);
+				ret = value;
+				break;
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_strunit_to_enum:
+ * @unit:
+ *
+ * Returns: the enum value that match the string @unit.
+ */
+eRptUnitLength
+rpt_common_strunit_to_enum (const gchar *unit)
+{
+	eRptUnitLength ret;
+
+	gchar *real_unit;
+
+	ret = RPT_UNIT_POINTS;
+
+	if (unit != NULL)
+		{
+			real_unit = g_strstrip (g_strdup (unit));
+			if (g_ascii_strcasecmp (real_unit, "pt") == 0)
+				{
+					/* already setted */
+				}
+			else if (g_ascii_strcasecmp (real_unit, "in") == 0)
+				{
+					ret = RPT_UNIT_INCHES;
+				}
+			else if (g_ascii_strcasecmp (real_unit, "cm") == 0)
+				{
+					ret = RPT_UNIT_CENTIMETRE;
+				}
+			else if (g_ascii_strcasecmp (real_unit, "mm") == 0)
+				{
+					ret = RPT_UNIT_MILLIMETRE;
+				}
+			else
+				{
+					g_warning ("Unit length «%s» not available.", real_unit);
+				}
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_enum_to_strunit:
+ * @unit:
+ *
+ * Returns: the string value that represents then enum value @unit.
+ */
+const gchar
+*rpt_common_enum_to_strunit (eRptUnitLength unit)
+{
+	gchar *ret;
+
+	switch (unit)
+		{
+			case RPT_UNIT_POINTS:
+				ret = g_strdup ("pt");
+				break;
+
+			case RPT_UNIT_INCHES:
+				ret = g_strdup ("in");
+				break;
+
+			case RPT_UNIT_CENTIMETRE:
+				ret = g_strdup ("cm");
+				break;
+
+			case RPT_UNIT_MILLIMETRE:
+				ret = g_strdup ("mm");
+				break;
+
+			default:
+				g_warning ("Unit length «%d» not available.", unit);
+				ret = g_strdup ("pt");
+				break;
+		}
+
+	return ret;
+}
 
 /**
  * rpt_common_rptpoint_new:

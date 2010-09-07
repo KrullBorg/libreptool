@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,14 @@
 
 G_BEGIN_DECLS
 
+
+typedef enum
+{
+	RPT_UNIT_POINTS,
+	RPT_UNIT_INCHES,
+	RPT_UNIT_CENTIMETRE,
+	RPT_UNIT_MILLIMETRE
+} eRptUnitLength;
 
 /**
  * RptColor:
@@ -156,6 +164,12 @@ struct _RptStroke
 };
 typedef struct _RptStroke RptStroke;
 
+
+gdouble rpt_common_value_to_points (eRptUnitLength unit, gdouble value);
+gdouble rpt_common_points_to_value (eRptUnitLength unit, gdouble value);
+
+eRptUnitLength rpt_common_strunit_to_enum (const gchar *unit);
+const gchar *rpt_common_enum_to_strunit (eRptUnitLength unit);
 
 RptPoint *rpt_common_rptpoint_new (void);
 RptPoint *rpt_common_get_position (xmlNode *xnode);
