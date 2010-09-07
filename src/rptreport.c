@@ -1241,15 +1241,15 @@ xmlDoc
 				{
 					if (row == 0 ||
 					    priv->body->new_page_after ||
-					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height: 0.0))) ||
-					    cur_y > (priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom))
+					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height)) ||
+					    cur_y > (priv->page->size->height - priv->page->margin_bottom))
 						{
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
 									if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
 									    priv->cur_page > 1)
 										{
-											cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
+											cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
 											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 										}
 								}
@@ -1281,12 +1281,12 @@ xmlDoc
 
 			if (priv->cur_page > 0 && priv->report_footer != NULL)
 				{
-					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
+					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
 					    priv->report_footer->new_page_before)
 						{
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
-									cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
+									cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 								}
 
@@ -1302,7 +1302,7 @@ xmlDoc
 				}
 			if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
 				{
-					cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 				}
 
@@ -1332,7 +1332,7 @@ xmlDoc
 				}
 			if (priv->page_footer != NULL)
 				{
-					cur_y = priv->page->size->height - priv->page->margin_top - priv->page->margin_bottom - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, -1);
 				}
 		}
