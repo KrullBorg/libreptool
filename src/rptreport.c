@@ -2078,6 +2078,11 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 	yy_scan_string (source);
 	yyparse (rpt_report, row, &ret);
 
+	if (g_strstr_len (ret, -1, "&#10;") != NULL)
+		{
+			ret = g_strjoinv ("\n", g_strsplit (ret, "&#10;", -1));
+		}
+
 	if (ret == NULL)
 		{
 			xmlNodeSetContent (xnode, "");

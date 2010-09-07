@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2010 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -259,7 +259,8 @@ RptObject
 					priv->font = rpt_common_get_font (xnode);
 					priv->align = rpt_common_get_align (xnode);
 
-					g_object_set (rpt_obj_text, "source", xmlGetProp (xnode, "source"), NULL);
+					prop = (gchar *)xmlGetProp (xnode, "source");
+					g_object_set (rpt_obj_text, "source", prop, NULL);
 
 					prop = (gchar *)xmlGetProp (xnode, "background-color");
 					if (prop != NULL)
