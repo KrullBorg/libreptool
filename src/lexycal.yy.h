@@ -207,6 +207,8 @@ void *yyalloc (yy_size_t  );
 void *yyrealloc (void *,yy_size_t  );
 void yyfree (void *  );
 
+/* Begin user sect3 */
+
 extern int yylineno;
 
 extern char *yytext;
@@ -322,8 +324,9 @@ extern int yylex (void);
 #undef YY_DECL
 #endif
 
-#line 61 "lexycal.fl"
+#line 62 "lexycal.fl"
 
-#line 328 "lexycal.yy.h"
+
+#line 331 "lexycal.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

@@ -339,6 +339,8 @@ void yyfree (void *  );
 
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
+/* Begin user sect3 */
+
 typedef unsigned char YY_CHAR;
 
 FILE *yyin = (FILE *) 0, *yyout = (FILE *) 0;
@@ -495,7 +497,7 @@ char *yytext;
 #include <glib.h>
 
 #include "parser.tab.h"
-#line 499 "lexycal.yy.c"
+#line 501 "lexycal.yy.c"
 
 #define INITIAL 0
 
@@ -685,7 +687,7 @@ YY_DECL
 #line 11 "lexycal.fl"
 
 
-#line 689 "lexycal.yy.c"
+#line 691 "lexycal.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -853,10 +855,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 61 "lexycal.fl"
+#line 62 "lexycal.fl"
 ECHO;
 	YY_BREAK
-#line 860 "lexycal.yy.c"
+#line 862 "lexycal.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1854,4 +1856,12 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 61 "lexycal.fl"
+#line 62 "lexycal.fl"
+
+
+
+int yywrap (void)
+{
+	return 1;
+}
+

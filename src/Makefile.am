@@ -1,5 +1,4 @@
-LIBS = $(REPTOOL_LIBS) \
-       -lfl
+LIBS = $(REPTOOL_LIBS)
 
 AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
               -DG_LOG_DOMAIN=\"libreptool\"

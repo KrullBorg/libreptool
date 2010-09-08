@@ -58,3 +58,10 @@ DIGIT	[0-9]
 								}
 
 .|" "|\n	/* eat up unmatched chars */
+
+%%
+
+int yywrap (void)
+{
+	return 1;
+}
