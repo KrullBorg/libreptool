@@ -112,10 +112,9 @@
 <!ELEMENT reptool (properties?, database?, page, report)>
 
 <!ELEMENT properties (unit-length?)>
-
 <!ELEMENT unit-length (pt | in | cm | mm) #IMPLIED>
 
-<!ELEMENT database (provider, connection_string, sql)>
+<!ELEMENT database (provider, connection-string, sql)>
 <!ELEMENT provider (#PCDATA)>
 <!ELEMENT connection-string (#PCDATA)>
 <!ELEMENT sql (#PCDATA)>

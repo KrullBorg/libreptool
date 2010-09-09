@@ -602,6 +602,35 @@ rpt_report_set_database (RptReport *rpt_report,
 	priv->db->provider_id = g_strstrip (g_strdup (provider_id));
 	priv->db->connection_string = g_strstrip (g_strdup (connection_string));
 	priv->db->sql = g_strstrip (g_strdup (sql));
+	priv->db->gda_conn = NULL;
+	priv->db->gda_datamodel = NULL;
+}
+
+/**
+ * rpt_report_set_database_from_datamodel:
+ * @rpt_report: an #RptReport object.
+ * @data_model: a #GdaDataModel.
+ *
+ */
+void
+rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *data_model)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+	g_return_if_fail (GDA_IS_DATA_MODEL (data_model));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->db != NULL)
+		{
+			g_free (priv->db);
+		}
+	priv->db = (Database *)g_malloc0 (sizeof (Database));
+
+	priv->db->provider_id = NULL;
+	priv->db->connection_string = NULL;
+	priv->db->sql = NULL;
+	priv->db->gda_conn = NULL;
+	priv->db->gda_datamodel = data_model;
 }
 
 /**
@@ -1207,31 +1236,34 @@ xmlDoc
 
 			/* database connection */
 			gda_init ();
-			error = NULL;
-			priv->db->gda_conn = gda_connection_open_from_string (priv->db->provider_id,
-			                                                      priv->db->connection_string,
-			                                                      NULL,
-			                                                      GDA_CONNECTION_OPTIONS_NONE,
-			                                                      &error);
-			if (priv->db->gda_conn == NULL)
+			if (priv->db->gda_datamodel == NULL)
 				{
-					/* TO DO */
-					g_warning ("Unable to establish the connection.");
-					return NULL;
-				}
-			else
-				{
-					GdaSqlParser *parser = gda_sql_parser_new ();
 					error = NULL;
-					GdaStatement *stmt = gda_sql_parser_parse_string (parser, priv->db->sql, NULL, &error);
-
-					error = NULL;
-					priv->db->gda_datamodel = gda_connection_statement_execute_select (priv->db->gda_conn, stmt, NULL, &error);
-					if (priv->db->gda_datamodel == NULL)
+					priv->db->gda_conn = gda_connection_open_from_string (priv->db->provider_id,
+							                                              priv->db->connection_string,
+							                                              NULL,
+							                                              GDA_CONNECTION_OPTIONS_NONE,
+							                                              &error);
+					if (priv->db->gda_conn == NULL)
 						{
 							/* TO DO */
-							g_warning ("Unable to create the datamodel.");
+							g_warning ("Unable to establish the connection.");
 							return NULL;
+						}
+					else
+						{
+							GdaSqlParser *parser = gda_sql_parser_new ();
+							error = NULL;
+							GdaStatement *stmt = gda_sql_parser_parse_string (parser, priv->db->sql, NULL, &error);
+
+							error = NULL;
+							priv->db->gda_datamodel = gda_connection_statement_execute_select (priv->db->gda_conn, stmt, NULL, &error);
+							if (priv->db->gda_datamodel == NULL)
+								{
+									/* TO DO */
+									g_warning ("Unable to create the datamodel.");
+									return NULL;
+								}
 						}
 				}
 
@@ -1257,6 +1289,14 @@ xmlDoc
 							cur_y = priv->page->margin_top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
+							if (priv->page_header != NULL)
+								{
+									if ((priv->cur_page == 1 && priv->page_header->first_page) ||
+									    priv->cur_page > 1)
+										{
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
+										}
+								}
 							if (priv->cur_page == 1 && priv->report_header != NULL)
 								{
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, row);
@@ -1264,14 +1304,6 @@ xmlDoc
 										{
 											cur_y = 0.0;
 											xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
-										}
-								}
-							if (priv->page_header != NULL)
-								{
-									if ((priv->cur_page == 1 && priv->page_header->first_page) ||
-									    priv->cur_page > 1)
-										{
-											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
 										}
 								}
 						}
@@ -1284,18 +1316,18 @@ xmlDoc
 					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
 					    priv->report_footer->new_page_before)
 						{
-							if (priv->cur_page > 0 && priv->page_footer != NULL)
+							if (priv->page_header != NULL)
 								{
-									cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
 								}
 
 							cur_y = priv->page->margin_top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
-							if (priv->page_header != NULL)
+							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
+									cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 								}
 						}
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER, row - 1);
@@ -1315,13 +1347,13 @@ xmlDoc
 			cur_y = priv->page->margin_top;
 			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
-			if (priv->report_header != NULL)
-				{
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, -1);
-				}
 			if (priv->page_header != NULL)
 				{
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, -1);
+				}
+			if (priv->report_header != NULL)
+				{
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, -1);
 				}
 
 			rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY, -1);

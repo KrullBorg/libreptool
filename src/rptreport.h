@@ -78,6 +78,8 @@ void rpt_report_set_database (RptReport *rpt_report,
                               const gchar *connection_string,
                               const gchar *sql);
 
+void rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *data_model);
+
 RptSize *rpt_report_get_page_size (RptReport *rpt_report);
 void rpt_report_set_page_size (RptReport *rpt_report,
                                RptSize size);
