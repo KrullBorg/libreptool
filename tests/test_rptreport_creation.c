@@ -16,7 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-#include <libreptool.h>
+#include <rptreport.h>
+#include <rptprint.h>
+#include <rptobject.h>
+#include <rptobjectellipse.h>
+#include <rptobjectimage.h>
+#include <rptobjectline.h>
+#include <rptobjectrect.h>
+#include <rptobjecttext.h>
 
 int
 main (int argc, char **argv)

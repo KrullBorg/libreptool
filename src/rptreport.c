@@ -1343,7 +1343,6 @@ xmlDoc
 		}
 	else
 		{
-			priv->cur_page++;
 			cur_y = priv->page->margin_top;
 			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
