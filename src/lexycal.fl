@@ -28,7 +28,7 @@ DIGIT	[0-9]
 			return STRING;
 			}
 
-"[".+"]"	{
+"["[^\]]+"]"	{
 			/*printf ("A field: %s\n", yytext);*/
 			yylval = g_strdup (yytext);
 			return FIELD;
