@@ -451,10 +451,10 @@ rpt_print_print (RptPrint *rpt_print)
 													g_warning ("Unable to write to the output file.");
 													return;
 												}
-		
+
 											priv->surface = cairo_svg_surface_create (new_out_filename, width, height);
 										}
-		
+
 									if (cairo_surface_status (priv->surface) == CAIRO_STATUS_SUCCESS)
 										{
 											if (priv->output_type == RPTP_OUTPUT_PNG || priv->output_type == RPTP_OUTPUT_SVG)
@@ -465,22 +465,22 @@ rpt_print_print (RptPrint *rpt_print)
 												{
 													priv->cr = cairo_create (priv->surface);
 												}
-		
+
 											if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG && npage == 0)
 												{
 													cairo_surface_destroy (priv->surface);
 												}
-		
+
 											if (cairo_status (priv->cr) == CAIRO_STATUS_SUCCESS)
 												{
 													rpt_print_page (rpt_print, cur);
-		
+
 													if (priv->output_type == RPTP_OUTPUT_PNG)
 														{
 															gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
 														
 															cairo_surface_write_to_png (priv->surface,
-																						new_out_filename);
+															                            new_out_filename);
 															cairo_surface_destroy (priv->surface);
 															cairo_destroy (priv->cr);
 														}
@@ -488,7 +488,7 @@ rpt_print_print (RptPrint *rpt_print)
 														{
 															cairo_show_page (priv->cr);
 														}
-		
+
 													if (priv->output_type == RPTP_OUTPUT_SVG)
 														{
 															cairo_surface_destroy (priv->surface);
@@ -500,7 +500,7 @@ rpt_print_print (RptPrint *rpt_print)
 												{
 													/* TO DO */
 													g_warning ("Cairo status not sucess: %d", cairo_status (priv->cr));
-												}												
+												}
 										}
 									else
 										{
@@ -518,10 +518,10 @@ rpt_print_print (RptPrint *rpt_print)
 						{
 							/* TO DO */
 						}
-		
+
 					cur = cur->next;
 				}
-		
+
 			if (priv->cr != NULL)
 				{
 					cairo_destroy (priv->cr);
@@ -651,9 +651,9 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 	/* clipping region for page's margins */
 	cairo_rectangle (priv->cr,
 	                 margin_left,
-					 margin_top,
-					 width - margin_left - margin_right,
-					 height - margin_top - margin_bottom);
+	                 margin_top,
+	                 width - margin_left - margin_right,
+	                 height - margin_top - margin_bottom);
 	cairo_clip (priv->cr);
 
 	while (cur != NULL)
@@ -1283,9 +1283,9 @@ static gchar
 	else
 		{
 			new_out_filename = g_strdup_printf ("%s%d%s",
-												g_strndup (filename, strlen (filename) - strlen (filename_ext)),
-												number,
-												filename_ext);
+			                                    g_strndup (filename, strlen (filename) - strlen (filename_ext)),
+			                                    number,
+			                                    filename_ext);
 		}
 
 	return new_out_filename;
@@ -1339,8 +1339,8 @@ rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
 	rpt_print_get_xml_page_attributes (rpt_print, priv->pages->nodeTab[page_nr]);
 	paper_size = gtk_paper_size_new_custom ("reptool",
 	                                        "RepTool",
-	                                        priv->width,
-	                                        priv->height,
+	                                        rpt_common_value_to_points (priv->unit, priv->width),
+	                                        rpt_common_value_to_points (priv->unit, priv->height),
 	                                        GTK_UNIT_POINTS);
 
 	gtk_page_setup_set_paper_size (setup, paper_size);
@@ -1358,6 +1358,10 @@ rpt_print_gtk_draw_page (GtkPrintOperation *operation,
 
 	priv->cr = gtk_print_context_get_cairo_context (context);
 	priv->gtk_print_context = context;
+
+	cairo_scale (priv->cr,
+	             gtk_print_context_get_width (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->width),
+	             gtk_print_context_get_height (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->height));
 
 	if (priv->width != 0 && priv->height != 0)
 		{

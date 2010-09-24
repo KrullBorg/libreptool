@@ -1318,7 +1318,7 @@ xmlDoc
 						{
 							if (priv->page_header != NULL)
 								{
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row - 1);
 								}
 
 							cur_y = priv->page->margin_top;
@@ -2174,17 +2174,42 @@ gchar
 	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
 		{
 			col = gda_data_model_get_column_index (priv->db->gda_datamodel, field_name);
-		
+
 			if (col > -1)
 				{
+					const GValue *gval;
+
 					error = NULL;
-					ret = gda_value_stringify (gda_data_model_get_value_at (priv->db->gda_datamodel, col, row, &error));
+					gval = gda_data_model_get_value_at (priv->db->gda_datamodel, col, row, &error);
+					if (error != NULL)
+						{
+							g_warning ("Error on retrieving field %s value: %s.", field_name, error->message != NULL ? error->message : "no details");
+						}
+					else
+						{
+							if (gda_value_is_null (gval))
+								{
+									ret = g_strdup ("");
+								}
+							else
+								{
+									ret = (gchar *)gda_value_stringify (gval);
+									if (ret == NULL)
+										{
+											ret = g_strdup ("");
+										}
+								}
+						}
 				}
 		}
 
 	if (ret == NULL)
 		{
 			ret = rpt_report_ask_field (rpt_report, field_name, row);
+		}
+	if (ret == NULL)
+		{
+			ret = g_strdup ("{ERROR}");
 		}
 
 	return ret;
@@ -2212,6 +2237,10 @@ gchar
 	if (ret != NULL)
 		{
 			ret = g_strdup (ret);
+		}
+	else
+		{
+			ret = g_strdup ("{ERROR}");
 		}
 
 	return ret;
