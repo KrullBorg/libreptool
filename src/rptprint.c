@@ -73,7 +73,7 @@ static void rpt_print_line (RptPrint *rpt_print,
                             const RptPoint *from_p,
                             const RptPoint *to_p,
                             const RptStroke *stroke,
-							const RptRotation *rotation);
+                            const RptRotation *rotation);
 static void rpt_print_border (RptPrint *rpt_print,
                               const RptPoint *position,
                               const RptSize *size,
@@ -231,7 +231,7 @@ RptPrint
 			else
 				{
 					/* TO DO */
-					g_warning ("Not a valid RepTool print report format");
+					g_warning ("Not a valid RepTool print report format.");
 				}
 		}
 
@@ -365,7 +365,8 @@ rpt_print_print (RptPrint *rpt_print)
 			return;
 		}
 
-	if (priv->output_type == RPTP_OUTPUT_GTK)
+	if (priv->output_type == RPTP_OUTPUT_GTK
+	    || priv->output_type == RPTP_OUTPUT_GTK_DEFAULT_PRINTER)
 		{
 			gchar *locale_old;
 			gchar *locale_num;
@@ -383,7 +384,9 @@ rpt_print_print (RptPrint *rpt_print)
 			                  G_CALLBACK (rpt_print_gtk_draw_page), (gpointer)rpt_print);
 
 			locale_num = setlocale (LC_NUMERIC, "C");
-			gtk_print_operation_run (operation, GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG, NULL, NULL);
+			gtk_print_operation_run (operation,
+			                         (priv->output_type == RPTP_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
+			                         NULL, NULL);
 			setlocale (LC_NUMERIC, locale_num);
 			setlocale (LC_ALL, locale_old);
 		}
@@ -505,13 +508,13 @@ rpt_print_print (RptPrint *rpt_print)
 									else
 										{
 											/* TO DO */
-											g_warning ("Cairo surface status not sucess");
+											g_warning ("Cairo surface status not sucess.");
 										}
 								}
 							else
 								{
 									/* TO DO */
-									g_warning ("Page width or height cannot be zero");
+									g_warning ("Page width or height cannot be zero.");
 								}
 						}
 					else

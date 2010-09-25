@@ -57,7 +57,8 @@ typedef enum
 	RPTP_OUTPUT_PDF,
 	RPTP_OUTPUT_PS,
 	RPTP_OUTPUT_SVG,
-	RPTP_OUTPUT_GTK
+	RPTP_OUTPUT_GTK,
+	RPTP_OUTPUT_GTK_DEFAULT_PRINTER
 } RptPrintOutputType;
 
 RptPrint *rpt_print_new_from_xml (xmlDoc *xdoc);
