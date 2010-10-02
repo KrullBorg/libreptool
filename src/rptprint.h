@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <libxml/tree.h>
+
+#include "rptcommon.h"
 
 G_BEGIN_DECLS
 
@@ -51,21 +53,13 @@ struct _RptPrintClass
 GType rpt_print_get_type (void) G_GNUC_CONST;
 
 
-typedef enum
-{
-	RPTP_OUTPUT_PNG,
-	RPTP_OUTPUT_PDF,
-	RPTP_OUTPUT_PS,
-	RPTP_OUTPUT_SVG,
-	RPTP_OUTPUT_GTK,
-	RPTP_OUTPUT_GTK_DEFAULT_PRINTER
-} RptPrintOutputType;
-
 RptPrint *rpt_print_new_from_xml (xmlDoc *xdoc);
 RptPrint *rpt_print_new_from_file (const gchar *filename);
 
-void rpt_print_set_output_type (RptPrint *rpt_print, RptPrintOutputType output_type);
+void rpt_print_set_output_type (RptPrint *rpt_print, eRptOutputType output_type);
 void rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename);
+
+void rpt_print_set_copies (RptPrint *rpt_print, guint copies);
 
 void rpt_print_print (RptPrint *rpt_print);
 

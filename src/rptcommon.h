@@ -38,6 +38,16 @@ typedef enum
 	RPT_UNIT_MILLIMETRE
 } eRptUnitLength;
 
+typedef enum
+{
+	RPT_OUTPUT_PNG,
+	RPT_OUTPUT_PDF,
+	RPT_OUTPUT_PS,
+	RPT_OUTPUT_SVG,
+	RPT_OUTPUT_GTK,
+	RPT_OUTPUT_GTK_DEFAULT_PRINTER
+} eRptOutputType;
+
 /**
  * RptColor:
  * @r: the red channel; value from 0 to 1.
@@ -170,6 +180,9 @@ gdouble rpt_common_points_to_value (eRptUnitLength unit, gdouble value);
 
 eRptUnitLength rpt_common_strunit_to_enum (const gchar *unit);
 const gchar *rpt_common_enum_to_strunit (eRptUnitLength unit);
+
+eRptOutputType rpt_common_stroutputtype_to_enum (const gchar *output_type);
+const gchar *rpt_common_enum_to_stroutputtype (eRptOutputType output_type);
 
 RptPoint *rpt_common_rptpoint_new (void);
 RptPoint *rpt_common_get_position (xmlNode *xnode);

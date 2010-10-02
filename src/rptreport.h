@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -70,6 +70,11 @@ RptReport *rpt_report_new (void);
 RptReport *rpt_report_new_from_xml (xmlDoc *xdoc);
 RptReport *rpt_report_new_from_file (const gchar *filename);
 
+void rpt_report_set_output_type (RptReport *rpt_report, eRptOutputType output_type);
+void rpt_report_set_output_filename (RptReport *rpt_report, const gchar *output_filename);
+
+void rpt_report_set_copies (RptReport *rpt_report, guint copies);
+
 const gchar *rpt_report_database_get_provider (RptReport *rpt_report);
 const gchar *rpt_report_database_get_connection_string (RptReport *rpt_report);
 const gchar *rpt_report_database_get_sql (RptReport *rpt_report);
@@ -107,7 +112,7 @@ void rpt_report_section_remove (RptReport *rpt_report, RptReportSection section)
 gboolean rpt_report_get_report_header_new_page_after (RptReport *rpt_report);
 void rpt_report_set_report_header_new_page_after (RptReport *rpt_report,
                                                   gboolean new_page_after);
-												  
+
 gboolean rpt_report_get_report_footer_new_page_before (RptReport *rpt_report);
 void rpt_report_set_report_footer_new_page_before (RptReport *rpt_report,
                                                    gboolean new_page_before);

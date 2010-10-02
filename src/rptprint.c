@@ -39,6 +39,7 @@ enum
 	PROP_UNIT_LENGTH,
 	PROP_OUTPUT_TYPE,
 	PROP_OUTPUT_FILENAME,
+	PROP_COPIES,
 	PROP_PATH_RELATIVES_TO
 };
 
@@ -106,6 +107,11 @@ struct _RptPrintPrivate
 	{
 		eRptUnitLength unit;
 
+		eRptOutputType output_type;
+		gchar *output_filename;
+
+		guint copies;
+
 		gdouble width;
 		gdouble height;
 		gdouble margin_top;
@@ -114,9 +120,6 @@ struct _RptPrintPrivate
 		gdouble margin_left;
 
 		xmlDoc *xdoc;
-
-		RptPrintOutputType output_type;
-		gchar *output_filename;
 
 		gchar *path_relatives_to;
 
@@ -177,16 +180,24 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                 g_param_spec_int ("output-type",
 	                                                   "Output Type",
 	                                                   "The output type.",
-	                                                   RPTP_OUTPUT_PNG, RPTP_OUTPUT_GTK,
-	                                                   RPTP_OUTPUT_PDF,
+	                                                   RPT_OUTPUT_PNG, RPT_OUTPUT_GTK,
+	                                                   RPT_OUTPUT_PDF,
 	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class, PROP_OUTPUT_FILENAME,
 	                                 g_param_spec_string ("output-filename",
 	                                                      "Output File Name",
 	                                                      "The output file's name.",
-	                                                      "",
+	                                                      "rptreport.pdf",
 	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+	g_object_class_install_property (object_class, PROP_COPIES,
+	                                 g_param_spec_uint ("copies",
+	                                                    "Copies",
+	                                                    "The number of copies to print.",
+	                                                    1, G_MAXUINT,
+	                                                    1,
+	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class, PROP_PATH_RELATIVES_TO,
 	                                 g_param_spec_string ("path-relatives-to",
@@ -267,8 +278,10 @@ RptPrint
  *
  */
 void
-rpt_print_set_output_type (RptPrint *rpt_print, RptPrintOutputType output_type)
+rpt_print_set_output_type (RptPrint *rpt_print, eRptOutputType output_type)
 {
+	g_return_if_fail (IS_RPT_PRINT (rpt_print));
+
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	priv->output_type = output_type;
@@ -283,9 +296,32 @@ rpt_print_set_output_type (RptPrint *rpt_print, RptPrintOutputType output_type)
 void
 rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename)
 {
+	g_return_if_fail (IS_RPT_PRINT (rpt_print));
+
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	priv->output_filename = g_strdup (output_filename);
+	if (g_strcmp0 (priv->output_filename, "") == 0)
+		{
+			g_warning ("It's not possible to set an empty output filename.");
+			priv->output_filename = g_strdup ("rptreport.pdf");
+		}
+}
+
+/**
+ * rpt_print_set_copies:
+ * @rpt_print: an #RptPrint object.
+ * @copies: number of copies.
+ *
+ */
+void
+rpt_print_set_copies (RptPrint *rpt_print, guint copies)
+{
+	g_return_if_fail (IS_RPT_PRINT (rpt_print));
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->copies = copies;
 }
 
 /**
@@ -344,6 +380,18 @@ rpt_print_print (RptPrint *rpt_print)
 								{
 									g_object_set (G_OBJECT (rpt_print), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
 								}
+							else if (strcmp (cur_property->name, "output-type") == 0)
+								{
+									rpt_print_set_output_type (rpt_print, rpt_common_stroutputtype_to_enum ((const gchar *)xmlNodeGetContent (cur_property)));
+								}
+							else if (strcmp (cur_property->name, "output-filename") == 0)
+								{
+									rpt_print_set_output_filename (rpt_print, (const gchar *)xmlNodeGetContent (cur_property));
+								}
+							else if (strcmp (cur_property->name, "copies") == 0)
+								{
+									rpt_print_set_copies (rpt_print, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
+								}
 
 							cur_property = cur_property->next;
 						}
@@ -365,8 +413,8 @@ rpt_print_print (RptPrint *rpt_print)
 			return;
 		}
 
-	if (priv->output_type == RPTP_OUTPUT_GTK
-	    || priv->output_type == RPTP_OUTPUT_GTK_DEFAULT_PRINTER)
+	if (priv->output_type == RPT_OUTPUT_GTK
+	    || priv->output_type == RPT_OUTPUT_GTK_DEFAULT_PRINTER)
 		{
 			gchar *locale_old;
 			gchar *locale_num;
@@ -385,7 +433,7 @@ rpt_print_print (RptPrint *rpt_print)
 
 			locale_num = setlocale (LC_NUMERIC, "C");
 			gtk_print_operation_run (operation,
-			                         (priv->output_type == RPTP_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
+			                         (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
 			                         NULL, NULL);
 			setlocale (LC_NUMERIC, locale_num);
 			setlocale (LC_ALL, locale_old);
@@ -396,21 +444,21 @@ rpt_print_print (RptPrint *rpt_print)
 				{
 					switch (priv->output_type)
 						{
-							case RPTP_OUTPUT_PNG:
+							case RPT_OUTPUT_PNG:
 								priv->output_filename = g_strdup ("reptool.png");
 								break;
-							case RPTP_OUTPUT_PDF:
+							case RPT_OUTPUT_PDF:
 								priv->output_filename = g_strdup ("reptool.pdf");
 								break;
-							case RPTP_OUTPUT_PS:
+							case RPT_OUTPUT_PS:
 								priv->output_filename = g_strdup ("reptool.ps");
 								break;
-							case RPTP_OUTPUT_SVG:
+							case RPT_OUTPUT_SVG:
 								priv->output_filename = g_strdup ("reptool.svg");
 								break;
 						}
 				}
-			if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG)
+			if (priv->output_type != RPT_OUTPUT_PNG && priv->output_type != RPT_OUTPUT_SVG)
 				{
 					fout = fopen (priv->output_filename, "w");
 					if (fout == NULL)
@@ -432,19 +480,19 @@ rpt_print_print (RptPrint *rpt_print)
 									width = rpt_common_value_to_points (priv->unit, priv->width);
 									height = rpt_common_value_to_points (priv->unit, priv->height);
 
-									if (priv->output_type == RPTP_OUTPUT_PNG)
+									if (priv->output_type == RPT_OUTPUT_PNG)
 										{
 											priv->surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int)width, (int)height);
 										}
-									else if (priv->output_type == RPTP_OUTPUT_PDF && npage == 0)
+									else if (priv->output_type == RPT_OUTPUT_PDF && npage == 0)
 										{
 											priv->surface = cairo_pdf_surface_create (priv->output_filename, width, height);
 										}
-									else if (priv->output_type == RPTP_OUTPUT_PS && npage == 0)
+									else if (priv->output_type == RPT_OUTPUT_PS && npage == 0)
 										{
 											priv->surface = cairo_ps_surface_create (priv->output_filename, width, height);
 										}
-									else if (priv->output_type == RPTP_OUTPUT_SVG)
+									else if (priv->output_type == RPT_OUTPUT_SVG)
 										{
 											gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
 											fout = fopen (new_out_filename, "w");
@@ -460,7 +508,7 @@ rpt_print_print (RptPrint *rpt_print)
 
 									if (cairo_surface_status (priv->surface) == CAIRO_STATUS_SUCCESS)
 										{
-											if (priv->output_type == RPTP_OUTPUT_PNG || priv->output_type == RPTP_OUTPUT_SVG)
+											if (priv->output_type == RPT_OUTPUT_PNG || priv->output_type == RPT_OUTPUT_SVG)
 												{
 													priv->cr = cairo_create (priv->surface);
 												}
@@ -469,7 +517,7 @@ rpt_print_print (RptPrint *rpt_print)
 													priv->cr = cairo_create (priv->surface);
 												}
 
-											if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG && npage == 0)
+											if (priv->output_type != RPT_OUTPUT_PNG && priv->output_type != RPT_OUTPUT_SVG && npage == 0)
 												{
 													cairo_surface_destroy (priv->surface);
 												}
@@ -478,7 +526,7 @@ rpt_print_print (RptPrint *rpt_print)
 												{
 													rpt_print_page (rpt_print, cur);
 
-													if (priv->output_type == RPTP_OUTPUT_PNG)
+													if (priv->output_type == RPT_OUTPUT_PNG)
 														{
 															gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
 														
@@ -492,7 +540,7 @@ rpt_print_print (RptPrint *rpt_print)
 															cairo_show_page (priv->cr);
 														}
 
-													if (priv->output_type == RPTP_OUTPUT_SVG)
+													if (priv->output_type == RPT_OUTPUT_SVG)
 														{
 															cairo_surface_destroy (priv->surface);
 															cairo_destroy (priv->cr);
@@ -529,7 +577,7 @@ rpt_print_print (RptPrint *rpt_print)
 				{
 					cairo_destroy (priv->cr);
 				}
-			if (priv->output_type != RPTP_OUTPUT_PNG && priv->output_type != RPTP_OUTPUT_SVG)
+			if (priv->output_type != RPT_OUTPUT_PNG && priv->output_type != RPT_OUTPUT_SVG)
 				{
 					fclose (fout);
 				}
@@ -555,6 +603,10 @@ rpt_print_set_property (GObject *object, guint property_id, const GValue *value,
 
 			case PROP_OUTPUT_FILENAME:
 				rpt_print_set_output_filename (rpt_print, g_value_get_string (value));
+				break;
+
+			case PROP_COPIES:
+				rpt_print_set_copies (rpt_print, g_value_get_uint (value));
 				break;
 
 			case PROP_PATH_RELATIVES_TO:
@@ -586,6 +638,10 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 
 			case PROP_OUTPUT_FILENAME:
 				g_value_set_string (value, priv->output_filename);
+				break;
+
+			case PROP_COPIES:
+				g_value_set_uint (value, priv->copies);
 				break;
 
 			case PROP_PATH_RELATIVES_TO:
@@ -1324,6 +1380,14 @@ rpt_print_gtk_begin_print (GtkPrintOperation *operation,
 	gtk_print_operation_set_default_page_setup (operation, page_set);
 	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
+
+	GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
+	if (settings == NULL)
+		{
+			settings = gtk_print_settings_new ();
+		}
+	gtk_print_settings_set_n_copies (settings, priv->copies);
+	gtk_print_operation_set_print_settings (operation, settings);
 }
 
 static void

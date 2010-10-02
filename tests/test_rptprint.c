@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2010 Andrea Zagli <azagli@inwind.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ main (int argc, char **argv)
 
 	if (rptp != NULL)
 		{
-			rpt_print_set_output_type (rptp, RPTP_OUTPUT_PNG);
+			rpt_print_set_output_type (rptp, RPT_OUTPUT_PNG);
 			rpt_print_set_output_filename (rptp, "test.png");
 			rpt_print_print (rptp);
 		}

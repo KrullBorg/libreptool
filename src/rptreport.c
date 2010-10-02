@@ -132,7 +132,7 @@ static void rpt_report_rptprint_section (RptReport *rpt_report,
                                          gdouble *cur_y,
                                          RptReportSection section,
                                          gint row);
-									  
+
 static void rpt_report_rptprint_parse_text_source (RptReport *rpt_report,
                                                    RptObject *rptobj,
                                                    xmlNode *xnode,
@@ -147,6 +147,11 @@ typedef struct _RptReportPrivate RptReportPrivate;
 struct _RptReportPrivate
 	{
 		eRptUnitLength unit;
+
+		eRptOutputType output_type;
+		gchar *output_filename;
+
+		guint copies;
 
 		Database *db;
 
@@ -251,6 +256,10 @@ rpt_report_init (RptReport *rpt_report)
 	priv->body->height = 0.0;
 	priv->body->objects = NULL;
 	priv->body->new_page_after = FALSE;
+
+	priv->output_type = RPT_OUTPUT_PDF;
+	priv->output_filename = g_strdup ("rptreport.pdf");
+	priv->copies = 1;
 }
 
 /**
@@ -330,6 +339,18 @@ RptReport
 											if (strcmp (cur_property->name, "unit-length") == 0)
 												{
 													g_object_set (G_OBJECT (rpt_report), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
+												}
+											else if (strcmp (cur_property->name, "output-type") == 0)
+												{
+													rpt_report_set_output_type (rpt_report, rpt_common_stroutputtype_to_enum ((const gchar *)xmlNodeGetContent (cur_property)));
+												}
+											else if (strcmp (cur_property->name, "output-filename") == 0)
+												{
+													rpt_report_set_output_filename (rpt_report, (const gchar *)xmlNodeGetContent (cur_property));
+												}
+											else if (strcmp (cur_property->name, "copies") == 0)
+												{
+													rpt_report_set_copies (rpt_report, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
 												}
 
 											cur_property = cur_property->next;
@@ -515,6 +536,59 @@ RptReport
 		}
 
 	return rpt_report;
+}
+
+/**
+ * rpt_report_set_output_type:
+ * @rpt_report:
+ * @output_type:
+ *
+ */
+void
+rpt_report_set_output_type (RptReport *rpt_report, eRptOutputType output_type)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->output_type = output_type;
+}
+
+/**
+ * rpt_report_set_output_filename:
+ * @rpt_report:
+ * @output_filename:
+ *
+ */
+void
+rpt_report_set_output_filename (RptReport *rpt_report, const gchar *output_filename)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->output_filename = g_strstrip (g_strdup (output_filename));
+	if (g_strcmp0 (priv->output_filename, "") == 0)
+		{
+			g_warning ("It's not possible to set an empty output filename.");
+			priv->output_filename = g_strdup ("rptreport.pdf");
+		}
+}
+
+/**
+ * rpt_report_set_copies:
+ * @rpt_report:
+ * @copies:
+ *
+ */
+void
+rpt_report_set_copies (RptReport *rpt_report, guint copies)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->copies = copies;
 }
 
 /**
@@ -1127,6 +1201,18 @@ xmlDoc
 	xmlNodeSetContent (xnode, rpt_common_enum_to_strunit (priv->unit));
 	xmlAddChild (xnodeprop, xnode);
 
+	xnode = xmlNewNode (NULL, "output-type");
+	xmlNodeSetContent (xnode, rpt_common_enum_to_stroutputtype (priv->output_type));
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "output-filename");
+	xmlNodeSetContent (xnode, priv->output_filename);
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "copies");
+	xmlNodeSetContent (xnode, g_strdup_printf ("%d", priv->copies));
+	xmlAddChild (xnodeprop, xnode);
+
 	if (priv->db != NULL)
 		{
 			xmlNode *xnodedb = xmlNewNode (NULL, "database");
@@ -1227,6 +1313,18 @@ xmlDoc
 
 	xmlNode *xnode = xmlNewNode (NULL, "unit-length");
 	xmlNodeSetContent (xnode, rpt_common_enum_to_strunit (priv->unit));
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "output-type");
+	xmlNodeSetContent (xnode, rpt_common_enum_to_stroutputtype (priv->output_type));
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "output-filename");
+	xmlNodeSetContent (xnode, priv->output_filename);
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "copies");
+	xmlNodeSetContent (xnode, g_strdup_printf ("%d", priv->copies));
 	xmlAddChild (xnodeprop, xnode);
 
 	if (priv->db != NULL)

@@ -185,6 +185,103 @@ const gchar
 }
 
 /**
+ * rpt_common_stroutputtype_to_enum:
+ * @output_type:
+ *
+ * Returns: the enum value that match the string @output_type.
+ */
+eRptOutputType
+rpt_common_stroutputtype_to_enum (const gchar *output_type)
+{
+	eRptOutputType ret;
+
+	gchar *real_outputtype;
+
+	ret = RPT_OUTPUT_PDF;
+
+	if (output_type != NULL)
+		{
+			real_outputtype = g_strstrip (g_strdup (output_type));
+			if (g_ascii_strcasecmp (real_outputtype, "pdf") == 0)
+				{
+					/* already setted */
+				}
+			else if (g_ascii_strcasecmp (real_outputtype, "png") == 0)
+				{
+					ret = RPT_OUTPUT_PNG;
+				}
+			else if (g_ascii_strcasecmp (real_outputtype, "ps") == 0)
+				{
+					ret = RPT_OUTPUT_PS;
+				}
+			else if (g_ascii_strcasecmp (real_outputtype, "svg") == 0)
+				{
+					ret = RPT_OUTPUT_SVG;
+				}
+			else if (g_ascii_strcasecmp (real_outputtype, "gtk") == 0)
+				{
+					ret = RPT_OUTPUT_GTK;
+				}
+			else if (g_ascii_strcasecmp (real_outputtype, "gtk-default") == 0)
+				{
+					ret = RPT_OUTPUT_GTK_DEFAULT_PRINTER;
+				}
+			else
+				{
+					g_warning ("Output type «%s» not available.", real_outputtype);
+				}
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_enum_to_stroutputtype:
+ * @output_type:
+ *
+ * Returns: the string value that represents then enum value @output_type.
+ */
+const gchar
+*rpt_common_enum_to_stroutputtype (eRptOutputType output_type)
+{
+	gchar *ret;
+
+	switch (output_type)
+		{
+			case RPT_OUTPUT_PDF:
+				ret = g_strdup ("df");
+				break;
+
+			case RPT_OUTPUT_PNG:
+				ret = g_strdup ("png");
+				break;
+
+			case RPT_OUTPUT_PS:
+				ret = g_strdup ("ps");
+				break;
+
+			case RPT_OUTPUT_SVG:
+				ret = g_strdup ("svg");
+				break;
+
+			case RPT_OUTPUT_GTK:
+				ret = g_strdup ("gtk");
+				break;
+
+			case RPT_OUTPUT_GTK_DEFAULT_PRINTER:
+				ret = g_strdup ("gtk-default");
+				break;
+
+			default:
+				g_warning ("Output type «%d» not available.", output_type);
+				ret = g_strdup ("pdf");
+				break;
+		}
+
+	return ret;
+}
+
+/**
  * rpt_common_rptpoint_new:
  *
  * Returns: an new allocated #RptPoint struct.

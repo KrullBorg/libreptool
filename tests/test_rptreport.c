@@ -67,7 +67,7 @@ main (int argc, char **argv)
 			rptp = rpt_print_new_from_xml (rptprint);
 			if (rptp != NULL)
 				{
-					rpt_print_set_output_type (rptp, RPTP_OUTPUT_PDF);
+					rpt_print_set_output_type (rptp, RPT_OUTPUT_PDF);
 					rpt_print_set_output_filename (rptp, "test.pdf");
 					rpt_print_print (rptp);
 				}

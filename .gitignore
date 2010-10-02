@@ -38,6 +38,9 @@ config.status
 docs/reference/version.xml
 docs/reference/html/
 docs/reference/xml/
+docs/reference/libreptool-decl-list.txt
+docs/reference/libreptool-decl.txt
+docs/reference/libreptool-scan.c
 libtool
 stamp-h1
 tests/test*.png
