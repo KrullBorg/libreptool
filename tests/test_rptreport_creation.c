@@ -68,7 +68,7 @@ main (int argc, char **argv)
 			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
-						  "stroke", &stroke,
+			              "stroke", &stroke,
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
@@ -81,7 +81,7 @@ main (int argc, char **argv)
 			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
-						  "stroke", &stroke,
+			              "stroke", &stroke,
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
@@ -93,7 +93,7 @@ main (int argc, char **argv)
 			stroke.color = rpt_common_parse_color ("#000000AA");
 			g_object_set (obj,
 			              "size", &size,
-						  "stroke", &stroke,
+			              "stroke", &stroke,
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
@@ -107,8 +107,19 @@ main (int argc, char **argv)
 			stroke.style = NULL;
 			g_object_set (obj,
 			              "size", &size,
-						  "stroke", &stroke,
-						  "fill-color", color,
+			              "stroke", &stroke,
+			              "fill-color", color,
+			              NULL);
+			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
+
+			point.x = 50;
+			point.y = 200;
+			obj = rpt_obj_image_new ("image1", point);
+			size.width = 100;
+			size.height = 100;
+			g_object_set (obj,
+			              "size", &size,
+			              "source", "gnome-globe.png",
 			              NULL);
 			rpt_report_add_object_to_section (rptr, obj, RPTREPORT_SECTION_BODY);
 
