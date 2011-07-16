@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -54,10 +54,7 @@ typedef struct
 typedef struct
 {
 	RptSize *size;
-	gdouble margin_top;
-	gdouble margin_right;
-	gdouble margin_bottom;
-	gdouble margin_left;
+	RptMargin *margin;
 } Page;
 
 typedef struct
@@ -243,9 +240,9 @@ rpt_report_init (RptReport *rpt_report)
 	priv->db = NULL;
 
 	priv->page = (Page *)g_malloc0 (sizeof (Page));
-	priv->page->size = (RptSize *)g_malloc0 (sizeof (RptSize));
-	priv->page->size->width = 0.0;
-	priv->page->size->height = 0.0;
+
+	priv->page->size = rpt_common_rptsize_new ();
+	priv->page->margin = rpt_common_rptmargin_new ();
 
 	priv->report_header = NULL;
 	priv->report_footer = NULL;
@@ -770,10 +767,10 @@ rpt_report_set_page_margins (RptReport *rpt_report,
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	priv->page->margin_top = top;
-	priv->page->margin_right = right;
-	priv->page->margin_bottom = bottom;
-	priv->page->margin_left = left;
+	priv->page->margin->top = top;
+	priv->page->margin->right = right;
+	priv->page->margin->bottom = bottom;
+	priv->page->margin->left = left;
 }
 
 /**
@@ -794,10 +791,27 @@ rpt_report_get_page_margins (RptReport *rpt_report,
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	*top = priv->page->margin_top;
-	*right = priv->page->margin_right;
-	*bottom = priv->page->margin_bottom;
-	*left = priv->page->margin_left;
+	*top = priv->page->margin->top;
+	*right = priv->page->margin->right;
+	*bottom = priv->page->margin->bottom;
+	*left = priv->page->margin->left;
+}
+
+RptMargin
+*rpt_report_get_page_margins_struct (RptReport *rpt_report)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	return g_memdup (priv->page->margin, sizeof (RptMargin));
+}
+
+void
+rpt_report_set_page_margins_struct (RptReport *rpt_report, RptMargin margin)
+{
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	g_free (priv->page->margin);
+	priv->page->margin = g_memdup (&margin, sizeof (RptMargin));
 }
 
 /**
@@ -1233,21 +1247,21 @@ xmlDoc
 
 	xnode = xmlNewNode (NULL, "page");
 	rpt_common_set_size (xnode, priv->page->size);
-	if (priv->page->margin_top != 0.0)
+	if (priv->page->margin->top != 0.0)
 		{
-			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin_top));
+			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin->top));
 		}
-	if (priv->page->margin_right != 0.0)
+	if (priv->page->margin->right != 0.0)
 		{
-			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin_right));
+			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin->right));
 		}
-	if (priv->page->margin_bottom != 0.0)
+	if (priv->page->margin->bottom != 0.0)
 		{
-			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin_bottom));
+			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin->bottom));
 		}
-	if (priv->page->margin_left != 0.0)
+	if (priv->page->margin->left != 0.0)
 		{
-			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin_left));
+			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin->left));
 		}
 	xmlAddChild (xroot, xnode);
 
@@ -1371,20 +1385,20 @@ xmlDoc
 				{
 					if (row == 0 ||
 					    priv->body->new_page_after ||
-					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height)) ||
-					    cur_y > (priv->page->size->height - priv->page->margin_bottom))
+					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height)) ||
+					    cur_y > (priv->page->size->height - priv->page->margin->bottom))
 						{
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
 									if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
 									    priv->cur_page > 1)
 										{
-											cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
+											cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
 											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 										}
 								}
 
-							cur_y = priv->page->margin_top;
+							cur_y = priv->page->margin->top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 							if (priv->page_header != NULL)
@@ -1411,7 +1425,7 @@ xmlDoc
 
 			if (priv->cur_page > 0 && priv->report_footer != NULL)
 				{
-					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin_bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
+					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin->bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
 					    priv->report_footer->new_page_before)
 						{
 							if (priv->page_header != NULL)
@@ -1419,12 +1433,12 @@ xmlDoc
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row - 1);
 								}
 
-							cur_y = priv->page->margin_top;
+							cur_y = priv->page->margin->top;
 							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
-									cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
+									cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
 									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 								}
 						}
@@ -1432,7 +1446,7 @@ xmlDoc
 				}
 			if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
 				{
-					cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
 				}
 
@@ -1441,7 +1455,7 @@ xmlDoc
 		}
 	else
 		{
-			cur_y = priv->page->margin_top;
+			cur_y = priv->page->margin->top;
 			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
 
 			if (priv->page_header != NULL)
@@ -1461,7 +1475,7 @@ xmlDoc
 				}
 			if (priv->page_footer != NULL)
 				{
-					cur_y = priv->page->size->height - priv->page->margin_bottom - priv->page_footer->height;
+					cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
 					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, -1);
 				}
 		}
@@ -2064,21 +2078,21 @@ static xmlNode
 	xmlAddChild (xroot, xnode);
 
 	rpt_common_set_size (xnode, priv->page->size);
-	if (priv->page->margin_top != 0.0)
+	if (priv->page->margin->top != 0.0)
 		{
-			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin_top));
+			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin->top));
 		}
-	if (priv->page->margin_right != 0.0)
+	if (priv->page->margin->right != 0.0)
 		{
-			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin_right));
+			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin->right));
 		}
-	if (priv->page->margin_bottom != 0.0)
+	if (priv->page->margin->bottom != 0.0)
 		{
-			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin_bottom));
+			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin->bottom));
 		}
-	if (priv->page->margin_left != 0.0)
+	if (priv->page->margin->left != 0.0)
 		{
-			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin_left));
+			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin->left));
 		}
 
 	priv->cur_page++;
@@ -2133,14 +2147,14 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 					xmlRemoveProp (attr);
 				}
 
-			if (priv->page->margin_left != 0.0)
+			if (priv->page->margin->left != 0.0)
 				{
 					prop = (gchar *)xmlGetProp (xnode, "x");
 					if (prop == NULL)
 						{
 							prop = g_strdup ("0.0");
 						}
-					xmlSetProp (xnode, "x", g_strdup_printf ("%f", strtod (prop, NULL) + priv->page->margin_left));
+					xmlSetProp (xnode, "x", g_strdup_printf ("%f", strtod (prop, NULL) + priv->page->margin->left));
 				}
 			
 			prop = (gchar *)xmlGetProp (xnode, "y");

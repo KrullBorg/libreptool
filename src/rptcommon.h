@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,15 @@ struct _RptRotation
 	gdouble angle;
 };
 typedef struct _RptRotation RptRotation;
+
+struct _RptMargin
+{
+	gdouble top;
+	gdouble right;
+	gdouble bottom;
+	gdouble left;
+};
+typedef struct _RptMargin RptMargin;
 
 /**
  * RptFont:
@@ -198,6 +207,11 @@ RptRotation *rpt_common_rptrotation_new (void);
 RptRotation *rpt_common_get_rotation (xmlNode *xnode);
 void rpt_common_set_rotation (xmlNode *xnode,
                               const RptRotation *rotation);
+
+RptMargin *rpt_common_rptmargin_new (void);
+RptMargin *rpt_common_get_margin (xmlNode *xnode);
+void rpt_common_set_margin (xmlNode *xnode,
+                            const RptMargin *margin);
 
 RptFont *rpt_common_rptfont_new (void);
 RptFont *rpt_common_get_font (xmlNode *xnode);

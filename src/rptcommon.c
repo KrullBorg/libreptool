@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -292,6 +292,8 @@ RptPoint
 	RptPoint *point;
 
 	point = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	point->x = 0.0;
+	point->y = 0.0;
 
 	return point;
 }
@@ -350,6 +352,8 @@ RptSize
 	RptSize *size;
 
 	size = (RptSize *)g_malloc0 (sizeof (RptSize));
+	size->width = 0.0;
+	size->height = 0.0;
 
 	return size;
 }
@@ -407,6 +411,7 @@ RptRotation
 	RptRotation *rotation;
 
 	rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
+	rotation->angle = 0.0;
 
 	return rotation;
 }
@@ -446,6 +451,82 @@ rpt_common_set_rotation (xmlNode *xnode, const RptRotation *rotation)
 	if (rotation != NULL)
 		{
 			xmlSetProp (xnode, "rotation", g_strdup_printf ("%f", rotation->angle));
+		}
+}
+
+/**
+ * rpt_common_rptmargin_new:
+ *
+ * Returns: an new allocated #RptMargin struct.
+ */
+RptMargin
+*rpt_common_rptmargin_new (void)
+{
+	RptMargin *margin;
+
+	margin = (RptMargin *)g_malloc0 (sizeof (RptMargin));
+	margin->top = 0.0;
+	margin->right = 0.0;
+	margin->bottom = 0.0;
+	margin->left = 0.0;
+
+	return margin;
+}
+
+/**
+ * rpt_common_get_margin:
+ * @xnode: an #xmlNode.
+ *
+ * Returns: an #RptMargin struct that represent the page's margin specified
+ * on @xnode.
+ */
+RptMargin
+*rpt_common_get_margin (xmlNode *xnode)
+{
+	RptMargin *margin = NULL;
+	gchar *prop;
+
+	margin = rpt_common_rptmargin_new ();
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"top");
+	if (prop != NULL)
+		{
+			margin->top = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"right");
+	if (prop != NULL)
+		{
+			margin->right = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"bottom");
+	if (prop != NULL)
+		{
+			margin->bottom = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"left");
+	if (prop != NULL)
+		{
+			margin->left = g_strtod (prop, NULL);
+		}
+
+	return margin;
+}
+
+/**
+ * rpt_common_set_margin:
+ * @xnode: an #xmlNode.
+ * @margin:
+ *
+ */
+void
+rpt_common_set_margin (xmlNode *xnode, const RptMargin *margin)
+{
+	if (margin != NULL)
+		{
+			xmlSetProp (xnode, "top", g_strdup_printf ("%f", margin->top));
+			xmlSetProp (xnode, "right", g_strdup_printf ("%f", margin->right));
+			xmlSetProp (xnode, "bottom", g_strdup_printf ("%f", margin->bottom));
+			xmlSetProp (xnode, "left", g_strdup_printf ("%f", margin->left));
 		}
 }
 

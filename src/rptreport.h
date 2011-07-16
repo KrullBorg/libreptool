@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -99,6 +99,9 @@ void rpt_report_set_page_margins (RptReport *rpt_report,
                                   gdouble right,
                                   gdouble bottom,
                                   gdouble left);
+
+RptMargin *rpt_report_get_page_margins_struct (RptReport *rpt_report);
+void rpt_report_set_page_margins_struct (RptReport *rpt_report, RptMargin margin);
 
 gdouble rpt_report_get_section_height (RptReport *rpt_report,
                                        RptReportSection section);

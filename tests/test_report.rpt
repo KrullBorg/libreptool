@@ -1,42 +1,15 @@
 <?xml version="1.0"?>
 <reptool>
-  <database>
-    <provider>
-SQLite
-    </provider>
-    <connection-string>
-DB_DIR=.;DB_NAME=db_test.db
-    </connection-string>
-    <sql>
-SELECT * FROM articles ORDER BY name
-    </sql>
-  </database>
-  <page width="595.000000" height="842.000000"/>
+  <properties>
+    <unit-length>pt</unit-length>
+    <output-type>df</output-type>
+    <output-filename>rptreport.pdf</output-filename>
+    <copies>1</copies>
+  </properties>
+  <page width="595.000000" height="842.000000" margin-top="200.000000" margin-left="100.000000"/>
   <report>
-    <report-header height="80.000000">
-      <text name="rephead" x="10.000000" y="10.000000" width="300.000000" height="70.000000" font-name="Verdana" font-size="16.000000" font-bold="y" font-color="#0000FFFF" source="&quot;the report's header&quot;"/>
-    </report-header>
-    <page-header first-page="y" height="80.000000">
-      <text name="title" x="10.000000" y="10.000000" width="300.000000" height="50.000000" font-name="Courier New" font-size="10.000000" font-bold="y" source="&quot;the page's title&quot; &amp; &quot; - &quot; &amp; @Page"/>
-      <line name="line1" x="10.000000" y="65.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#000000FF"/>
-    </page-header>
-    <body height="200.000000">
-      <text name="txt_id" x="50.000000" y="50.000000" width="100.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="[id]"/>
-      <text name="txt_name" x="200.000000" y="50.000000" width="100.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="[name]"/>
-      <text name="txt_req" x="50.000000" y="100.000000" width="100.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="[nonexistent]"/>
-      <rect name="rect1" x="400.000000" y="10.000000" width="20.000000" height="20.000000" stroke-width="1.000000" stroke-color="#000000FF" fill-color="#00FF00FF"/>
-      <image name="img1" x="450.000000" y="10.000000" width="60.000000" height="60.000000" border-bottom-width="1.000000" border-bottom-color="#FF0000FF" border-bottom-style="10.000000;10.000000;" source="tests/gnome-globe.png"/>
+    <body height="0.000000">
+      <text name="txt_id" x="50.000000" y="50.000000" width="100.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="&quot;text with&#10;new line&quot;"/>
     </body>
-    <report-footer height="50.000000">
-      <line name="line3" x="10.000000" y="10.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#FFFF00FF" stroke-style="50.000000;10.000000;"/>
-      <text name="txt_report_footer" x="10.000000" y="20.000000" width="500.000000" height="30.000000" font-name="Sans" font-size="12.000000" horizontal-align="center" source="&quot;the report's footer&quot;"/>
-      <line name="line4" x="10.000000" y="50.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#FFFF00FF" stroke-style="1.000000;5.000000;"/>
-    </report-footer>
-    <page-footer first-page="y" last-page="y" height="80.000000">
-      <line name="line2" x="10.000000" y="10.000000" width="500.000000" height="0.000000" stroke-width="1.000000" stroke-color="#000000FF"/>
-      <text name="footer" x="10.000000" y="20.000000" width="300.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="&quot;the page's footer&quot;"/>
-      <ellipse name="ellipse1" x="400.000000" y="50.000000" width="20.000000" height="10.000000" stroke-width="1.000000" stroke-color="#FF0000FF" fill-color="#00FF00FF"/>
-      <text name="page_n" x="500.000000" y="20.000000" width="50.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="@Page &amp; &quot;/&quot; &amp; @Pages"/>
-    </page-footer>
   </report>
 </reptool>
