@@ -122,8 +122,10 @@ static gboolean rpt_report_object_is_in_section (RptReport *rpt_report, RptObjec
 static void rpt_report_section_create (RptReport *rpt_report, RptReportSection section);
 static xmlNode *rpt_report_section_get_xml (RptReport *rpt_report, RptReportSection section);
 
+static xmlNode *rpt_report_rptprint_get_properties_node (xmlDoc *xdoc);
+
 static xmlNode *rpt_report_rptprint_new_page (RptReport *rpt_report,
-                                              xmlNode *xroot);
+                                              xmlDoc *xdoc);
 static void rpt_report_rptprint_section (RptReport *rpt_report,
                                          xmlNode *xpage,
                                          gdouble *cur_y,
@@ -162,33 +164,7 @@ struct _RptReportPrivate
 		guint cur_page;
 	};
 
-GType
-rpt_report_get_type (void)
-{
-	static GType rpt_report_type = 0;
-
-	if (!rpt_report_type)
-		{
-			static const GTypeInfo rpt_report_info =
-			{
-				sizeof (RptReportClass),
-				NULL,	/* base_init */
-				NULL,	/* base_finalize */
-				(GClassInitFunc) rpt_report_class_init,
-				NULL,	/* class_finalize */
-				NULL,	/* class_data */
-				sizeof (RptReport),
-				0,	/* n_preallocs */
-				(GInstanceInitFunc) rpt_report_init,
-				NULL
-			};
-
-			rpt_report_type = g_type_register_static (G_TYPE_OBJECT, "RptReport",
-			                                          &rpt_report_info, 0);
-		}
-
-	return rpt_report_type;
-}
+G_DEFINE_TYPE (RptReport, rpt_report, G_TYPE_OBJECT)
 
 static void
 rpt_report_class_init (RptReportClass *klass)
@@ -320,42 +296,37 @@ RptReport
 					rpt_report = rpt_report_new ();
 
 					priv = RPT_REPORT_GET_PRIVATE (rpt_report);
-					xpcontext = xmlXPathNewContext (xdoc);
 
 					/* search for node "properties" */
-					xpcontext->node = cur;
-					xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::properties", xpcontext);
-					if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+					xmlNode *xnodeprop = rpt_report_rptprint_get_properties_node (xdoc);
+					if (xnodeprop != NULL)
 						{
-							xnodeset = xpresult->nodesetval;
-							if (xnodeset->nodeNr == 1)
+							xmlNode *cur_property = xnodeprop->children;
+							while (cur_property != NULL)
 								{
-									xmlNode *cur_property = xnodeset->nodeTab[0]->children;
-									while (cur_property != NULL)
+									if (g_strcmp0 (cur_property->name, "unit-length") == 0)
 										{
-											if (g_strcmp0 (cur_property->name, "unit-length") == 0)
-												{
-													g_object_set (G_OBJECT (rpt_report), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
-												}
-											else if (g_strcmp0 (cur_property->name, "output-type") == 0)
-												{
-													rpt_report_set_output_type (rpt_report, rpt_common_stroutputtype_to_enum ((const gchar *)xmlNodeGetContent (cur_property)));
-												}
-											else if (g_strcmp0 (cur_property->name, "output-filename") == 0)
-												{
-													rpt_report_set_output_filename (rpt_report, (const gchar *)xmlNodeGetContent (cur_property));
-												}
-											else if (g_strcmp0 (cur_property->name, "copies") == 0)
-												{
-													rpt_report_set_copies (rpt_report, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
-												}
-
-											cur_property = cur_property->next;
+											g_object_set (G_OBJECT (rpt_report), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
 										}
+									else if (g_strcmp0 (cur_property->name, "output-type") == 0)
+										{
+											rpt_report_set_output_type (rpt_report, rpt_common_stroutputtype_to_enum ((const gchar *)xmlNodeGetContent (cur_property)));
+										}
+									else if (g_strcmp0 (cur_property->name, "output-filename") == 0)
+										{
+											rpt_report_set_output_filename (rpt_report, (const gchar *)xmlNodeGetContent (cur_property));
+										}
+									else if (g_strcmp0 (cur_property->name, "copies") == 0)
+										{
+											rpt_report_set_copies (rpt_report, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
+										}
+
+									cur_property = cur_property->next;
 								}
 						}
 
 					/* search for node "database" */
+					xpcontext = xmlXPathNewContext (xdoc);
 					xpcontext->node = cur;
 					xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::database", xpcontext);
 					if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
@@ -1391,7 +1362,7 @@ xmlDoc
 								}
 
 							cur_y = priv->page->margin->top;
-							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+							xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
 
 							if (priv->page_header != NULL)
 								{
@@ -1407,7 +1378,7 @@ xmlDoc
 									if (priv->report_header->new_page_after)
 										{
 											cur_y = 0.0;
-											xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+											xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
 										}
 								}
 						}
@@ -1426,7 +1397,7 @@ xmlDoc
 								}
 
 							cur_y = priv->page->margin->top;
-							xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+							xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
 
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
@@ -1448,7 +1419,7 @@ xmlDoc
 	else
 		{
 			cur_y = priv->page->margin->top;
-			xpage = rpt_report_rptprint_new_page (rpt_report, xroot);
+			xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
 
 			if (priv->page_header != NULL)
 				{
@@ -1486,34 +1457,6 @@ xmlDoc
 	xmlDocSetRootElement (xdoc, xroot);
 
 	return xdoc;
-}
-
-static xmlNode
-*rpt_report_rptprint_get_properties_node (xmlDoc *xdoc)
-{
-	xmlNode *xnode;
-
-	xmlXPathContextPtr xpcontext;
-	xmlXPathObjectPtr xpresult;
-	xmlNodeSetPtr xnodeset;
-
-	xnode = NULL;
-
-	xpcontext = xmlXPathNewContext (xdoc);
-
-	/* search for node "properties" */
-	xpcontext->node = xmlDocGetRootElement (xdoc);
-	xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::properties", xpcontext);
-	if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
-		{
-			xnodeset = xpresult->nodesetval;
-			if (xnodeset->nodeNr > 0)
-				{
-					xnode = xnodeset->nodeTab[0];
-				}
-		}
-
-	return xnode;
 }
 
 void
@@ -1602,6 +1545,23 @@ rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies)
 	xnode = xmlNewNode (NULL, "copies");
 	xmlNodeSetContent (xnode, g_strdup_printf ("%d", copies));
 	xmlAddChild (xnodeprop, xnode);
+}
+
+xmlNode
+*rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin)
+{
+	xmlNode *xroot;
+	xmlNode *xnode;
+
+	xroot = xmlDocGetRootElement (xdoc);
+
+	xnode = xmlNewNode (NULL, "page");
+	xmlAddChild (xroot, xnode);
+
+	rpt_common_set_size (xnode, size);
+	rpt_common_set_margin (xnode, margin);
+
+	return xnode;
 }
 
 /**
@@ -2189,32 +2149,41 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 }
 
 static xmlNode
-*rpt_report_rptprint_new_page (RptReport *rpt_report, xmlNode *xroot)
+*rpt_report_rptprint_get_properties_node (xmlDoc *xdoc)
+{
+	xmlNode *xnode;
+
+	xmlXPathContextPtr xpcontext;
+	xmlXPathObjectPtr xpresult;
+	xmlNodeSetPtr xnodeset;
+
+	xnode = NULL;
+
+	xpcontext = xmlXPathNewContext (xdoc);
+
+	/* search for node "properties" */
+	xpcontext->node = xmlDocGetRootElement (xdoc);
+	xpresult = xmlXPathEvalExpression ((const xmlChar *)"child::properties", xpcontext);
+	if (!xmlXPathNodeSetIsEmpty (xpresult->nodesetval))
+		{
+			xnodeset = xpresult->nodesetval;
+			if (xnodeset->nodeNr > 0)
+				{
+					xnode = xnodeset->nodeTab[0];
+				}
+		}
+
+	return xnode;
+}
+
+static xmlNode
+*rpt_report_rptprint_new_page (RptReport *rpt_report, xmlDoc *xdoc)
 {
 	xmlNode *xnode;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	xnode = xmlNewNode (NULL, "page");
-	xmlAddChild (xroot, xnode);
-
-	rpt_common_set_size (xnode, priv->page->size);
-	if (priv->page->margin->top != 0.0)
-		{
-			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", priv->page->margin->top));
-		}
-	if (priv->page->margin->right != 0.0)
-		{
-			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", priv->page->margin->right));
-		}
-	if (priv->page->margin->bottom != 0.0)
-		{
-			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", priv->page->margin->bottom));
-		}
-	if (priv->page->margin->left != 0.0)
-		{
-			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", priv->page->margin->left));
-		}
+	xnode = rpt_report_rptprint_page_new (xdoc, priv->page->size, priv->page->margin);
 
 	priv->cur_page++;
 

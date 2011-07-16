@@ -153,6 +153,7 @@ void rpt_report_rptprint_set_unit_length (xmlDoc *xdoc, eRptUnitLength unit);
 void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_type);
 void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
 void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
+xmlNode *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin);
 
 
 G_END_DECLS
