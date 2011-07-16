@@ -2,11 +2,14 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([libreptool], [0.1.0], [azagli@libero.it])
+AC_INIT([libreptool], [0.2.0], [azagli@libero.it])
 AC_CONFIG_SRCDIR([src/rptprint.c])
 AC_CONFIG_HEADER([config.h])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(-Wall)
+
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
 AM_MAINTAINER_MODE
 
 AC_CONFIG_MACRO_DIR([m4])
