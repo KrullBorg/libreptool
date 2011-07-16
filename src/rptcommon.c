@@ -249,7 +249,7 @@ const gchar
 	switch (output_type)
 		{
 			case RPT_OUTPUT_PDF:
-				ret = g_strdup ("df");
+				ret = g_strdup ("pdf");
 				break;
 
 			case RPT_OUTPUT_PNG:

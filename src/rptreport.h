@@ -135,10 +135,6 @@ void rpt_report_set_page_footer_first_last_page (RptReport *rpt_report,
 gboolean rpt_report_body_get_new_page_after (RptReport *rpt_report);
 void rpt_report_body_set_new_page_after (RptReport *rpt_report, gboolean new_page_after);
 
-xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
-
-xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
-
 gboolean rpt_report_add_object_to_section (RptReport *rpt_report,
                                            RptObject *rpt_object,
                                            RptReportSection section);
@@ -147,6 +143,16 @@ void rpt_report_remove_object (RptReport *rpt_report,
 
 RptObject *rpt_report_get_object_from_name (RptReport *rpt_report,
                                             const gchar *name);
+
+xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
+
+xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
+
+xmlDoc *rpt_report_rptprint_new (void);
+void rpt_report_rptprint_set_unit_length (xmlDoc *xdoc, eRptUnitLength unit);
+void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_type);
+void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
+void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
 
 
 G_END_DECLS

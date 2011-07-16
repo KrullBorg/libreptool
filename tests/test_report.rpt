@@ -2,7 +2,7 @@
 <reptool>
   <properties>
     <unit-length>pt</unit-length>
-    <output-type>df</output-type>
+    <output-type>pdf</output-type>
     <output-filename>rptreport.pdf</output-filename>
     <copies>1</copies>
   </properties>
