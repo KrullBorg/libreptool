@@ -299,6 +299,25 @@ RptPoint
 }
 
 /**
+ * rpt_common_rptpoint_new_with_values:
+ * @x:
+ * @y:
+ *
+ * Returns: an new allocated #RptPoint struct.
+ */
+RptPoint
+*rpt_common_rptpoint_new_with_values (gdouble x, gdouble y)
+{
+	RptPoint *point;
+
+	point = rpt_common_rptpoint_new ();
+	point->x = x;
+	point->y = y;
+
+	return point;
+}
+
+/**
  * rpt_common_get_position:
  * @xnode: an #xmlNode.
  *
@@ -359,6 +378,25 @@ RptSize
 }
 
 /**
+ * rpt_common_rptsize_new_with_values:
+ * @width:
+ * @height:
+ *
+ * Returns: an new allocated #RptSize struct.
+ */
+RptSize
+*rpt_common_rptsize_new_with_values (gdouble width, gdouble height)
+{
+	RptSize *size;
+
+	size = rpt_common_rptsize_new ();
+	size->width = width;
+	size->height = height;
+
+	return size;
+}
+
+/**
  * rpt_common_get_size:
  * @xnode: an #xmlNode.
  *
@@ -376,9 +414,8 @@ RptSize
 	height = xmlGetProp (xnode, (const xmlChar *)"height");
 	if (width != NULL && height != NULL)
 		{
-			size = rpt_common_rptsize_new ();
-			size->width = strtod (width, NULL);
-			size->height = strtod (height, NULL);
+			size = rpt_common_rptsize_new_with_values (g_strtod (width, NULL),
+			                                           g_strtod (height, NULL));
 		}
 
 	return size;
@@ -412,6 +449,23 @@ RptRotation
 
 	rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
 	rotation->angle = 0.0;
+
+	return rotation;
+}
+
+/**
+ * rpt_common_rptrotation_new_with_values:
+ * @angle:
+ *
+ * Returns: an new allocated #RptRotation struct.
+ */
+RptRotation
+*rpt_common_rptrotation_new_with_values (gdouble angle)
+{
+	RptRotation *rotation;
+
+	rotation = rpt_common_rptrotation_new ();
+	rotation->angle = angle;
 
 	return rotation;
 }
@@ -469,6 +523,32 @@ RptMargin
 	margin->right = 0.0;
 	margin->bottom = 0.0;
 	margin->left = 0.0;
+
+	return margin;
+}
+
+/**
+ * rpt_common_rptmargin_new_with_values:
+ * @top:
+ * @right:
+ * @bottom:
+ * @left:
+ *
+ * Returns: an new allocated #RptMargin struct.
+ */
+RptMargin
+*rpt_common_rptmargin_new_with_values (gdouble top,
+                                       gdouble right,
+                                       gdouble bottom,
+                                       gdouble left)
+{
+	RptMargin *margin;
+
+	margin = rpt_common_rptmargin_new ();
+	margin->top = top;
+	margin->right = right;
+	margin->bottom = bottom;
+	margin->left = left;
 
 	return margin;
 }
