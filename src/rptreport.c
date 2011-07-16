@@ -1564,6 +1564,41 @@ xmlNode
 	return xnode;
 }
 
+void
+rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object)
+{
+	xmlNode *xnodeobj;
+	xmlAttrPtr attr;
+
+	g_return_if_fail (IS_RPT_OBJECT (rpt_object));
+
+	xnodeobj = xmlNewNode (NULL, "node");
+
+	rpt_object_get_xml (rpt_object, xnodeobj);
+	attr = xmlHasProp (xnodeobj, "name");
+	if (attr != NULL)
+		{
+			xmlRemoveProp (attr);
+		}
+
+	if (IS_RPT_OBJ_TEXT (rpt_object))
+		{
+			rpt_report_rptprint_parse_text_source (NULL, rpt_object, xnodeobj, -1);
+			attr = xmlHasProp (xnodeobj, "source");
+			if (attr != NULL)
+				{
+					xmlRemoveProp (attr);
+				}
+		}
+	else if (IS_RPT_OBJ_IMAGE (rpt_object))
+		{
+			/* TO DO */
+			/* rpt_report_rptprint_parse_image_source (rpt_report, rptobj, xnode); */
+		}
+
+	xmlAddChild (xnodepage, xnodeobj);
+}
+
 /**
  * rpt_report_add_object_to_section:
  * @rpt_report: an #RptReport object.
@@ -2303,8 +2338,6 @@ rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj,
 {
 	gchar *source;
 	gchar *ret;
-
-	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	g_object_get (G_OBJECT (rptobj), "source", &source, NULL);
 

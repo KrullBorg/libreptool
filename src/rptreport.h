@@ -154,6 +154,7 @@ void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_ty
 void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
 void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
 xmlNode *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin);
+void rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object);
 
 
 G_END_DECLS
