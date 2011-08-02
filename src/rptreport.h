@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -100,6 +100,9 @@ void rpt_report_set_page_margins (RptReport *rpt_report,
                                   gdouble bottom,
                                   gdouble left);
 
+RptMargin *rpt_report_get_page_margins_struct (RptReport *rpt_report);
+void rpt_report_set_page_margins_struct (RptReport *rpt_report, RptMargin margin);
+
 gdouble rpt_report_get_section_height (RptReport *rpt_report,
                                        RptReportSection section);
 void rpt_report_set_section_height (RptReport *rpt_report,
@@ -132,10 +135,6 @@ void rpt_report_set_page_footer_first_last_page (RptReport *rpt_report,
 gboolean rpt_report_body_get_new_page_after (RptReport *rpt_report);
 void rpt_report_body_set_new_page_after (RptReport *rpt_report, gboolean new_page_after);
 
-xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
-
-xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
-
 gboolean rpt_report_add_object_to_section (RptReport *rpt_report,
                                            RptObject *rpt_object,
                                            RptReportSection section);
@@ -144,6 +143,18 @@ void rpt_report_remove_object (RptReport *rpt_report,
 
 RptObject *rpt_report_get_object_from_name (RptReport *rpt_report,
                                             const gchar *name);
+
+xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
+
+xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
+
+xmlDoc *rpt_report_rptprint_new (void);
+void rpt_report_rptprint_set_unit_length (xmlDoc *xdoc, eRptUnitLength unit);
+void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_type);
+void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
+void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
+xmlNode *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin);
+void rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object);
 
 
 G_END_DECLS

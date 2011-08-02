@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2006-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -130,33 +130,7 @@ struct _RptPrintPrivate
 		GtkPrintContext *gtk_print_context;
 	};
 
-GType
-rpt_print_get_type (void)
-{
-	static GType rpt_print_type = 0;
-
-	if (!rpt_print_type)
-		{
-			static const GTypeInfo rpt_print_info =
-			{
-				sizeof (RptPrintClass),
-				NULL,	/* base_init */
-				NULL,	/* base_finalize */
-				(GClassInitFunc) rpt_print_class_init,
-				NULL,	/* class_finalize */
-				NULL,	/* class_data */
-				sizeof (RptPrint),
-				0,	/* n_preallocs */
-				(GInstanceInitFunc) rpt_print_init,
-				NULL
-			};
-
-			rpt_print_type = g_type_register_static (G_TYPE_OBJECT, "RptPrint",
-			                                         &rpt_print_info, 0);
-		}
-
-	return rpt_print_type;
-}
+G_DEFINE_TYPE (RptPrint, rpt_print, G_TYPE_OBJECT)
 
 static void
 rpt_print_class_init (RptPrintClass *klass)

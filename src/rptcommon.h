@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,15 @@ struct _RptRotation
 	gdouble angle;
 };
 typedef struct _RptRotation RptRotation;
+
+struct _RptMargin
+{
+	gdouble top;
+	gdouble right;
+	gdouble bottom;
+	gdouble left;
+};
+typedef struct _RptMargin RptMargin;
 
 /**
  * RptFont:
@@ -185,19 +194,31 @@ eRptOutputType rpt_common_stroutputtype_to_enum (const gchar *output_type);
 const gchar *rpt_common_enum_to_stroutputtype (eRptOutputType output_type);
 
 RptPoint *rpt_common_rptpoint_new (void);
+RptPoint *rpt_common_rptpoint_new_with_values (gdouble x, gdouble y);
 RptPoint *rpt_common_get_position (xmlNode *xnode);
 void rpt_common_set_position (xmlNode *xnode,
                               const RptPoint *position);
 
 RptSize *rpt_common_rptsize_new (void);
+RptSize *rpt_common_rptsize_new_with_values (gdouble width, gdouble height);
 RptSize *rpt_common_get_size (xmlNode *xnode);
 void rpt_common_set_size (xmlNode *xnode,
                           const RptSize *size);
 
 RptRotation *rpt_common_rptrotation_new (void);
+RptRotation *rpt_common_rptrotation_new_with_values (gdouble angle);
 RptRotation *rpt_common_get_rotation (xmlNode *xnode);
 void rpt_common_set_rotation (xmlNode *xnode,
                               const RptRotation *rotation);
+
+RptMargin *rpt_common_rptmargin_new (void);
+RptMargin *rpt_common_rptmargin_new_with_values (gdouble top,
+                                                 gdouble right,
+                                                 gdouble bottom,
+                                                 gdouble left);
+RptMargin *rpt_common_get_margin (xmlNode *xnode);
+void rpt_common_set_margin (xmlNode *xnode,
+                            const RptMargin *margin);
 
 RptFont *rpt_common_rptfont_new (void);
 RptFont *rpt_common_get_font (xmlNode *xnode);

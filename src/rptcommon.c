@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -249,7 +249,7 @@ const gchar
 	switch (output_type)
 		{
 			case RPT_OUTPUT_PDF:
-				ret = g_strdup ("df");
+				ret = g_strdup ("pdf");
 				break;
 
 			case RPT_OUTPUT_PNG:
@@ -292,6 +292,27 @@ RptPoint
 	RptPoint *point;
 
 	point = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	point->x = 0.0;
+	point->y = 0.0;
+
+	return point;
+}
+
+/**
+ * rpt_common_rptpoint_new_with_values:
+ * @x:
+ * @y:
+ *
+ * Returns: an new allocated #RptPoint struct.
+ */
+RptPoint
+*rpt_common_rptpoint_new_with_values (gdouble x, gdouble y)
+{
+	RptPoint *point;
+
+	point = rpt_common_rptpoint_new ();
+	point->x = x;
+	point->y = y;
 
 	return point;
 }
@@ -350,6 +371,27 @@ RptSize
 	RptSize *size;
 
 	size = (RptSize *)g_malloc0 (sizeof (RptSize));
+	size->width = 0.0;
+	size->height = 0.0;
+
+	return size;
+}
+
+/**
+ * rpt_common_rptsize_new_with_values:
+ * @width:
+ * @height:
+ *
+ * Returns: an new allocated #RptSize struct.
+ */
+RptSize
+*rpt_common_rptsize_new_with_values (gdouble width, gdouble height)
+{
+	RptSize *size;
+
+	size = rpt_common_rptsize_new ();
+	size->width = width;
+	size->height = height;
 
 	return size;
 }
@@ -372,9 +414,8 @@ RptSize
 	height = xmlGetProp (xnode, (const xmlChar *)"height");
 	if (width != NULL && height != NULL)
 		{
-			size = rpt_common_rptsize_new ();
-			size->width = strtod (width, NULL);
-			size->height = strtod (height, NULL);
+			size = rpt_common_rptsize_new_with_values (g_strtod (width, NULL),
+			                                           g_strtod (height, NULL));
 		}
 
 	return size;
@@ -407,6 +448,24 @@ RptRotation
 	RptRotation *rotation;
 
 	rotation = (RptRotation *)g_malloc0 (sizeof (RptRotation));
+	rotation->angle = 0.0;
+
+	return rotation;
+}
+
+/**
+ * rpt_common_rptrotation_new_with_values:
+ * @angle:
+ *
+ * Returns: an new allocated #RptRotation struct.
+ */
+RptRotation
+*rpt_common_rptrotation_new_with_values (gdouble angle)
+{
+	RptRotation *rotation;
+
+	rotation = rpt_common_rptrotation_new ();
+	rotation->angle = angle;
 
 	return rotation;
 }
@@ -446,6 +505,108 @@ rpt_common_set_rotation (xmlNode *xnode, const RptRotation *rotation)
 	if (rotation != NULL)
 		{
 			xmlSetProp (xnode, "rotation", g_strdup_printf ("%f", rotation->angle));
+		}
+}
+
+/**
+ * rpt_common_rptmargin_new:
+ *
+ * Returns: an new allocated #RptMargin struct.
+ */
+RptMargin
+*rpt_common_rptmargin_new (void)
+{
+	RptMargin *margin;
+
+	margin = (RptMargin *)g_malloc0 (sizeof (RptMargin));
+	margin->top = 0.0;
+	margin->right = 0.0;
+	margin->bottom = 0.0;
+	margin->left = 0.0;
+
+	return margin;
+}
+
+/**
+ * rpt_common_rptmargin_new_with_values:
+ * @top:
+ * @right:
+ * @bottom:
+ * @left:
+ *
+ * Returns: an new allocated #RptMargin struct.
+ */
+RptMargin
+*rpt_common_rptmargin_new_with_values (gdouble top,
+                                       gdouble right,
+                                       gdouble bottom,
+                                       gdouble left)
+{
+	RptMargin *margin;
+
+	margin = rpt_common_rptmargin_new ();
+	margin->top = top;
+	margin->right = right;
+	margin->bottom = bottom;
+	margin->left = left;
+
+	return margin;
+}
+
+/**
+ * rpt_common_get_margin:
+ * @xnode: an #xmlNode.
+ *
+ * Returns: an #RptMargin struct that represent the page's margin specified
+ * on @xnode.
+ */
+RptMargin
+*rpt_common_get_margin (xmlNode *xnode)
+{
+	RptMargin *margin = NULL;
+	gchar *prop;
+
+	margin = rpt_common_rptmargin_new ();
+
+	prop = xmlGetProp (xnode, (const xmlChar *)"top");
+	if (prop != NULL)
+		{
+			margin->top = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"right");
+	if (prop != NULL)
+		{
+			margin->right = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"bottom");
+	if (prop != NULL)
+		{
+			margin->bottom = g_strtod (prop, NULL);
+		}
+	prop = xmlGetProp (xnode, (const xmlChar *)"left");
+	if (prop != NULL)
+		{
+			margin->left = g_strtod (prop, NULL);
+		}
+
+	return margin;
+}
+
+/**
+ * rpt_common_set_margin:
+ * @xnode: an #xmlNode.
+ * @margin:
+ *
+ */
+void
+rpt_common_set_margin (xmlNode *xnode, const RptMargin *margin)
+{
+	if (margin != NULL)
+		{
+			xmlSetProp (xnode, "top", g_strdup_printf ("%f", margin->top));
+			xmlSetProp (xnode, "right", g_strdup_printf ("%f", margin->right));
+			xmlSetProp (xnode, "bottom", g_strdup_printf ("%f", margin->bottom));
+			xmlSetProp (xnode, "left", g_strdup_printf ("%f", margin->left));
 		}
 }
 

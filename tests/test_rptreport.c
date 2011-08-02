@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ gchar
 {
 	gchar *ret = NULL;
 
-	if (strcmp (field_name, "field_to_request") == 0)
+	if (g_strcmp0 (field_name, "field_to_request") == 0)
 		{
 			ret = g_strdup ("the field requested");
 		}
-	else if (strcmp (field_name, "nonexistent") == 0 &&
+	else if (g_strcmp0 (field_name, "nonexistent") == 0 &&
 	         data_model != NULL &&
 	         row > -1)
 		{
