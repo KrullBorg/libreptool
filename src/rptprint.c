@@ -431,6 +431,17 @@ rpt_print_print (RptPrint *rpt_print)
 			g_signal_connect (G_OBJECT (operation), "draw-page",
 			                  G_CALLBACK (rpt_print_gtk_draw_page), (gpointer)rpt_print);
 
+			/* it not seems to work inside the begin-print signal
+			 * i'm waiting a response from the gtk developers
+			 */
+			GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
+			if (settings == NULL)
+				{
+					settings = gtk_print_settings_new ();
+				}
+			gtk_print_settings_set_n_copies (settings, priv->copies);
+			gtk_print_operation_set_print_settings (operation, settings);
+
 			locale_num = setlocale (LC_NUMERIC, "C");
 			gtk_print_operation_run (operation,
 			                         (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
@@ -1381,13 +1392,16 @@ rpt_print_gtk_begin_print (GtkPrintOperation *operation,
 	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
 
+	/* it not seems to work inside the begin-print signal
+	 * i'm waiting a response from the gtk developers
+	 *
 	GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
 	if (settings == NULL)
 		{
 			settings = gtk_print_settings_new ();
 		}
 	gtk_print_settings_set_n_copies (settings, priv->copies);
-	gtk_print_operation_set_print_settings (operation, settings);
+	gtk_print_operation_set_print_settings (operation, settings);*/
 }
 
 static void
