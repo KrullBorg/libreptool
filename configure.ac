@@ -63,13 +63,13 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([memset strcasecmp strstr strtol])
 
 AC_CONFIG_FILES([
-  libreptool.pc
-  Makefile
-  src/Makefile
-  tests/Makefile
-  docs/Makefile
-  docs/reference/Makefile
-  docs/reference/version.xml
-  data/Makefile
+	libreptool.pc
+	Makefile
+	src/Makefile
+	tests/Makefile
+	docs/Makefile
+	docs/reference/Makefile
+	docs/reference/version.xml
+	data/Makefile
 ])
 AC_OUTPUT

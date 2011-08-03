@@ -81,8 +81,12 @@ static void rpt_print_border (RptPrint *rpt_print,
                               const RptRotation *rotation);
 
 
-static gchar *rpt_print_new_numbered_filename (const gchar *filename, int number);
-static void rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, gdouble angle);
+static gchar *rpt_print_new_numbered_filename (const gchar *filename,
+                                               int number);
+static void rpt_print_rotate (RptPrint *rpt_print,
+                              const RptPoint *position,
+                              const RptSize *size,
+                              gdouble angle);
 
 
 static void rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
@@ -201,7 +205,9 @@ rpt_print_init (RptPrint *rpt_print)
 RptPrint
 *rpt_print_new_from_xml (xmlDoc *xdoc)
 {
-	RptPrint *rpt_print = NULL;
+	RptPrint *rpt_print;
+
+	rpt_print = NULL;
 
 	xmlNode *cur = xmlDocGetRootElement (xdoc);
 	if (cur != NULL)
@@ -222,6 +228,10 @@ RptPrint
 					g_warning ("Not a valid RepTool print report format.");
 				}
 		}
+	else
+		{
+			g_warning ("No root element on xmlDoc.");
+		}
 
 	return rpt_print;
 }
@@ -237,7 +247,9 @@ RptPrint
 RptPrint
 *rpt_print_new_from_file (const gchar *filename)
 {
-	RptPrint *rpt_print = NULL;
+	RptPrint *rpt_print;
+
+	rpt_print = NULL;
 
 	xmlDoc *xdoc = xmlParseFile (filename);
 	if (xdoc != NULL)
@@ -280,7 +292,7 @@ rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename
 	priv->output_filename = g_strdup (output_filename);
 	if (g_strcmp0 (priv->output_filename, "") == 0)
 		{
-			g_warning ("It's not possible to set an empty output filename.");
+			g_warning ("It's not possible to set an empty output filename; default to rptreport.pdf.");
 			priv->output_filename = g_strdup ("rptreport.pdf");
 		}
 }
@@ -654,31 +666,37 @@ rpt_print_get_xml_page_attributes (RptPrint *rpt_print, xmlNode *xml_page)
 	if (prop != NULL)
 		{
 			priv->width = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"height");
 	if (prop != NULL)
 		{
 			priv->height = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-top");
 	if (prop != NULL)
 		{
 			priv->margin_top = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-right");
 	if (prop != NULL)
 		{
 			priv->margin_right = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-bottom");
 	if (prop != NULL)
 		{
 			priv->margin_bottom = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-left");
 	if (prop != NULL)
 		{
 			priv->margin_left = g_strtod (prop, NULL);
+			xmlFree (prop);
 		}
 }
 
@@ -780,22 +798,26 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
 	if (prop != NULL)
 		{
-			padding_top = rpt_common_value_to_points (priv->unit, atof (prop));
+			padding_top = rpt_common_value_to_points (priv->unit, g_strtod (prop, NULL));
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-right");
 	if (prop != NULL)
 		{
-			padding_right = rpt_common_value_to_points (priv->unit, atof (prop));
+			padding_right = rpt_common_value_to_points (priv->unit, g_strtod (prop, NULL));
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-bottom");
 	if (prop != NULL)
 		{
-			padding_bottom = rpt_common_value_to_points (priv->unit, atof (prop));
+			padding_bottom = rpt_common_value_to_points (priv->unit, g_strtod (prop, NULL));
+			xmlFree (prop);
 		}
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-left");
 	if (prop != NULL)
 		{
-			padding_left = rpt_common_value_to_points (priv->unit, atof (prop));
+			padding_left = rpt_common_value_to_points (priv->unit, g_strtod (prop, NULL));
+			xmlFree (prop);
 		}
 
 	/* creating pango layout */
@@ -965,6 +987,13 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		{
 			cairo_reset_clip (priv->cr);
 		}
+
+	g_free (position);
+	g_free (size);
+	g_free (rotation);
+	g_free (align);
+	g_free (border);
+	g_free (font);
 }
 
 static void
@@ -1032,6 +1061,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 	if (prop != NULL)
 		{
 			fill_color = rpt_common_parse_color (prop);
+			xmlFree (prop);
 		}
 
 	if (rotation != NULL)
@@ -1288,7 +1318,11 @@ rpt_print_line (RptPrint *rpt_print,
 }
 
 static void
-rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *size, const RptBorder *border, const RptRotation *rotation)
+rpt_print_border (RptPrint *rpt_print,
+                  const RptPoint *position,
+                  const RptSize *size,
+                  const RptBorder *border,
+                  const RptRotation *rotation)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
