@@ -31,7 +31,7 @@ main (int argc, char **argv)
 		{
 			rpt_print_set_output_type (rptp, RPT_OUTPUT_PNG);
 			rpt_print_set_output_filename (rptp, "test.png");
-			rpt_print_print (rptp);
+			rpt_print_print (rptp, NULL);
 		}
 
 	return 0;

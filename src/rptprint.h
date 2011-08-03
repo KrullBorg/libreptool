@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2006-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <libxml/tree.h>
+#include <gtk/gtk.h>
 
 #include "rptcommon.h"
 
@@ -61,7 +62,7 @@ void rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_fil
 
 void rpt_print_set_copies (RptPrint *rpt_print, guint copies);
 
-void rpt_print_print (RptPrint *rpt_print);
+void rpt_print_print (RptPrint *rpt_print, GtkWindow *transient);
 
 
 G_END_DECLS

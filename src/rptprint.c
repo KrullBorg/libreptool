@@ -21,7 +21,6 @@
 #include <math.h>
 #include <locale.h>
 
-#include <gtk/gtk.h>
 #include <cairo.h>
 #include <cairo-pdf.h>
 #include <cairo-ps.h>
@@ -185,6 +184,10 @@ static void
 rpt_print_init (RptPrint *rpt_print)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	priv->surface = NULL;
+	priv->cr = NULL;
+	priv->gtk_print_context = NULL;
 }
 
 /**
@@ -301,10 +304,11 @@ rpt_print_set_copies (RptPrint *rpt_print, guint copies)
 /**
  * rpt_print_print:
  * @rpt_print: an #RptPrint object.
+ * @transient:
  *
  */
 void
-rpt_print_print (RptPrint *rpt_print)
+rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 {
 	xmlXPathContextPtr xpcontext;
 	xmlXPathObjectPtr xpresult;
@@ -393,6 +397,8 @@ rpt_print_print (RptPrint *rpt_print)
 			gchar *locale_old;
 			gchar *locale_num;
 			GtkPrintOperation *operation;
+			GError *error;
+			GtkPrintOperationResult res;
 
 			locale_old = setlocale (LC_ALL, NULL);
 			gtk_init (0, NULL);
@@ -405,23 +411,23 @@ rpt_print_print (RptPrint *rpt_print)
 			g_signal_connect (G_OBJECT (operation), "draw-page",
 			                  G_CALLBACK (rpt_print_gtk_draw_page), (gpointer)rpt_print);
 
-			/* it not seems to work inside the begin-print signal
-			 * i'm waiting a response from the gtk developers
-			 */
-			GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
-			if (settings == NULL)
-				{
-					settings = gtk_print_settings_new ();
-				}
-			gtk_print_settings_set_n_copies (settings, priv->copies);
-			gtk_print_operation_set_print_settings (operation, settings);
-
+			error = NULL;
 			locale_num = setlocale (LC_NUMERIC, "C");
-			gtk_print_operation_run (operation,
-			                         (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
-			                         NULL, NULL);
+			res = gtk_print_operation_run (operation,
+			                               (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
+			                               transient, &error);
 			setlocale (LC_NUMERIC, locale_num);
 			setlocale (LC_ALL, locale_old);
+
+			if (priv->output_type == RPT_OUTPUT_GTK
+			    && res == GTK_PRINT_OPERATION_RESULT_CANCEL)
+				{
+					return;
+				}
+			if (error != NULL && error->message != NULL)
+				{
+					g_warning ("Error on starting print operation: %s.\n", error->message);
+				}
 		}
 	else
 		{
@@ -573,7 +579,6 @@ static void
 rpt_print_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	RptPrint *rpt_print = RPT_PRINT (object);
-
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	switch (property_id)
@@ -608,7 +613,6 @@ static void
 rpt_print_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	RptPrint *rpt_print = RPT_PRINT (object);
-
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	switch (property_id)
@@ -649,32 +653,32 @@ rpt_print_get_xml_page_attributes (RptPrint *rpt_print, xmlNode *xml_page)
 	prop = xmlGetProp (xml_page, (const xmlChar *)"width");
 	if (prop != NULL)
 		{
-			priv->width = strtod (prop, NULL);
+			priv->width = g_strtod (prop, NULL);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"height");
 	if (prop != NULL)
 		{
-			priv->height = strtod (prop, NULL);
+			priv->height = g_strtod (prop, NULL);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-top");
 	if (prop != NULL)
 		{
-			priv->margin_top = strtod (prop, NULL);
+			priv->margin_top = g_strtod (prop, NULL);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-right");
 	if (prop != NULL)
 		{
-			priv->margin_right = strtod (prop, NULL);
+			priv->margin_right = g_strtod (prop, NULL);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-bottom");
 	if (prop != NULL)
 		{
-			priv->margin_bottom = strtod (prop, NULL);
+			priv->margin_bottom = g_strtod (prop, NULL);
 		}
 	prop = xmlGetProp (xml_page, (const xmlChar *)"margin-left");
 	if (prop != NULL)
 		{
-			priv->margin_left = strtod (prop, NULL);
+			priv->margin_left = g_strtod (prop, NULL);
 		}
 }
 
@@ -705,23 +709,23 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 			if (!xmlNodeIsText (cur))
 				{
 					cairo_save (priv->cr);
-					if (strcmp (cur->name, "text") == 0)
+					if (g_strcmp0 (cur->name, "text") == 0)
 						{
 							rpt_print_text_xml (rpt_print, cur);
 						}
-					else if (strcmp (cur->name, "line") == 0)
+					else if (g_strcmp0 (cur->name, "line") == 0)
 						{
 							rpt_print_line_xml (rpt_print, cur);
 						}
-					else if (strcmp (cur->name, "rect") == 0)
+					else if (g_strcmp0 (cur->name, "rect") == 0)
 						{
 							rpt_print_rect_xml (rpt_print, cur);
 						}
-					else if (strcmp (cur->name, "ellipse") == 0)
+					else if (g_strcmp0 (cur->name, "ellipse") == 0)
 						{
 							rpt_print_ellipse_xml (rpt_print, cur);
 						}
-					else if (strcmp (cur->name, "image") == 0)
+					else if (g_strcmp0 (cur->name, "image") == 0)
 						{
 							rpt_print_image_xml (rpt_print, cur);
 						}
@@ -967,8 +971,8 @@ static void
 rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 {
 	RptPoint *position;
-	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
-	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
+	RptPoint *from_p;
+	RptPoint *to_p;
 	RptSize *size;
 	RptRotation *rotation;
 	RptStroke *stroke;
@@ -978,12 +982,19 @@ rpt_print_line_xml (RptPrint *rpt_print, xmlNode *xnode)
 	rotation = rpt_common_get_rotation (xnode);
 	stroke = rpt_common_get_stroke (xnode);
 
-	from_p->x = position->x;
-	from_p->y = position->y;
-	to_p->x = position->x + size->width;
-	to_p->y = position->y + size->height;
+	from_p = rpt_common_rptpoint_new_with_values (position->x,
+	                                              position->y);
+	to_p = rpt_common_rptpoint_new_with_values (position->x + size->width,
+	                                            position->y + size->height);
 
 	rpt_print_line (rpt_print, from_p, to_p, stroke, rotation);
+
+	g_free (position);
+	g_free (from_p);
+	g_free (to_p);
+	g_free (size);
+	g_free (rotation);
+	g_free (stroke);
 }
 
 static void
@@ -1010,9 +1021,9 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	if (stroke == NULL)
 		{
-			stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+			stroke = rpt_common_rptstroke_new ();
 			stroke->width = rpt_common_points_to_value (priv->unit, 1.0);
-			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+			stroke->color = rpt_common_rptcolor_new ();
 			stroke->color->a = 1.0;
 			stroke->style = NULL;
 		}
@@ -1030,7 +1041,8 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	/* TO DO */
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
-	cairo_rectangle (priv->cr, rpt_common_value_to_points (priv->unit, position->x),
+	cairo_rectangle (priv->cr,
+	                 rpt_common_value_to_points (priv->unit, position->x),
 	                 rpt_common_value_to_points (priv->unit, position->y),
 	                 rpt_common_value_to_points (priv->unit, size->width),
 	                 rpt_common_value_to_points (priv->unit, size->height));
@@ -1049,6 +1061,11 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
 	cairo_stroke (priv->cr);
+
+	g_free (position);
+	g_free (size);
+	g_free (rotation);
+	g_free (stroke);
 }
 
 static void
@@ -1076,9 +1093,9 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	if (stroke == NULL)
 		{
-			stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+			stroke = rpt_common_rptstroke_new ();
 			stroke->width = rpt_common_points_to_value (priv->unit, 1.0);
-			stroke->color = (RptColor *)g_malloc0 (sizeof (RptColor));
+			stroke->color = rpt_common_rptcolor_new ();
 			stroke->color->a = 1.0;
 			stroke->style = NULL;
 		}
@@ -1107,6 +1124,10 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
 	cairo_stroke (priv->cr);
+
+	g_free (position);
+	g_free (size);
+	g_free (stroke);
 }
 
 static void
@@ -1195,10 +1216,19 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	
 	cairo_pattern_destroy (pattern);
 	cairo_surface_destroy (image);
+
+	g_free (position);
+	g_free (size);
+	g_free (rotation);
+	g_free (border);
 }
 
 static void
-rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_p, const RptStroke *stroke, const RptRotation *rotation)
+rpt_print_line (RptPrint *rpt_print,
+                const RptPoint *from_p,
+                const RptPoint *to_p,
+                const RptStroke *stroke,
+                const RptRotation *rotation)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
@@ -1233,17 +1263,21 @@ rpt_print_line (RptPrint *rpt_print, const RptPoint *from_p, const RptPoint *to_
 
 	if (rotation != NULL)
 		{
-			RptSize size;
+			RptSize *size;
 
-			size.width = rpt_common_value_to_points (priv->unit, to_p->x - from_p->x);
-			size.height = rpt_common_value_to_points (priv->unit, to_p->y - from_p->y);
+			size = rpt_common_rptsize_new_with_values (rpt_common_value_to_points (priv->unit, to_p->x - from_p->x),
+			                                           rpt_common_value_to_points (priv->unit, to_p->y - from_p->y));
 
-			rpt_print_rotate (rpt_print, from_p, &size, rotation->angle);
+			rpt_print_rotate (rpt_print, from_p, size, rotation->angle);
+
+			g_free (size);
 		}
 
-	cairo_move_to (priv->cr, rpt_common_value_to_points (priv->unit, from_p->x),
+	cairo_move_to (priv->cr,
+	               rpt_common_value_to_points (priv->unit, from_p->x),
 	               rpt_common_value_to_points (priv->unit, from_p->y));
-	cairo_line_to (priv->cr, rpt_common_value_to_points (priv->unit, to_p->x),
+	cairo_line_to (priv->cr,
+	               rpt_common_value_to_points (priv->unit, to_p->x),
 	               rpt_common_value_to_points (priv->unit, to_p->y));
 	cairo_stroke (priv->cr);
 
@@ -1264,9 +1298,9 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			return;
 		}
 
-	RptPoint *from_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
-	RptPoint *to_p = (RptPoint *)g_malloc0 (sizeof (RptPoint));
-	RptStroke *stroke = (RptStroke *)g_malloc0 (sizeof (RptStroke));
+	RptPoint *from_p = rpt_common_rptpoint_new ();
+	RptPoint *to_p = rpt_common_rptpoint_new ();
+	RptStroke *stroke = rpt_common_rptstroke_new ();
 
 	if (border->top_width != 0.0)
 		{
@@ -1312,6 +1346,10 @@ rpt_print_border (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 			stroke->style = border->left_style;
 			rpt_print_line (rpt_print, from_p, to_p, stroke, NULL);
 		}
+
+	g_free (from_p);
+	g_free (to_p);
+	g_free (stroke);
 }
 
 static gchar
@@ -1347,35 +1385,34 @@ rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 	cairo_rotate (priv->cr, angle * G_PI / 180.);
 	cairo_translate (priv->cr, -tx, -ty);
 }
+
 static void
 rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
                            GtkPrintContext *context,
                            gpointer user_data)
 {
 	RptPrint *rpt_print = (RptPrint *)user_data;
-
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	GtkPageSetup *page_set = gtk_page_setup_new ();
+
 	gtk_page_setup_set_top_margin (page_set, 0.0, GTK_UNIT_POINTS);
 	gtk_page_setup_set_bottom_margin (page_set, 0.0, GTK_UNIT_POINTS);
 	gtk_page_setup_set_left_margin (page_set, 0.0, GTK_UNIT_POINTS);
 	gtk_page_setup_set_right_margin (page_set, 0.0, GTK_UNIT_POINTS);
 
 	gtk_print_operation_set_default_page_setup (operation, page_set);
+
 	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
 
-	/* it not seems to work inside the begin-print signal
-	 * i'm waiting a response from the gtk developers
-	 *
 	GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
 	if (settings == NULL)
 		{
 			settings = gtk_print_settings_new ();
 		}
 	gtk_print_settings_set_n_copies (settings, priv->copies);
-	gtk_print_operation_set_print_settings (operation, settings);*/
+	gtk_print_operation_set_print_settings (operation, settings);
 }
 
 static void
@@ -1386,12 +1423,24 @@ rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
                                   gpointer user_data)
 {
 	GtkPaperSize *paper_size;
+	gdouble swap;
 
 	RptPrint *rpt_print = (RptPrint *)user_data;
-
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	rpt_print_get_xml_page_attributes (rpt_print, priv->pages->nodeTab[page_nr]);
+
+	gtk_print_operation_set_use_full_page (operation, TRUE);
+	swap = 0.0;
+	if (priv->width > priv->height)
+		{
+			swap = priv->width;
+			priv->width = priv->height;
+			priv->height = swap;
+
+			gtk_page_setup_set_orientation (setup, GTK_PAGE_ORIENTATION_LANDSCAPE);
+		}
+
 	paper_size = gtk_paper_size_new_custom ("reptool",
 	                                        "RepTool",
 	                                        rpt_common_value_to_points (priv->unit, priv->width),
@@ -1399,6 +1448,13 @@ rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
 	                                        GTK_UNIT_POINTS);
 
 	gtk_page_setup_set_paper_size (setup, paper_size);
+
+	if (swap != 0)
+		{
+			swap = priv->width;
+			priv->width = priv->height;
+			priv->height = swap;
+		}
 }
 
 static void
@@ -1408,12 +1464,12 @@ rpt_print_gtk_draw_page (GtkPrintOperation *operation,
                          gpointer user_data)
 {
 	RptPrint *rpt_print = (RptPrint *)user_data;
-
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	priv->cr = gtk_print_context_get_cairo_context (context);
 	priv->gtk_print_context = context;
 
+	cairo_reset_clip (priv->cr);
 	cairo_scale (priv->cr,
 	             gtk_print_context_get_width (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->width),
 	             gtk_print_context_get_height (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->height));
