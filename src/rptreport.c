@@ -2566,11 +2566,11 @@ gchar
 	ret = g_strdup ("");
 	real_special = g_strstrip (g_strdup (special));
 
-	if (strncmp (real_special, "@Page", 5) == 0)
+	if (g_strcmp0 (real_special, "@Page") == 0)
 		{
 			ret = g_strdup_printf ("%d", priv->cur_page);
 		}
-	else if (strncmp (real_special, "@Pages", 6) == 0)
+	else if (g_strcmp0 (real_special, "@Pages") == 0)
 		{
 			ret = g_strdup ("@Pages");
 		}
