@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gtk/gtk.h>
 #include <libgda/libgda.h>
 #include <libxml/tree.h>
 
@@ -84,6 +85,8 @@ void rpt_report_set_database (RptReport *rpt_report,
                               const gchar *sql);
 
 void rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *data_model);
+
+void rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report, GtkTreeModel *model);
 
 RptSize *rpt_report_get_page_size (RptReport *rpt_report);
 void rpt_report_set_page_size (RptReport *rpt_report,

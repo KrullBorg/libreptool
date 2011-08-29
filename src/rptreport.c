@@ -49,6 +49,8 @@ typedef struct
 
 	GdaConnection *gda_conn;
 	GdaDataModel *gda_datamodel;
+
+	GtkTreeModel *treemodel;
 } Database;
 
 typedef struct
@@ -129,13 +131,11 @@ static xmlNode *rpt_report_rptprint_new_page (RptReport *rpt_report,
 static void rpt_report_rptprint_section (RptReport *rpt_report,
                                          xmlNode *xpage,
                                          gdouble *cur_y,
-                                         RptReportSection section,
-                                         gint row);
+                                         RptReportSection section);
 
 static void rpt_report_rptprint_parse_text_source (RptReport *rpt_report,
                                                    RptObject *rptobj,
-                                                   xmlNode *xnode,
-                                                   gint row);
+                                                   xmlNode *xnode);
 
 static void rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc);
 
@@ -162,6 +162,8 @@ struct _RptReportPrivate
 		Body *body;
 
 		guint cur_page;
+		gint cur_row;
+		GtkTreeIter *cur_iter;
 	};
 
 G_DEFINE_TYPE (RptReport, rpt_report, G_TYPE_OBJECT)
@@ -233,6 +235,9 @@ rpt_report_init (RptReport *rpt_report)
 	priv->output_type = RPT_OUTPUT_PDF;
 	priv->output_filename = g_strdup ("rptreport.pdf");
 	priv->copies = 1;
+
+	priv->cur_row = -1;
+	priv->cur_iter = NULL;
 }
 
 /**
@@ -650,6 +655,7 @@ rpt_report_set_database (RptReport *rpt_report,
 	priv->db->sql = g_strstrip (g_strdup (sql));
 	priv->db->gda_conn = NULL;
 	priv->db->gda_datamodel = NULL;
+	priv->db->treemodel = NULL;
 }
 
 /**
@@ -670,13 +676,44 @@ rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *dat
 		{
 			g_free (priv->db);
 		}
-	priv->db = (Database *)g_malloc0 (sizeof (Database));
+	priv->db = (Database *)g_new0 (Database, 1);
 
 	priv->db->provider_id = NULL;
 	priv->db->connection_string = NULL;
 	priv->db->sql = NULL;
 	priv->db->gda_conn = NULL;
 	priv->db->gda_datamodel = data_model;
+	priv->db->treemodel = NULL;
+}
+
+/**
+ * rpt_report_set_database_as_gtktreemodel:
+ * @rpt_report: an #RptReport object.
+ * @model: a #GtkTreeModel (for now only #GtkListStore is supported).
+ *
+ */
+void
+rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report, GtkTreeModel *model)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+	g_return_if_fail (GTK_IS_TREE_MODEL (rpt_report));
+
+	g_return_if_fail (GTK_IS_LIST_STORE (rpt_report));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->db != NULL)
+		{
+			g_free (priv->db);
+		}
+	priv->db = (Database *)g_new0 (Database, 1);
+
+	priv->db->provider_id = NULL;
+	priv->db->connection_string = NULL;
+	priv->db->sql = NULL;
+	priv->db->gda_conn = NULL;
+	priv->db->gda_datamodel = NULL;
+	priv->db->treemodel = model;
 }
 
 /**
@@ -1343,9 +1380,9 @@ xmlDoc
 				}
 
 			rows = gda_data_model_get_n_rows (priv->db->gda_datamodel);
-
 			for (row = 0; row < rows; row++)
 				{
+					priv->cur_row = row;
 					if (row == 0 ||
 					    priv->body->new_page_after ||
 					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height)) ||
@@ -1357,7 +1394,9 @@ xmlDoc
 									    priv->cur_page > 1)
 										{
 											cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
+											priv->cur_row = row - 1;
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+											priv->cur_row = row;
 										}
 								}
 
@@ -1369,12 +1408,12 @@ xmlDoc
 									if ((priv->cur_page == 1 && priv->page_header->first_page) ||
 									    priv->cur_page > 1)
 										{
-											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row);
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
 										}
 								}
 							if (priv->cur_page == 1 && priv->report_header != NULL)
 								{
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, row);
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER);
 									if (priv->report_header->new_page_after)
 										{
 											cur_y = 0.0;
@@ -1383,7 +1422,7 @@ xmlDoc
 								}
 						}
 
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY, row);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
 				}
 
 			if (priv->cur_page > 0 && priv->report_footer != NULL)
@@ -1393,7 +1432,9 @@ xmlDoc
 						{
 							if (priv->page_header != NULL)
 								{
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, row - 1);
+									priv->cur_row = row - 1;
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+									priv->cur_row = row;
 								}
 
 							cur_y = priv->page->margin->top;
@@ -1402,19 +1443,27 @@ xmlDoc
 							if (priv->cur_page > 0 && priv->page_footer != NULL)
 								{
 									cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
+									priv->cur_row = row - 1;
+									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+									priv->cur_row = row;
 								}
 						}
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER, row - 1);
+					priv->cur_row = row - 1;
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER);
+					priv->cur_row = row;
 				}
 			if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
 				{
 					cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, row - 1);
+					priv->cur_row = row - 1;
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+					priv->cur_row = row;
 				}
 
 			/* change @Pages */
 			rpt_report_change_specials (rpt_report, xdoc);
+
+			priv->cur_row = -1;
 		}
 	else
 		{
@@ -1423,23 +1472,23 @@ xmlDoc
 
 			if (priv->page_header != NULL)
 				{
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER, -1);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
 				}
 			if (priv->report_header != NULL)
 				{
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER, -1);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER);
 				}
 
-			rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY, -1);
+			rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
 
 			if (priv->report_footer != NULL)
 				{
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER, -1);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER);
 				}
 			if (priv->page_footer != NULL)
 				{
 					cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER, -1);
+					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
 				}
 		}
 
@@ -1583,7 +1632,7 @@ rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object)
 
 	if (IS_RPT_OBJ_TEXT (rpt_object))
 		{
-			rpt_report_rptprint_parse_text_source (NULL, rpt_object, xnodeobj, -1);
+			rpt_report_rptprint_parse_text_source (NULL, rpt_object, xnodeobj);
 			attr = xmlHasProp (xnodeobj, "source");
 			if (attr != NULL)
 				{
@@ -2226,7 +2275,10 @@ static xmlNode
 }
 
 static void
-rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur_y, RptReportSection section, gint row)
+rpt_report_rptprint_section (RptReport *rpt_report,
+                             xmlNode *xpage,
+                             gdouble *cur_y,
+                             RptReportSection section)
 {
 	GList *objects;
 	xmlAttrPtr attr;
@@ -2291,7 +2343,7 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 
 			if (IS_RPT_OBJ_TEXT (rptobj))
 				{
-					rpt_report_rptprint_parse_text_source (rpt_report, rptobj, xnode, row);
+					rpt_report_rptprint_parse_text_source (rpt_report, rptobj, xnode);
 					attr = xmlHasProp (xnode, "source");
 					if (attr != NULL)
 						{
@@ -2334,15 +2386,19 @@ rpt_report_rptprint_section (RptReport *rpt_report, xmlNode *xpage, gdouble *cur
 }
 
 static void
-rpt_report_rptprint_parse_text_source (RptReport *rpt_report, RptObject *rptobj, xmlNode *xnode, gint row)
+rpt_report_rptprint_parse_text_source (RptReport *rpt_report,
+                                       RptObject *rptobj,
+                                       xmlNode *xnode)
 {
 	gchar *source;
 	gchar *ret;
 
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
 	g_object_get (G_OBJECT (rptobj), "source", &source, NULL);
 
 	yy_scan_string (source);
-	yyparse (rpt_report, row, &ret);
+	yyparse (rpt_report, &ret);
 
 	if (g_strstr_len (ret, -1, "&#10;") != NULL)
 		{
@@ -2398,7 +2454,8 @@ rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc)
 }
 
 gchar
-*rpt_report_get_field (RptReport *rpt_report, const gchar *field_name, gint row)
+*rpt_report_get_field (RptReport *rpt_report,
+                       const gchar *field_name)
 {
 	GError *error;
 	gint col;
@@ -2412,10 +2469,10 @@ gchar
 
 			if (col > -1)
 				{
-					const GValue *gval;
+					GValue *gval;
 
 					error = NULL;
-					gval = gda_data_model_get_value_at (priv->db->gda_datamodel, col, row, &error);
+					gval = (GValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, priv->cur_row, &error);
 					if (error != NULL)
 						{
 							g_warning ("Error on retrieving field «%s» value: %s.",
@@ -2442,7 +2499,7 @@ gchar
 
 	if (ret == NULL)
 		{
-			ret = rpt_report_ask_field (rpt_report, field_name, row);
+			ret = rpt_report_ask_field (rpt_report, field_name);
 		}
 	if (ret == NULL)
 		{
@@ -2453,7 +2510,8 @@ gchar
 }
 
 gchar
-*rpt_report_ask_field (RptReport *rpt_report, const gchar *field, gint row)
+*rpt_report_ask_field (RptReport *rpt_report,
+                       const gchar *field)
 {
 	gchar *ret = NULL;
 
@@ -2464,12 +2522,12 @@ gchar
 	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
 		{
 			g_signal_emit (rpt_report, klass->field_request_signal_id,
-			               0, field, priv->db->gda_datamodel, row, &ret);
+			               0, field, priv->db->gda_datamodel, priv->cur_row, &ret);
 		}
 	else
 		{
 			g_signal_emit (rpt_report, klass->field_request_signal_id,
-			               0, field, NULL, row, &ret);
+			               0, field, NULL, -1, &ret);
 		}
 	if (ret != NULL)
 		{
@@ -2554,7 +2612,7 @@ gchar
 }
 
 gchar
-*rpt_report_get_special (RptReport *rpt_report, const gchar *special, gint row)
+*rpt_report_get_special (RptReport *rpt_report, const gchar *special)
 {
 	gchar *ret;
 	gchar *real_special;

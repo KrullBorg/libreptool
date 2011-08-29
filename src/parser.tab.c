@@ -79,7 +79,7 @@
 #include "lexycal.yy.h"
 #include "rptreport_priv.h"
 
-void yyerror (RptReport *rpt_report, gint row, gchar **ret, char const *s);
+void yyerror (RptReport *rpt_report, gchar **ret, char const *s);
 
 
 /* Line 189 of yacc.c  */
@@ -420,8 +420,8 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    32,    32,    33,    36,    39,    40,    41,    42,    43,
-      44,    45,    46,    47,    48,    49
+       0,    31,    31,    32,    35,    38,    39,    40,    41,    42,
+      43,    44,    45,    46,    47,    48
 };
 #endif
 
@@ -554,7 +554,7 @@ do								\
     }								\
   else								\
     {								\
-      yyerror (rpt_report, row, ret, YY_("syntax error: cannot back up")); \
+      yyerror (rpt_report, ret, YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
 while (YYID (0))
@@ -634,7 +634,7 @@ do {									  \
     {									  \
       YYFPRINTF (stderr, "%s ", Title);					  \
       yy_symbol_print (stderr,						  \
-		  Type, Value, rpt_report, row, ret); \
+		  Type, Value, rpt_report, ret); \
       YYFPRINTF (stderr, "\n");						  \
     }									  \
 } while (YYID (0))
@@ -648,22 +648,20 @@ do {									  \
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, RptReport *rpt_report, gint row, gchar **ret)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, RptReport *rpt_report, gchar **ret)
 #else
 static void
-yy_symbol_value_print (yyoutput, yytype, yyvaluep, rpt_report, row, ret)
+yy_symbol_value_print (yyoutput, yytype, yyvaluep, rpt_report, ret)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
     RptReport *rpt_report;
-    gint row;
     gchar **ret;
 #endif
 {
   if (!yyvaluep)
     return;
   YYUSE (rpt_report);
-  YYUSE (row);
   YYUSE (ret);
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
@@ -686,15 +684,14 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, rpt_report, row, ret)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, RptReport *rpt_report, gint row, gchar **ret)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, RptReport *rpt_report, gchar **ret)
 #else
 static void
-yy_symbol_print (yyoutput, yytype, yyvaluep, rpt_report, row, ret)
+yy_symbol_print (yyoutput, yytype, yyvaluep, rpt_report, ret)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
     RptReport *rpt_report;
-    gint row;
     gchar **ret;
 #endif
 {
@@ -703,7 +700,7 @@ yy_symbol_print (yyoutput, yytype, yyvaluep, rpt_report, row, ret)
   else
     YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, rpt_report, row, ret);
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep, rpt_report, ret);
   YYFPRINTF (yyoutput, ")");
 }
 
@@ -746,14 +743,13 @@ do {								\
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (YYSTYPE *yyvsp, int yyrule, RptReport *rpt_report, gint row, gchar **ret)
+yy_reduce_print (YYSTYPE *yyvsp, int yyrule, RptReport *rpt_report, gchar **ret)
 #else
 static void
-yy_reduce_print (yyvsp, yyrule, rpt_report, row, ret)
+yy_reduce_print (yyvsp, yyrule, rpt_report, ret)
     YYSTYPE *yyvsp;
     int yyrule;
     RptReport *rpt_report;
-    gint row;
     gchar **ret;
 #endif
 {
@@ -768,7 +764,7 @@ yy_reduce_print (yyvsp, yyrule, rpt_report, row, ret)
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &(yyvsp[(yyi + 1) - (yynrhs)])
-		       		       , rpt_report, row, ret);
+		       		       , rpt_report, ret);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -776,7 +772,7 @@ yy_reduce_print (yyvsp, yyrule, rpt_report, row, ret)
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (yyvsp, Rule, rpt_report, row, ret); \
+    yy_reduce_print (yyvsp, Rule, rpt_report, ret); \
 } while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -1027,21 +1023,19 @@ yysyntax_error (char *yyresult, int yystate, int yychar)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, RptReport *rpt_report, gint row, gchar **ret)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, RptReport *rpt_report, gchar **ret)
 #else
 static void
-yydestruct (yymsg, yytype, yyvaluep, rpt_report, row, ret)
+yydestruct (yymsg, yytype, yyvaluep, rpt_report, ret)
     const char *yymsg;
     int yytype;
     YYSTYPE *yyvaluep;
     RptReport *rpt_report;
-    gint row;
     gchar **ret;
 #endif
 {
   YYUSE (yyvaluep);
   YYUSE (rpt_report);
-  YYUSE (row);
   YYUSE (ret);
 
   if (!yymsg)
@@ -1065,7 +1059,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (RptReport *rpt_report, gint row, gchar **ret);
+int yyparse (RptReport *rpt_report, gchar **ret);
 #else
 int yyparse ();
 #endif
@@ -1101,12 +1095,11 @@ yyparse (YYPARSE_PARAM)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 int
-yyparse (RptReport *rpt_report, gint row, gchar **ret)
+yyparse (RptReport *rpt_report, gchar **ret)
 #else
 int
-yyparse (rpt_report, row, ret)
+yyparse (rpt_report, ret)
     RptReport *rpt_report;
-    gint row;
     gchar **ret;
 #endif
 #endif
@@ -1355,91 +1348,91 @@ yyreduce:
         case 4:
 
 /* Line 1455 of yacc.c  */
-#line 36 "parser.y"
+#line 35 "parser.y"
     { *ret = g_strdup ((yyvsp[(1) - (1)])); ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 39 "parser.y"
+#line 38 "parser.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 40 "parser.y"
+#line 39 "parser.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 41 "parser.y"
+#line 40 "parser.y"
     { (yyval) = g_strndup ((yyvsp[(1) - (1)]) + 1, strlen ((yyvsp[(1) - (1)])) - 2) ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 42 "parser.y"
-    { (yyval) = rpt_report_get_field (rpt_report, g_strndup ((yyvsp[(1) - (1)]) + 1, strlen ((yyvsp[(1) - (1)])) - 2), row); ;}
+#line 41 "parser.y"
+    { (yyval) = rpt_report_get_field (rpt_report, g_strndup ((yyvsp[(1) - (1)]) + 1, strlen ((yyvsp[(1) - (1)])) - 2)); ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 43 "parser.y"
-    { (yyval) = rpt_report_get_special (rpt_report, (yyvsp[(1) - (1)]), row); ;}
+#line 42 "parser.y"
+    { (yyval) = rpt_report_get_special (rpt_report, (yyvsp[(1) - (1)])); ;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 44 "parser.y"
+#line 43 "parser.y"
     { (yyval) = g_strdup_printf ("%f", strtod ((yyvsp[(1) - (3)]), NULL) + strtod ((yyvsp[(3) - (3)]), NULL)); ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 45 "parser.y"
+#line 44 "parser.y"
     { (yyval) = g_strdup_printf ("%f", strtod ((yyvsp[(1) - (3)]), NULL) - strtod ((yyvsp[(3) - (3)]), NULL)); ;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 46 "parser.y"
+#line 45 "parser.y"
     { (yyval) = g_strdup_printf ("%f", strtod ((yyvsp[(1) - (3)]), NULL) * strtod ((yyvsp[(3) - (3)]), NULL)); ;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 47 "parser.y"
+#line 46 "parser.y"
     { (yyval) = g_strdup_printf ("%f", strtod ((yyvsp[(1) - (3)]), NULL) / strtod ((yyvsp[(3) - (3)]), NULL)); ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 48 "parser.y"
+#line 47 "parser.y"
     { (yyval) = g_strconcat ((yyvsp[(1) - (3)]), (yyvsp[(3) - (3)]), NULL); ;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 49 "parser.y"
+#line 48 "parser.y"
     { (yyval) = (yyvsp[(2) - (3)]); ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1443 "parser.tab.c"
+#line 1436 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1474,7 +1467,7 @@ yyerrlab:
     {
       ++yynerrs;
 #if ! YYERROR_VERBOSE
-      yyerror (rpt_report, row, ret, YY_("syntax error"));
+      yyerror (rpt_report, ret, YY_("syntax error"));
 #else
       {
 	YYSIZE_T yysize = yysyntax_error (0, yystate, yychar);
@@ -1498,11 +1491,11 @@ yyerrlab:
 	if (0 < yysize && yysize <= yymsg_alloc)
 	  {
 	    (void) yysyntax_error (yymsg, yystate, yychar);
-	    yyerror (rpt_report, row, ret, yymsg);
+	    yyerror (rpt_report, ret, yymsg);
 	  }
 	else
 	  {
-	    yyerror (rpt_report, row, ret, YY_("syntax error"));
+	    yyerror (rpt_report, ret, YY_("syntax error"));
 	    if (yysize != 0)
 	      goto yyexhaustedlab;
 	  }
@@ -1526,7 +1519,7 @@ yyerrlab:
       else
 	{
 	  yydestruct ("Error: discarding",
-		      yytoken, &yylval, rpt_report, row, ret);
+		      yytoken, &yylval, rpt_report, ret);
 	  yychar = YYEMPTY;
 	}
     }
@@ -1582,7 +1575,7 @@ yyerrlab1:
 
 
       yydestruct ("Error: popping",
-		  yystos[yystate], yyvsp, rpt_report, row, ret);
+		  yystos[yystate], yyvsp, rpt_report, ret);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1617,7 +1610,7 @@ yyabortlab:
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (rpt_report, row, ret, YY_("memory exhausted"));
+  yyerror (rpt_report, ret, YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
@@ -1625,7 +1618,7 @@ yyexhaustedlab:
 yyreturn:
   if (yychar != YYEMPTY)
      yydestruct ("Cleanup: discarding lookahead",
-		 yytoken, &yylval, rpt_report, row, ret);
+		 yytoken, &yylval, rpt_report, ret);
   /* Do not reclaim the symbols of the rule which action triggered
      this YYABORT or YYACCEPT.  */
   YYPOPSTACK (yylen);
@@ -1633,7 +1626,7 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-		  yystos[*yyssp], yyvsp, rpt_report, row, ret);
+		  yystos[*yyssp], yyvsp, rpt_report, ret);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1651,12 +1644,12 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 51 "parser.y"
+#line 50 "parser.y"
 
 
 /* Called by yyparse on error.  */
 void
-yyerror (RptReport *rpt_report, gint row, gchar **ret, char const *s)
+yyerror (RptReport *rpt_report, gchar **ret, char const *s)
 {
 	g_warning ("Bison error: %s", s);
 }

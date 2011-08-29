@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,14 +28,11 @@ G_BEGIN_DECLS
 
 
 gchar *rpt_report_get_field (RptReport *rpt_report,
-                             const gchar *field_name,
-                             gint row);
+                             const gchar *field_name);
 gchar *rpt_report_ask_field (RptReport *rpt_report,
-                             const gchar *field,
-                             gint row);
+                             const gchar *field);
 gchar *rpt_report_get_special (RptReport *rpt_report,
-                               const gchar *special,
-                               gint row);
+                               const gchar *special);
 
 
 G_END_DECLS
