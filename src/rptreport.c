@@ -2656,6 +2656,16 @@ gchar
 		{
 			ret = g_strdup ("{ERROR}");
 		}
+	else
+		{
+			gchar **strv;
+
+			strv = g_strsplit (ret, "&", -1);
+			g_free (ret);
+
+			ret = g_strjoinv ("&amp;", strv);
+			g_strfreev (strv);
+		}
 
 	return ret;
 }
