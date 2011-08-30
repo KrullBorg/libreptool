@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2011 Andrea Zagli <azagli@libero.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,17 +30,19 @@ gchar
 {
 	gchar *ret = NULL;
 
-	if (g_strcmp0 (field_name, "field_to_request") == 0)
+	if (g_strcmp0 (field_name, "nonexistent") == 0 &&
+	    treemodel != NULL &&
+	    iter != NULL)
 		{
-			ret = g_strdup ("the field requested");
-		}
-	else if (g_strcmp0 (field_name, "nonexistent") == 0 &&
-	         data_model != NULL &&
-	         row > -1)
-		{
-			ret = g_strdup_printf ("%s - %s",
-			                       gda_value_stringify (gda_data_model_get_value_at (data_model, 0, row, NULL)),
-			                       gda_value_stringify (gda_data_model_get_value_at (data_model, 1, row, NULL)));
+			gint id;
+			gchar *name;
+
+			gtk_tree_model_get (treemodel, iter,
+			                    0, &id,
+			                    1, &name,
+			                    -1);
+
+			ret = g_strdup_printf ("%d - %s", id, name);
 		}
 
 	return ret;
@@ -52,9 +54,47 @@ main (int argc, char **argv)
 	RptReport *rptr;
 	RptPrint *rptp;
 
+	GtkListStore *model;
+	GtkTreeIter iter;
+	GHashTable *columns_names;
+
 	g_type_init ();
 
 	rptr = rpt_report_new_from_file (argv[1]);
+
+	model = gtk_list_store_new (2,
+	                            G_TYPE_INT,
+	                            G_TYPE_STRING);
+
+	gtk_list_store_append (model, &iter);
+	gtk_list_store_set (model, &iter,
+	                    0, 1,
+	                    1, "Mary Jane Red",
+	                    -1);
+
+	gtk_list_store_append (model, &iter);
+	gtk_list_store_set (model, &iter,
+	                    0, 2,
+	                    1, "John Doe",
+	                    -1);
+
+	gtk_list_store_append (model, &iter);
+	gtk_list_store_set (model, &iter,
+	                    0, 3,
+	                    1, "Elene McArty",
+	                    -1);
+
+	gtk_list_store_append (model, &iter);
+	gtk_list_store_set (model, &iter,
+	                    0, 4,
+	                    1, "Raul Bread",
+	                    -1);
+
+	columns_names = g_hash_table_new (g_str_hash, g_str_equal);
+	g_hash_table_insert (columns_names, "id", "0");
+	g_hash_table_insert (columns_names, "name", "1");
+
+	rpt_report_set_database_as_gtktreemodel (rptr, GTK_TREE_MODEL (model), columns_names);
 
 	g_signal_connect (rptr, "field-request", G_CALLBACK (field_request), NULL);
 

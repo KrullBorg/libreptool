@@ -13,6 +13,12 @@ lib_LTLIBRARIES = libreptool.la
 
 libreptool_la_LDFLAGS = -no-undefined
 
+rptmarshal.c: rptmarshal.h reptool_marshal.list $(GLIB_GENMARSHAL)
+	$(GLIB_GENMARSHAL) reptool_marshal.list --body --prefix=_rpt_marshal > $@
+
+rptmarshal.h: reptool_marshal.list $(GLIB_GENMARSHAL)
+	$(GLIB_GENMARSHAL) reptool_marshal.list --header --prefix=_rpt_marshal > $@
+
 libreptool_la_SOURCES = \
                         rptobject.c \
                         rptobjecttext.c \

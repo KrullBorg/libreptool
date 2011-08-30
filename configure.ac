@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([libreptool], [0.2.0], [azagli@libero.it])
+AC_INIT([libreptool], [0.2.1], [azagli@libero.it])
 AC_CONFIG_SRCDIR([src/rptprint.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -30,6 +30,11 @@ AC_PROG_MAKE_SET
 AC_PROG_LEX
 AC_PROG_LIBTOOL
 GTK_DOC_CHECK
+
+dnl ******************************
+dnl glib-genmarshal
+dnl ******************************
+AC_PATH_PROG(GLIB_GENMARSHAL, glib-genmarshal)
 
 # Checks for libraries.
 PKG_CHECK_MODULES([REPTOOL], [gtk+-2.0 >= 2.10.0

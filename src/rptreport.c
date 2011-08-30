@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,7 @@ typedef struct
 	GdaDataModel *gda_datamodel;
 
 	GtkTreeModel *treemodel;
+	GHashTable *columns_names;
 } Database;
 
 typedef struct
@@ -192,6 +193,8 @@ rpt_report_class_init (RptReportClass *klass)
 	 * @field_name: the name of the field requested.
 	 * @data_model: a #GdaDataModel; or NULL if there's no database source.
 	 * @row: the current @data_model's row; -1 if @data_model is NULL.
+	 * @treemodel: a #GtkTreeModel; or NULL if there's no #GtkTreeModel source.
+	 * @iter: a #GtkTreeIter; or NULL if @treemodel is NULL.
 	 *
 	 * The signal is emitted each time there's into text's attribute source
 	 * a field that doesn't exists.
@@ -202,12 +205,14 @@ rpt_report_class_init (RptReportClass *klass)
 	                                               0,
 	                                               NULL,
 	                                               NULL,
-	                                               _rpt_marshal_STRING__STRING_POINTER_INT,
+	                                               _rpt_marshal_STRING__STRING_POINTER_INT_POINTER_POINTER,
 	                                               G_TYPE_STRING,
-	                                               3,
+	                                               5,
 	                                               G_TYPE_STRING,
 	                                               G_TYPE_POINTER,
-	                                               G_TYPE_INT);
+	                                               G_TYPE_INT,
+	                                               G_TYPE_POINTER,
+	                                               G_TYPE_POINTER);
 }
 
 static void
@@ -648,7 +653,7 @@ rpt_report_set_database (RptReport *rpt_report,
 		{
 			g_free (priv->db);
 		}
-	priv->db = (Database *)g_malloc0 (sizeof (Database));
+	priv->db = (Database *)g_new0 (Database, 1);
 
 	priv->db->provider_id = g_strstrip (g_strdup (provider_id));
 	priv->db->connection_string = g_strstrip (g_strdup (connection_string));
@@ -656,6 +661,7 @@ rpt_report_set_database (RptReport *rpt_report,
 	priv->db->gda_conn = NULL;
 	priv->db->gda_datamodel = NULL;
 	priv->db->treemodel = NULL;
+	priv->db->columns_names = NULL;
 }
 
 /**
@@ -674,6 +680,11 @@ rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *dat
 
 	if (priv->db != NULL)
 		{
+			if (priv->db->columns_names != NULL)
+				{
+					g_hash_table_destroy (priv->db->columns_names);
+				}
+
 			g_free (priv->db);
 		}
 	priv->db = (Database *)g_new0 (Database, 1);
@@ -684,26 +695,40 @@ rpt_report_set_database_from_datamodel (RptReport *rpt_report, GdaDataModel *dat
 	priv->db->gda_conn = NULL;
 	priv->db->gda_datamodel = data_model;
 	priv->db->treemodel = NULL;
+	priv->db->columns_names = NULL;
 }
 
 /**
  * rpt_report_set_database_as_gtktreemodel:
  * @rpt_report: an #RptReport object.
  * @model: a #GtkTreeModel (for now only #GtkListStore is supported).
+ * @columns_names:
  *
  */
 void
-rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report, GtkTreeModel *model)
+rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report,
+                                         GtkTreeModel *model,
+                                         GHashTable *columns_names)
 {
 	g_return_if_fail (IS_RPT_REPORT (rpt_report));
-	g_return_if_fail (GTK_IS_TREE_MODEL (rpt_report));
+	g_return_if_fail (GTK_IS_TREE_MODEL (model));
+	g_return_if_fail (columns_names != NULL);
 
-	g_return_if_fail (GTK_IS_LIST_STORE (rpt_report));
+	g_return_if_fail (GTK_IS_LIST_STORE (model));
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	if (priv->db != NULL)
 		{
+			if (priv->db->gda_datamodel != NULL)
+				{
+					g_object_unref (priv->db->gda_datamodel);
+				}
+			if (priv->db->gda_conn != NULL)
+				{
+					gda_connection_close_no_warning (priv->db->gda_conn);
+				}
+
 			g_free (priv->db);
 		}
 	priv->db = (Database *)g_new0 (Database, 1);
@@ -714,6 +739,7 @@ rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report, GtkTreeModel *mo
 	priv->db->gda_conn = NULL;
 	priv->db->gda_datamodel = NULL;
 	priv->db->treemodel = model;
+	priv->db->columns_names = g_hash_table_ref (columns_names);
 }
 
 /**
@@ -1342,56 +1368,198 @@ xmlDoc
 	if (priv->db != NULL)
 		{
 			gint row;
-			gint rows;
 
-			/* database connection */
-			gda_init ();
-			if (priv->db->gda_datamodel == NULL)
+			if (priv->db->treemodel != NULL)
 				{
-					error = NULL;
-					priv->db->gda_conn = gda_connection_open_from_string (priv->db->provider_id,
-					                                                      priv->db->connection_string,
-					                                                      NULL,
-					                                                      GDA_CONNECTION_OPTIONS_NONE,
-					                                                      &error);
-					if (priv->db->gda_conn == NULL)
+					GtkTreeIter *iter_prec;
+					GtkTreeIter iter;
+
+					if (!gtk_tree_model_get_iter_first (priv->db->treemodel, &iter))
 						{
-							/* TO DO */
-							g_warning ("Unable to establish the connection: %s.",
-							           error != NULL && error->message != NULL ? error->message : "no details");
+							g_warning ("GtkTreeModel is empty.");
 							return NULL;
 						}
-					else
-						{
-							GdaSqlParser *parser = gda_sql_parser_new ();
-							error = NULL;
-							GdaStatement *stmt = gda_sql_parser_parse_string (parser, priv->db->sql, NULL, &error);
 
+					row = 0;
+					do
+						{
+							priv->cur_iter = &iter;
+							if (row == 0 ||
+							    priv->body->new_page_after ||
+							    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height)) ||
+							    cur_y > (priv->page->size->height - priv->page->margin->bottom))
+								{
+									if (priv->cur_page > 0 && priv->page_footer != NULL)
+										{
+											if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
+											    priv->cur_page > 1)
+												{
+													cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
+													priv->cur_iter = iter_prec;
+													rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+													priv->cur_iter = &iter;
+												}
+										}
+
+									cur_y = priv->page->margin->top;
+									xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+
+									if (priv->page_header != NULL)
+										{
+											if ((priv->cur_page == 1 && priv->page_header->first_page) ||
+											    priv->cur_page > 1)
+												{
+													rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+												}
+										}
+									if (priv->cur_page == 1 && priv->report_header != NULL)
+										{
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER);
+											if (priv->report_header->new_page_after)
+												{
+													cur_y = 0.0;
+													xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+												}
+										}
+								}
+
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
+
+							iter_prec = g_memdup (&iter, sizeof (GtkTreeIter));
+							row++;
+						} while (gtk_tree_model_iter_next (priv->db->treemodel, &iter));
+
+					priv->cur_iter = iter_prec;
+					if (priv->cur_page > 0 && priv->report_footer != NULL)
+						{
+							if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin->bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
+							    priv->report_footer->new_page_before)
+								{
+									if (priv->page_header != NULL)
+										{
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+										}
+
+									cur_y = priv->page->margin->top;
+									xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+
+									if (priv->cur_page > 0 && priv->page_footer != NULL)
+										{
+											cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+										}
+								}
+
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER);
+						}
+
+					if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
+						{
+							cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+						}
+				}
+			else
+				{
+					gint rows;
+
+					/* database connection */
+					gda_init ();
+					if (priv->db->gda_datamodel == NULL)
+						{
 							error = NULL;
-							priv->db->gda_datamodel = gda_connection_statement_execute_select (priv->db->gda_conn, stmt, NULL, &error);
-							if (priv->db->gda_datamodel == NULL)
+							priv->db->gda_conn = gda_connection_open_from_string (priv->db->provider_id,
+							                                                      priv->db->connection_string,
+							                                                      NULL,
+							                                                      GDA_CONNECTION_OPTIONS_NONE,
+							                                                      &error);
+							if (priv->db->gda_conn == NULL || error != NULL)
 								{
 									/* TO DO */
-									g_warning ("Unable to create the datamodel: %s",
+									g_warning ("Unable to establish the connection: %s.",
 									           error != NULL && error->message != NULL ? error->message : "no details");
 									return NULL;
 								}
-						}
-				}
-
-			rows = gda_data_model_get_n_rows (priv->db->gda_datamodel);
-			for (row = 0; row < rows; row++)
-				{
-					priv->cur_row = row;
-					if (row == 0 ||
-					    priv->body->new_page_after ||
-					    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height)) ||
-					    cur_y > (priv->page->size->height - priv->page->margin->bottom))
-						{
-							if (priv->cur_page > 0 && priv->page_footer != NULL)
+							else
 								{
-									if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
-									    priv->cur_page > 1)
+									GdaSqlParser *parser = gda_sql_parser_new ();
+									error = NULL;
+									GdaStatement *stmt = gda_sql_parser_parse_string (parser, priv->db->sql, NULL, &error);
+
+									error = NULL;
+									priv->db->gda_datamodel = gda_connection_statement_execute_select (priv->db->gda_conn, stmt, NULL, &error);
+									if (priv->db->gda_datamodel == NULL || error != NULL)
+										{
+											/* TO DO */
+											g_warning ("Unable to create the datamodel: %s",
+											           error != NULL && error->message != NULL ? error->message : "no details");
+											return NULL;
+										}
+								}
+						}
+
+					rows = gda_data_model_get_n_rows (priv->db->gda_datamodel);
+					for (row = 0; row < rows; row++)
+						{
+							priv->cur_row = row;
+							if (row == 0 ||
+							    priv->body->new_page_after ||
+							    (priv->page_footer != NULL && (cur_y + priv->body->height > priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height)) ||
+							    cur_y > (priv->page->size->height - priv->page->margin->bottom))
+								{
+									if (priv->cur_page > 0 && priv->page_footer != NULL)
+										{
+											if ((priv->cur_page == 1 && priv->page_footer->first_page) ||
+											    priv->cur_page > 1)
+												{
+													cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
+													priv->cur_row = row - 1;
+													rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+													priv->cur_row = row;
+												}
+										}
+
+									cur_y = priv->page->margin->top;
+									xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+
+									if (priv->page_header != NULL)
+										{
+											if ((priv->cur_page == 1 && priv->page_header->first_page) ||
+											    priv->cur_page > 1)
+												{
+													rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+												}
+										}
+									if (priv->cur_page == 1 && priv->report_header != NULL)
+										{
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER);
+											if (priv->report_header->new_page_after)
+												{
+													cur_y = 0.0;
+													xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+												}
+										}
+								}
+
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
+						}
+
+					if (priv->cur_page > 0 && priv->report_footer != NULL)
+						{
+							if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin->bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
+							    priv->report_footer->new_page_before)
+								{
+									if (priv->page_header != NULL)
+										{
+											priv->cur_row = row - 1;
+											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
+											priv->cur_row = row;
+										}
+
+									cur_y = priv->page->margin->top;
+									xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
+
+									if (priv->cur_page > 0 && priv->page_footer != NULL)
 										{
 											cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
 											priv->cur_row = row - 1;
@@ -1400,70 +1568,25 @@ xmlDoc
 										}
 								}
 
-							cur_y = priv->page->margin->top;
-							xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
-
-							if (priv->page_header != NULL)
-								{
-									if ((priv->cur_page == 1 && priv->page_header->first_page) ||
-									    priv->cur_page > 1)
-										{
-											rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
-										}
-								}
-							if (priv->cur_page == 1 && priv->report_header != NULL)
-								{
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_HEADER);
-									if (priv->report_header->new_page_after)
-										{
-											cur_y = 0.0;
-											xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
-										}
-								}
+							priv->cur_row = row - 1;
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER);
+							priv->cur_row = row;
 						}
 
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_BODY);
-				}
-
-			if (priv->cur_page > 0 && priv->report_footer != NULL)
-				{
-					if ((cur_y + priv->report_footer->height > priv->page->size->height - priv->page->margin->bottom - (priv->page_footer != NULL ? priv->page_footer->height : 0.0)) ||
-					    priv->report_footer->new_page_before)
+					if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
 						{
-							if (priv->page_header != NULL)
-								{
-									priv->cur_row = row - 1;
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_HEADER);
-									priv->cur_row = row;
-								}
-
-							cur_y = priv->page->margin->top;
-							xpage = rpt_report_rptprint_new_page (rpt_report, xdoc);
-
-							if (priv->cur_page > 0 && priv->page_footer != NULL)
-								{
-									cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-									priv->cur_row = row - 1;
-									rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
-									priv->cur_row = row;
-								}
+							cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
+							priv->cur_row = row - 1;
+							rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
+							priv->cur_row = row;
 						}
-					priv->cur_row = row - 1;
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_REPORT_FOOTER);
-					priv->cur_row = row;
-				}
-			if (priv->cur_page > 0 && priv->page_footer != NULL && priv->page_footer->last_page)
-				{
-					cur_y = priv->page->size->height - priv->page->margin->bottom - priv->page_footer->height;
-					priv->cur_row = row - 1;
-					rpt_report_rptprint_section (rpt_report, xpage, &cur_y, RPTREPORT_SECTION_PAGE_FOOTER);
-					priv->cur_row = row;
 				}
 
 			/* change @Pages */
 			rpt_report_change_specials (rpt_report, xdoc);
 
 			priv->cur_row = -1;
+			priv->cur_iter = NULL;
 		}
 	else
 		{
@@ -2458,39 +2581,67 @@ gchar
                        const gchar *field_name)
 {
 	GError *error;
+
 	gint col;
+	GValue *gval;
+
 	gchar *ret = NULL;
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
-	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
+	if (priv->db != NULL)
 		{
-			col = gda_data_model_get_column_index (priv->db->gda_datamodel, field_name);
-
-			if (col > -1)
+			if (priv->db->treemodel != NULL
+			    && priv->db->columns_names != NULL)
 				{
-					GValue *gval;
+					gchar *str_col;
 
-					error = NULL;
-					gval = (GValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, priv->cur_row, &error);
-					if (error != NULL)
+					str_col = (gchar *)g_hash_table_lookup (priv->db->columns_names, field_name);
+					if (str_col != NULL)
 						{
-							g_warning ("Error on retrieving field «%s» value: %s.",
-							           field_name,
-							           error->message != NULL ? error->message : "no details");
-						}
-					else
-						{
-							if (gda_value_is_null (gval))
+							str_col = g_strstrip (g_strdup (str_col));
+							if (g_strcmp0 (str_col, "") != 0)
 								{
-									ret = g_strdup ("");
+									gval = g_new0 (GValue, 1);
+
+									col = strtol (str_col, NULL, 10);
+									gtk_tree_model_get_value (priv->db->treemodel, priv->cur_iter,
+									                          col, gval);
+
+									ret = (gchar *)gda_value_stringify (gval);
+
+									g_value_unset (gval);
+									g_free (str_col);
+								}
+						}
+				}
+			else if (priv->db->gda_datamodel != NULL)
+				{
+					col = gda_data_model_get_column_index (priv->db->gda_datamodel, field_name);
+
+					if (col > -1)
+						{
+							error = NULL;
+							gval = (GValue *)gda_data_model_get_value_at (priv->db->gda_datamodel, col, priv->cur_row, &error);
+							if (error != NULL)
+								{
+									g_warning ("Error on retrieving field «%s» value: %s.",
+									           field_name,
+									           error->message != NULL ? error->message : "no details");
 								}
 							else
 								{
-									ret = (gchar *)gda_value_stringify (gval);
-									if (ret == NULL)
+									if (gda_value_is_null (gval))
 										{
 											ret = g_strdup ("");
+										}
+									else
+										{
+											ret = (gchar *)gda_value_stringify (gval);
+											if (ret == NULL)
+												{
+													ret = g_strdup ("");
+												}
 										}
 								}
 						}
@@ -2519,10 +2670,24 @@ gchar
 
 	RptReportClass *klass = RPT_REPORT_GET_CLASS (rpt_report);
 
-	if (priv->db != NULL && priv->db->gda_datamodel != NULL)
+	if (priv->db != NULL)
 		{
-			g_signal_emit (rpt_report, klass->field_request_signal_id,
-			               0, field, priv->db->gda_datamodel, priv->cur_row, &ret);
+			if (priv->db->gda_datamodel != NULL)
+				{
+					g_signal_emit (rpt_report, klass->field_request_signal_id,
+					               0, field,
+					               priv->db->gda_datamodel, priv->cur_row,
+					               NULL, NULL,
+					               &ret);
+				}
+			else if (priv->db->treemodel != NULL)
+				{
+					g_signal_emit (rpt_report, klass->field_request_signal_id,
+					               0, field,
+					               NULL, NULL,
+					               priv->db->treemodel, priv->cur_iter,
+					               &ret);
+				}
 		}
 	else
 		{
