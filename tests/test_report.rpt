@@ -2,14 +2,14 @@
 <reptool>
   <properties>
     <unit-length>pt</unit-length>
-    <output-type>pdf</output-type>
-    <output-filename>rptreport.pdf</output-filename>
+    <output-type>png</output-type>
+    <output-filename>test.png</output-filename>
     <copies>1</copies>
   </properties>
   <database>
-    <provider>SQLite</provider>
-    <connection-string>DB_DIR=.;DB_NAME=db_test.db</connection-string>
-    <sql>SELECT * FROM articles ORDER BY name</sql>
+    <provider/>
+    <connection-string/>
+    <sql/>
   </database>
   <page width="595.000000" height="842.000000"/>
   <report>

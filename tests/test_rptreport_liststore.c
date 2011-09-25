@@ -100,6 +100,9 @@ main (int argc, char **argv)
 
 	if (rptr != NULL)
 		{
+			rpt_report_set_output_type (rptr, RPT_OUTPUT_PNG);
+			rpt_report_set_output_filename (rptr, "test.png");
+
 			xmlDoc *report = rpt_report_get_xml (rptr);
 			xmlSaveFormatFile ("test_report.rpt", report, 2);
 
@@ -111,8 +114,6 @@ main (int argc, char **argv)
 				{
 					g_object_set (G_OBJECT (rptp), "path-relatives-to", "..", NULL);
 
-					rpt_print_set_output_type (rptp, RPT_OUTPUT_PDF);
-					rpt_print_set_output_filename (rptp, "test.pdf");
 					rpt_print_print (rptp, NULL);
 				}
 		}

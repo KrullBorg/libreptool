@@ -224,7 +224,7 @@ RptPrint
 				}
 			else
 				{
-					/* TO DO */
+					/* TODO */
 					g_warning ("Not a valid RepTool print report format.");
 				}
 		}
@@ -339,7 +339,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 	xmlNode *cur = xmlDocGetRootElement (priv->xdoc);
 	if (cur == NULL)
 		{
-			/* TO DO */
+			/* TODO */
 			g_warning ("Xml isn't a valid reptool print definition.");
 			return;
 		}
@@ -347,7 +347,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 		{
 			if (xmlStrcmp (cur->name, (const xmlChar *)"reptool_report") != 0)
 				{
-					/* TO DO */
+					/* TODO */
 					g_warning ("Xml isn't a valid reptool print definition.");
 					return;
 				}
@@ -398,7 +398,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 		}
 	else
 		{
-			/* TO DO */
+			/* TODO */
 			g_warning ("No pages found in xml.");
 			return;
 		}
@@ -466,7 +466,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 					fout = fopen (priv->output_filename, "w");
 					if (fout == NULL)
 						{
-							/* TO DO */
+							/* TODO */
 							g_warning ("Unable to write to the output file.");
 							return;
 						}
@@ -501,7 +501,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 											fout = fopen (new_out_filename, "w");
 											if (fout == NULL)
 												{
-													/* TO DO */
+													/* TODO */
 													g_warning ("Unable to write to the output file.");
 													return;
 												}
@@ -552,25 +552,25 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 												}
 											else
 												{
-													/* TO DO */
+													/* TODO */
 													g_warning ("Cairo status not sucess: %d", cairo_status (priv->cr));
 												}
 										}
 									else
 										{
-											/* TO DO */
+											/* TODO */
 											g_warning ("Cairo surface status not sucess.");
 										}
 								}
 							else
 								{
-									/* TO DO */
+									/* TODO */
 									g_warning ("Page width or height cannot be zero.");
 								}
 						}
 					else
 						{
-							/* TO DO */
+							/* TODO */
 						}
 
 					cur = cur->next;
@@ -939,7 +939,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 				break;
 		}
 
-	/* TO DO */
+	/* TODO */
 	/* setting vertical alignment */
 	switch (align->v_align)
 		{
@@ -1069,7 +1069,7 @@ rpt_print_rect_xml (RptPrint *rpt_print, xmlNode *xnode)
 			rpt_print_rotate (rpt_print, position, size, rotation->angle);
 		}
 
-	/* TO DO */
+	/* TODO */
 	/*cairo_set_line_width (priv->cr, stroke.width);*/
 	cairo_rectangle (priv->cr,
 	                 rpt_common_value_to_points (priv->unit, position->x),
@@ -1113,7 +1113,7 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 	size = rpt_common_get_size (xnode);
 	stroke = rpt_common_get_stroke (xnode);
 
-	/* TO DO */
+	/* TODO */
 	/* rotation */
 
 	if (position == NULL || size == NULL)
@@ -1262,16 +1262,23 @@ rpt_print_line (RptPrint *rpt_print,
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
+	gdouble to_add;
+
 	if (from_p == NULL || to_p == NULL)
 		{
 			g_warning ("Line node from point and to point are mandatories.");
 			return;
 		}
 
+	to_add = 0;
 	if (stroke != NULL)
 		{
-			/* TO DO */
-			/*cairo_set_line_width (priv->cr, stroke.width);*/
+			cairo_set_line_width (priv->cr, stroke->width);
+			if ((gint)stroke->width % 2 != 0)
+				{
+					to_add = 0.5;
+				}
+
 			if (stroke->color != NULL)
 				{
 					cairo_set_source_rgba (priv->cr, stroke->color->r, stroke->color->g, stroke->color->b, stroke->color->a);
@@ -1305,10 +1312,10 @@ rpt_print_line (RptPrint *rpt_print,
 
 	cairo_move_to (priv->cr,
 	               rpt_common_value_to_points (priv->unit, from_p->x),
-	               rpt_common_value_to_points (priv->unit, from_p->y));
+	               rpt_common_value_to_points (priv->unit, from_p->y) + to_add);
 	cairo_line_to (priv->cr,
 	               rpt_common_value_to_points (priv->unit, to_p->x),
-	               rpt_common_value_to_points (priv->unit, to_p->y));
+	               rpt_common_value_to_points (priv->unit, to_p->y) + to_add);
 	cairo_stroke (priv->cr);
 
 	if (stroke != NULL && stroke->style != NULL)
