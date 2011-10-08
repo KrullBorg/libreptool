@@ -71,6 +71,9 @@ RptReport *rpt_report_new (void);
 RptReport *rpt_report_new_from_xml (xmlDoc *xdoc);
 RptReport *rpt_report_new_from_file (const gchar *filename);
 
+RptReport *rpt_report_new_from_gtktreeview (GtkTreeView *view,
+                                            const gchar *title);
+
 void rpt_report_set_output_type (RptReport *rpt_report, eRptOutputType output_type);
 void rpt_report_set_output_filename (RptReport *rpt_report, const gchar *output_filename);
 

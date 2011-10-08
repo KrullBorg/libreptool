@@ -45,6 +45,7 @@ libtool
 stamp-h1
 tests/test*.png
 tests/*.pdf
+tests/rptreport_gtktreeview
 tests/test_report.rptr
 tests/test_rptprint
 tests/test_rptreport

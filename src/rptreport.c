@@ -521,6 +521,168 @@ RptReport
 }
 
 /**
+ * rpt_report_new_from_gtktreeview:
+ * @view:
+ * @title:
+ *
+ * Returns: the newly created #RptReport object.
+ */
+RptReport
+*rpt_report_new_from_gtktreeview (GtkTreeView *view,
+                                  const gchar *title)
+{
+	RptReport *ret;
+
+	GList *columns;
+	GHashTable *columns_names;
+
+	RptSize *page_size;
+
+	RptPoint *point;
+	RptSize *size;
+	RptObject *obj;
+
+	guint x;
+	GtkTreeViewColumn *col;
+	gint col_width;
+	const gchar *col_title;
+	gchar *field_name;
+
+	guint idx;
+
+	g_return_val_if_fail (GTK_IS_TREE_VIEW (view), NULL);
+
+	ret = rpt_report_new ();
+
+	columns = gtk_tree_view_get_columns (view);
+	if (columns == NULL) return NULL;
+
+	g_object_set (G_OBJECT (ret), "unit-length", RPT_UNIT_MILLIMETRE, NULL);
+
+	page_size = rpt_common_rptsize_new_with_values (297, 210);
+	rpt_report_set_page_size (ret, *page_size);
+
+	rpt_report_set_page_margins (ret, 10, 10, 10, 10);
+
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 30);
+	rpt_report_set_page_header_first_last_page (ret, TRUE, TRUE);
+
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, 30);
+
+	if (title != NULL)
+		{
+			point = rpt_common_rptpoint_new_with_values (0, 0);
+			obj = rpt_obj_text_new ("title", *point);
+
+			size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+
+			g_object_set (obj,
+			              "source", title,
+			              "size", size,
+			              NULL);
+
+			g_free (point);
+			g_free (size);
+
+			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
+		}
+
+	columns_names = g_hash_table_new (g_str_hash, g_str_equal);
+
+	x = 0;
+	idx = 0;
+	while (columns != NULL)
+		{
+			col = (GtkTreeViewColumn *)columns->data;
+
+			col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
+			col_width = gtk_tree_view_column_get_width (col) / 96 * 25.4;
+
+			point = rpt_common_rptpoint_new_with_values (x, 20);
+			size = rpt_common_rptsize_new_with_values (col_width, 10);
+
+			obj = rpt_obj_text_new (g_strdup_printf ("title_%d", idx), *point);
+
+			g_object_set (obj,
+			              "source", col_title,
+			              "size", size,
+			              NULL);
+
+			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
+
+			field_name = g_strdup_printf ("field_%d", idx);
+			obj = rpt_obj_text_new (field_name, *point);
+
+			g_object_set (obj,
+			              "source", g_strdup_printf ("[%s]", field_name),
+			              "size", size,
+			              NULL);
+
+			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_BODY);
+
+			g_free (point);
+			g_free (size);
+
+			g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
+
+			x += col_width + 5;
+			idx++;
+
+			columns = g_list_next (columns);
+		}
+
+	point = rpt_common_rptpoint_new_with_values (0, 10);
+	obj = rpt_obj_line_new ("line1", *point);
+
+	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 0);
+
+	g_object_set (obj,
+	              "size", size,
+	              NULL);
+
+	g_free (point);
+	g_free (size);
+
+	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
+
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_FOOTER, 15);
+
+	point = rpt_common_rptpoint_new_with_values (0, 0);
+	obj = rpt_obj_line_new ("line2", *point);
+
+	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 0);
+
+	g_object_set (obj,
+	              "size", size,
+	              NULL);
+
+	g_free (point);
+	g_free (size);
+
+	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_FOOTER);
+	rpt_report_set_page_footer_first_last_page (ret, TRUE, TRUE);
+
+	point = rpt_common_rptpoint_new_with_values (0, 0);
+	obj = rpt_obj_text_new ("pages", *point);
+
+	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+
+	g_object_set (obj,
+	              "source", "\"Page \" & @Page & \" of \" & @Pages",
+	              "size", size,
+	              NULL);
+
+	g_free (point);
+	g_free (size);
+
+	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_FOOTER);
+
+	rpt_report_set_database_as_gtktreemodel (ret, gtk_tree_view_get_model (view), columns_names);
+
+	return ret;
+}
+
+/**
  * rpt_report_set_output_type:
  * @rpt_report:
  * @output_type:
@@ -1794,18 +1956,34 @@ rpt_report_add_object_to_section (RptReport *rpt_report, RptObject *rpt_object, 
 			switch (section)
 				{
 					case RPTREPORT_SECTION_REPORT_HEADER:
+						if (priv->report_header == NULL)
+							{
+								rpt_report_section_create (rpt_report, RPTREPORT_SECTION_REPORT_HEADER);
+							}
 						priv->report_header->objects = g_list_append (priv->report_header->objects, rpt_object);;
 						break;
 
 					case RPTREPORT_SECTION_REPORT_FOOTER:
+						if (priv->report_footer == NULL)
+							{
+								rpt_report_section_create (rpt_report, RPTREPORT_SECTION_REPORT_FOOTER);
+							}
 						priv->report_footer->objects = g_list_append (priv->report_footer->objects, rpt_object);;
 						break;
 
 					case RPTREPORT_SECTION_PAGE_HEADER:
+						if (priv->page_header == NULL)
+							{
+								rpt_report_section_create (rpt_report, RPTREPORT_SECTION_PAGE_HEADER);
+							}
 						priv->page_header->objects = g_list_append (priv->page_header->objects, rpt_object);;
 						break;
 
 					case RPTREPORT_SECTION_PAGE_FOOTER:
+						if (priv->page_footer == NULL)
+							{
+								rpt_report_section_create (rpt_report, RPTREPORT_SECTION_PAGE_FOOTER);
+							}
 						priv->page_footer->objects = g_list_append (priv->page_footer->objects, rpt_object);;
 						break;
 
@@ -2694,7 +2872,7 @@ gchar
 				{
 					g_signal_emit (rpt_report, klass->field_request_signal_id,
 					               0, field,
-					               NULL, NULL,
+					               NULL, -1,
 					               priv->db->treemodel, priv->cur_iter,
 					               &ret);
 				}
@@ -2702,7 +2880,7 @@ gchar
 	else
 		{
 			g_signal_emit (rpt_report, klass->field_request_signal_id,
-			               0, field, NULL, -1, &ret);
+			               0, field, NULL, -1, NULL, NULL, &ret);
 		}
 	if (ret != NULL)
 		{

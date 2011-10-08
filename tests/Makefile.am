@@ -9,7 +9,8 @@ noinst_PROGRAMS = \
                   test_rptreport \
                   test_rptprint \
                   test_rptreport_creation \
-                  test_rptreport_liststore
+                  test_rptreport_liststore \
+                  rptreport_gtktreeview
 
 LDADD = $(libreptool)
 
