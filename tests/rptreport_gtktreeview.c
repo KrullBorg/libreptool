@@ -50,6 +50,13 @@ main (int argc, char **argv)
 	                    CHECKED_COLUMN, FALSE,
 	                    -1);
 
+	gtk_list_store_append (store, &iter);
+	gtk_list_store_set (store, &iter,
+	                    TITLE_COLUMN, "The Art of Computer Programming",
+	                    AUTHOR_COLUMN, "Donald E. Knuth",
+	                    CHECKED_COLUMN, FALSE,
+	                    -1);
+
 	GtkWidget *tree;
 
 	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));

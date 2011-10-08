@@ -533,6 +533,9 @@ RptReport
 {
 	RptReport *ret;
 
+	GtkStyle *style;
+	PangoFontDescription *pango_font;
+
 	GList *columns;
 	GHashTable *columns_names;
 
@@ -540,6 +543,8 @@ RptReport
 
 	RptPoint *point;
 	RptSize *size;
+	RptFont *font;
+	RptAlign *align;
 	RptObject *obj;
 
 	guint x;
@@ -551,6 +556,9 @@ RptReport
 	guint idx;
 
 	g_return_val_if_fail (GTK_IS_TREE_VIEW (view), NULL);
+
+	style = gtk_widget_get_style (GTK_WIDGET (view));
+	pango_font = style->font_desc;
 
 	ret = rpt_report_new ();
 
@@ -564,10 +572,10 @@ RptReport
 
 	rpt_report_set_page_margins (ret, 10, 10, 10, 10);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 30);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 27);
 	rpt_report_set_page_header_first_last_page (ret, TRUE, TRUE);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, 30);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, 15);
 
 	if (title != NULL)
 		{
@@ -575,14 +583,19 @@ RptReport
 			obj = rpt_obj_text_new ("title", *point);
 
 			size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+			font = rpt_common_rptfont_from_pango_description (pango_font);
+			font->size += 2;
+			font->bold = TRUE;
 
 			g_object_set (obj,
 			              "source", title,
 			              "size", size,
+			              "font", font,
 			              NULL);
 
 			g_free (point);
 			g_free (size);
+			g_free (font);
 
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
 		}
@@ -596,19 +609,28 @@ RptReport
 			col = (GtkTreeViewColumn *)columns->data;
 
 			col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
-			col_width = gtk_tree_view_column_get_width (col) / 96 * 25.4;
+			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96 * 72);
 
-			point = rpt_common_rptpoint_new_with_values (x, 20);
+			point = rpt_common_rptpoint_new_with_values (x, 15);
 			size = rpt_common_rptsize_new_with_values (col_width, 10);
+			font = rpt_common_rptfont_from_pango_description (pango_font);
+			font->bold = TRUE;
 
 			obj = rpt_obj_text_new (g_strdup_printf ("title_%d", idx), *point);
 
 			g_object_set (obj,
 			              "source", col_title,
 			              "size", size,
+			              "font", font,
 			              NULL);
 
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
+
+			g_free (point);
+			g_free (font);
+
+			point = rpt_common_rptpoint_new_with_values (x, 0);
+			font = rpt_common_rptfont_from_pango_description (pango_font);
 
 			field_name = g_strdup_printf ("field_%d", idx);
 			obj = rpt_obj_text_new (field_name, *point);
@@ -616,12 +638,14 @@ RptReport
 			g_object_set (obj,
 			              "source", g_strdup_printf ("[%s]", field_name),
 			              "size", size,
+			              "font", font,
 			              NULL);
 
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_BODY);
 
 			g_free (point);
 			g_free (size);
+			g_free (font);
 
 			g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
 
@@ -631,7 +655,7 @@ RptReport
 			columns = g_list_next (columns);
 		}
 
-	point = rpt_common_rptpoint_new_with_values (0, 10);
+	point = rpt_common_rptpoint_new_with_values (0, 25);
 	obj = rpt_obj_line_new ("line1", *point);
 
 	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 0);
@@ -645,7 +669,7 @@ RptReport
 
 	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_FOOTER, 15);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_FOOTER, 12);
 
 	point = rpt_common_rptpoint_new_with_values (0, 0);
 	obj = rpt_obj_line_new ("line2", *point);
@@ -662,18 +686,25 @@ RptReport
 	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_FOOTER);
 	rpt_report_set_page_footer_first_last_page (ret, TRUE, TRUE);
 
-	point = rpt_common_rptpoint_new_with_values (0, 0);
+	point = rpt_common_rptpoint_new_with_values (0, 2);
 	obj = rpt_obj_text_new ("pages", *point);
 
 	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+	align = rpt_common_rptalign_new ();
+	align->h_align = RPT_HALIGN_RIGHT;
+	font = rpt_common_rptfont_from_pango_description (pango_font);
+	font->size -= 1;
 
 	g_object_set (obj,
 	              "source", "\"Page \" & @Page & \" of \" & @Pages",
 	              "size", size,
+	              "font", font,
+	              "align", align,
 	              NULL);
 
 	g_free (point);
 	g_free (size);
+	g_free (font);
 
 	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_FOOTER);
 
