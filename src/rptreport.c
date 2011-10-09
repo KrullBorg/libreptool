@@ -550,7 +550,7 @@ RptReport
 
 	guint x;
 	GtkTreeViewColumn *col;
-	gint col_width;
+	gfloat col_width;
 	const gchar *col_title;
 	gchar *field_name;
 
@@ -618,7 +618,7 @@ RptReport
 			col = (GtkTreeViewColumn *)columns->data;
 
 			col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
-			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96 * 72);
+			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96.0 * 72.0);
 
 			point = rpt_common_rptpoint_new_with_values (x, 15);
 			if (columns->next == NULL && x < page_size->width)
