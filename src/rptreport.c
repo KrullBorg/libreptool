@@ -540,6 +540,7 @@ RptReport
 	GHashTable *columns_names;
 
 	RptSize *page_size;
+	RptMargin *page_margin;
 
 	RptPoint *point;
 	RptSize *size;
@@ -578,7 +579,8 @@ RptReport
 	page_size = rpt_common_rptsize_new_with_values (297, 210);
 	rpt_report_set_page_size (ret, *page_size);
 
-	rpt_report_set_page_margins (ret, 10, 10, 10, 10);
+	page_margin = rpt_common_rptmargin_new_with_values (10, 10, 10, 10);
+	rpt_report_set_page_margins_struct (ret, *page_margin);
 
 	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 27);
 	rpt_report_set_page_header_first_last_page (ret, TRUE, TRUE);
@@ -590,7 +592,7 @@ RptReport
 			point = rpt_common_rptpoint_new_with_values (0, 0);
 			obj = rpt_obj_text_new ("title", *point);
 
-			size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+			size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 10);
 			font = rpt_common_rptfont_from_pango_description (pango_font);
 			font->size += 2;
 			font->bold = TRUE;
@@ -622,7 +624,7 @@ RptReport
 			if (columns->next == NULL && x < page_size->width)
 				{
 					/* the last column is always large until the end of the page */
-					size = rpt_common_rptsize_new_with_values (page_size->width - x, 10);
+					size = rpt_common_rptsize_new_with_values ((page_size->width - page_margin->left - page_margin->right) - x, 10);
 				}
 			else
 				{
@@ -671,7 +673,7 @@ RptReport
 	point = rpt_common_rptpoint_new_with_values (0, 25);
 	obj = rpt_obj_line_new ("line1", *point);
 
-	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 0);
+	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 0);
 
 	g_object_set (obj,
 	              "size", size,
@@ -687,7 +689,7 @@ RptReport
 	point = rpt_common_rptpoint_new_with_values (0, 0);
 	obj = rpt_obj_line_new ("line2", *point);
 
-	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 0);
+	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 0);
 
 	g_object_set (obj,
 	              "size", size,
@@ -702,7 +704,7 @@ RptReport
 	point = rpt_common_rptpoint_new_with_values (0, 2);
 	obj = rpt_obj_text_new ("pages", *point);
 
-	size = rpt_common_rptsize_new_with_values (page_size->width - 20, 10);
+	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 10);
 	align = rpt_common_rptalign_new ();
 	align->h_align = RPT_HALIGN_RIGHT;
 	font = rpt_common_rptfont_from_pango_description (pango_font);
