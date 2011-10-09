@@ -558,7 +558,15 @@ RptReport
 	g_return_val_if_fail (GTK_IS_TREE_VIEW (view), NULL);
 
 	style = gtk_widget_get_style (GTK_WIDGET (view));
-	pango_font = style->font_desc;
+	pango_font = pango_font_description_copy (style->font_desc);
+	if (pango_font == NULL)
+		{
+			g_warning ("No font from GtkTreeView. Default to Arial 10.");
+
+			pango_font = pango_font_description_new ();
+			pango_font_description_set_family (pango_font, "Arial");
+			pango_font_description_set_size (pango_font, 10);
+		}
 
 	ret = rpt_report_new ();
 
@@ -595,7 +603,6 @@ RptReport
 
 			g_free (point);
 			g_free (size);
-			g_free (font);
 
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
 		}
@@ -612,7 +619,15 @@ RptReport
 			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96 * 72);
 
 			point = rpt_common_rptpoint_new_with_values (x, 15);
-			size = rpt_common_rptsize_new_with_values (col_width, 10);
+			if (columns->next == NULL && x < page_size->width)
+				{
+					/* the last column is always large until the end of the page */
+					size = rpt_common_rptsize_new_with_values (page_size->width - x, 10);
+				}
+			else
+				{
+					size = rpt_common_rptsize_new_with_values (col_width, 10);
+				}
 			font = rpt_common_rptfont_from_pango_description (pango_font);
 			font->bold = TRUE;
 
@@ -627,7 +642,6 @@ RptReport
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
 
 			g_free (point);
-			g_free (font);
 
 			point = rpt_common_rptpoint_new_with_values (x, 0);
 			font = rpt_common_rptfont_from_pango_description (pango_font);
@@ -645,7 +659,6 @@ RptReport
 
 			g_free (point);
 			g_free (size);
-			g_free (font);
 
 			g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
 
@@ -704,7 +717,6 @@ RptReport
 
 	g_free (point);
 	g_free (size);
-	g_free (font);
 
 	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_FOOTER);
 

@@ -27,12 +27,46 @@ enum
 	N_COLUMNS
 };
 
-int
-main (int argc, char **argv)
+GtkWidget *tree;
+
+gboolean
+on_w_delete_event (GtkWidget *widget,
+                   GdkEvent *event,
+                   gpointer user_data)
+{
+	return FALSE;
+}
+
+void
+on_btn_stampa_clicked (GtkButton *button, gpointer user_data)
 {
 	RptReport *rptr;
 	RptPrint *rptp;
 
+	rptr = rpt_report_new_from_gtktreeview (GTK_TREE_VIEW (tree), "\"Report's Title\"");
+
+	if (rptr != NULL)
+		{
+			xmlDoc *report = rpt_report_get_xml (rptr);
+			xmlSaveFormatFile ("test_report.rpt", report, 2);
+
+			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
+			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
+
+			rptp = rpt_print_new_from_xml (rptprint);
+			if (rptp != NULL)
+				{
+					g_object_set (G_OBJECT (rptp), "path-relatives-to", "..", NULL);
+					rpt_print_set_output_type (rptp, RPT_OUTPUT_PDF);
+					rpt_print_set_output_filename (rptp, "rptreport.pdf");
+					rpt_print_print (rptp, NULL);
+				}
+		}
+}
+
+int
+main (int argc, char **argv)
+{
 	gtk_init (&argc, &argv);
 
 	GtkListStore *store = gtk_list_store_new (N_COLUMNS,       /* Total number of columns */
@@ -57,8 +91,6 @@ main (int argc, char **argv)
 	                    CHECKED_COLUMN, FALSE,
 	                    -1);
 
-	GtkWidget *tree;
-
 	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
 
 	GtkCellRenderer *renderer;
@@ -69,6 +101,7 @@ main (int argc, char **argv)
 	                                                   renderer,
 	                                                   "text", TITLE_COLUMN,
 	                                                   NULL);
+	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
 	renderer = gtk_cell_renderer_text_new ();
@@ -76,34 +109,29 @@ main (int argc, char **argv)
 	                                                   renderer,
 	                                                   "text", AUTHOR_COLUMN,
 	                                                   NULL);
+	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
 	GtkWidget *w = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size (GTK_WINDOW (w), 500, 400);
 
-	gtk_container_add (GTK_CONTAINER (w), tree);
+	g_signal_connect (w, "delete-event", G_CALLBACK (on_w_delete_event), NULL);
+	g_signal_connect (w, "destroy", gtk_main_quit, NULL);
+
+	GtkWidget *box = gtk_vbox_new (FALSE, 5);
+
+	gtk_container_add (GTK_CONTAINER (w), box);
+
+	gtk_box_pack_start (GTK_BOX (box), tree, TRUE, TRUE, 0);
+
+	GtkWidget *btn_stampa = gtk_button_new_from_stock ("gtk-print");
+
+	gtk_box_pack_start (GTK_BOX (box), btn_stampa, FALSE, FALSE, 0);
+
+	g_signal_connect (G_OBJECT (btn_stampa), "clicked",
+	                  G_CALLBACK (on_btn_stampa_clicked), NULL);
 
 	gtk_widget_show_all (w);
-
-	rptr = rpt_report_new_from_gtktreeview (GTK_TREE_VIEW (tree), "\"Report's Title\"");
-
-	if (rptr != NULL)
-		{
-			xmlDoc *report = rpt_report_get_xml (rptr);
-			xmlSaveFormatFile ("test_report.rpt", report, 2);
-
-			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
-			xmlSaveFormatFile ("test_report.rptr", rptprint, 2);
-		
-			rptp = rpt_print_new_from_xml (rptprint);
-			if (rptp != NULL)
-				{
-					g_object_set (G_OBJECT (rptp), "path-relatives-to", "..", NULL);
-					rpt_print_set_output_type (rptp, RPT_OUTPUT_PDF);
-					rpt_print_set_output_filename (rptp, "rptreport.pdf");
-					rpt_print_print (rptp, NULL);
-				}
-		}
 
 	gtk_main ();
 
