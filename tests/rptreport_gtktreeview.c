@@ -27,6 +27,7 @@ enum
 	N_COLUMNS
 };
 
+GtkWidget *w;
 GtkWidget *tree;
 
 gboolean
@@ -48,6 +49,7 @@ on_btn_stampa_clicked (GtkButton *button, gpointer user_data)
 	if (rptr != NULL)
 		{
 			xmlDoc *report = rpt_report_get_xml (rptr);
+			rpt_report_set_output_type (rptr, RPT_OUTPUT_GTK);
 			xmlSaveFormatFile ("test_report.rpt", report, 2);
 
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
@@ -57,9 +59,8 @@ on_btn_stampa_clicked (GtkButton *button, gpointer user_data)
 			if (rptp != NULL)
 				{
 					g_object_set (G_OBJECT (rptp), "path-relatives-to", "..", NULL);
-					rpt_print_set_output_type (rptp, RPT_OUTPUT_PDF);
-					rpt_print_set_output_filename (rptp, "rptreport.pdf");
-					rpt_print_print (rptp, NULL);
+					rpt_print_set_output_type (rptp, RPT_OUTPUT_GTK);
+					rpt_print_print (rptp, GTK_WINDOW (w));
 				}
 		}
 }
@@ -112,7 +113,7 @@ main (int argc, char **argv)
 	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
-	GtkWidget *w = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+	w = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size (GTK_WINDOW (w), 500, 400);
 
 	g_signal_connect (w, "delete-event", G_CALLBACK (on_w_delete_event), NULL);
