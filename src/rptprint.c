@@ -774,7 +774,6 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 	gchar *text = (gchar *)xmlNodeGetContent (xnode);
 	gchar *prop;
-	gchar *str_font;
 
 	gdouble padding_top = 0.0;
 	gdouble padding_right = 0.0;
@@ -834,30 +833,25 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			pango_layout_set_width (playout, (rpt_common_value_to_points (priv->unit, size->width) - padding_left - padding_right) * PANGO_SCALE);
 		}
 
-	str_font = g_strdup (font->name);
+	/* creating pango font description */
+	pfdesc = pango_font_description_new ();
+
+	pango_font_description_set_family (pfdesc, font->name);
 	if (font->bold)
 		{
-			str_font = g_strconcat (str_font, " bold", NULL);
+			pango_font_description_set_weight (pfdesc, PANGO_WEIGHT_BOLD);
 		}
 	if (font->italic)
 		{
-			str_font = g_strconcat (str_font, " italic", NULL);
+			pango_font_description_set_style (pfdesc, PANGO_STYLE_ITALIC);
 		}
 	if (font->size > 0.0f)
 		{
-			str_font = g_strconcat (str_font, g_strdup_printf (" %f", font->size), NULL);
+			pango_font_description_set_size (pfdesc, (int)font->size * PANGO_SCALE);
 		}
 	else
 		{
-			str_font = g_strconcat (str_font, " 12", NULL);
-		}
-
-	/* creating pango font description */
-	pfdesc = pango_font_description_from_string (str_font);
-	if (pfdesc == NULL)
-		{
-			g_warning ("Unable to create a PangoFontDescription from the string: %s", str_font);
-			return;
+			pango_font_description_set_size (pfdesc, 12);
 		}
 
 	pango_layout_set_font_description (playout, pfdesc);
