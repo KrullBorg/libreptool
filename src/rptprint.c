@@ -431,6 +431,9 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 			setlocale (LC_NUMERIC, locale_num);
 			setlocale (LC_ALL, locale_old);
 
+			g_free (locale_old);
+			g_free (locale_num);
+
 			if (priv->output_type == RPT_OUTPUT_GTK
 			    && res == GTK_PRINT_OPERATION_RESULT_CANCEL)
 				{
@@ -505,6 +508,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 													g_warning ("Unable to write to the output file.");
 													return;
 												}
+											g_free (new_out_filename);
 
 											priv->surface = cairo_svg_surface_create (new_out_filename, width, height);
 										}
@@ -537,6 +541,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 															                            new_out_filename);
 															cairo_surface_destroy (priv->surface);
 															cairo_destroy (priv->cr);
+															g_free (new_out_filename);
 														}
 													else
 														{
@@ -1212,7 +1217,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	adapt = xmlGetProp (xnode, (const xmlChar *)"adapt");
 	if (adapt == NULL)
 		{
-			adapt = "none";
+			adapt = g_strdup ("none");
 		}
 	else
 		{
@@ -1274,6 +1279,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	g_free (size);
 	g_free (rotation);
 	g_free (border);
+	g_free (adapt);
 }
 
 static void

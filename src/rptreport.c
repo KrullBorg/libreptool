@@ -406,21 +406,25 @@ RptReport
 									if (prop != NULL)
 										{
 											margin_top = g_strtod (prop, NULL);
+											xmlFree (prop);
 										}
 									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-right");
 									if (prop != NULL)
 										{
 											margin_right = g_strtod (prop, NULL);
+											xmlFree (prop);
 										}
 									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-bottom");
 									if (prop != NULL)
 										{
 											margin_bottom = g_strtod (prop, NULL);
+											xmlFree (prop);
 										}
 									prop = xmlGetProp (xnodeset->nodeTab[0], "margin-left");
 									if (prop != NULL)
 										{
 											margin_left = g_strtod (prop, NULL);
+											xmlFree (prop);
 										}
 									rpt_report_set_page_margins (rpt_report, margin_top, margin_right, margin_bottom, margin_left);
 								}
@@ -566,7 +570,7 @@ RptReport
 
 			pango_font = pango_font_description_new ();
 			pango_font_description_set_family (pango_font, "Arial");
-			pango_font_description_set_size (pango_font, 10);
+			pango_font_description_set_size (pango_font, 10 * PANGO_SCALE);
 		}
 
 	ret = rpt_report_new ();
@@ -2124,7 +2128,6 @@ static void
 rpt_report_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	RptReport *rpt_report = RPT_REPORT (object);
-
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	switch (property_id)
@@ -2143,7 +2146,6 @@ static void
 rpt_report_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	RptReport *rpt_report = RPT_REPORT (object);
-
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	switch (property_id)
@@ -2506,6 +2508,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->report_header->new_page_after = TRUE;
 							}
+						xmlFree (prop);
 					}
 				break;
 
@@ -2519,6 +2522,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->report_footer->new_page_before = TRUE;
 							}
+						xmlFree (prop);
 					}
 				break;
 
@@ -2532,6 +2536,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->page_header->first_page = TRUE;
 							}
+						xmlFree (prop);
 					}
 				prop = xmlGetProp (xnode, "last-page");
 				if (prop != NULL)
@@ -2540,6 +2545,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->page_header->last_page = TRUE;
 							}
+						xmlFree (prop);
 					}
 				break;
 
@@ -2553,6 +2559,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->page_footer->first_page = TRUE;
 							}
+						xmlFree (prop);
 					}
 				prop = xmlGetProp (xnode, "last-page");
 				if (prop != NULL)
@@ -2574,6 +2581,7 @@ rpt_report_xml_parse_section (RptReport *rpt_report, xmlNode *xnode, RptReportSe
 							{
 								priv->body->new_page_after = TRUE;
 							}
+						xmlFree (prop);
 					}
 				break;
 		}
@@ -2679,14 +2687,16 @@ rpt_report_rptprint_section (RptReport *rpt_report,
 							prop = g_strdup ("0.0");
 						}
 					xmlSetProp (xnode, "x", g_strdup_printf ("%f", g_strtod (prop, NULL) + priv->page->margin->left));
+					xmlFree (prop);
 				}
-			
+
 			prop = (gchar *)xmlGetProp (xnode, "y");
 			if (prop == NULL)
 				{
 					prop = g_strdup ("0.0");
 				}
 			xmlSetProp (xnode, "y", g_strdup_printf ("%f", g_strtod (prop, NULL) + *cur_y));
+			xmlFree (prop);
 
 			if (IS_RPT_OBJ_TEXT (rptobj))
 				{
@@ -2796,6 +2806,7 @@ rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc)
 							                    NULL);
 						}
 					xmlNodeSetContent (cur, cont);
+					g_free (cont);
 				}
 		}
 }
@@ -3050,6 +3061,7 @@ gchar
 				}
 
 			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
+			g_free (format);
 		}
 	else if (strncmp (real_special, "@Time", 5) == 0)
 		{
@@ -3070,6 +3082,7 @@ gchar
 				}
 
 			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
+			g_free (format);
 		}
 
 	return ret;
