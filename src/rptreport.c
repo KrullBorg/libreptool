@@ -655,6 +655,7 @@ RptReport
 			              "source", g_strdup_printf ("[%s]", field_name),
 			              "size", size,
 			              "font", font,
+			              "ellipsize", RPT_ELLIPSIZE_END,
 			              NULL);
 
 			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_BODY);

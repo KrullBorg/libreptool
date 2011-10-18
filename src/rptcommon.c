@@ -185,6 +185,87 @@ const gchar
 }
 
 /**
+ * rpt_common_strellipsize_to_enum:
+ * @ellipsize:
+ *
+ * Returns: the enum value that match the string @ellipsize.
+ */
+eRptEllipsize
+rpt_common_strellipsize_to_enum (const gchar *ellipsize)
+{
+	eRptEllipsize ret;
+
+	gchar *real_ellipsize;
+
+	ret = RPT_ELLIPSIZE_NONE;
+
+	if (ellipsize != NULL)
+		{
+			real_ellipsize = g_strstrip (g_strdup (ellipsize));
+			if (g_ascii_strcasecmp (real_ellipsize, "none") == 0)
+				{
+					/* already setted */
+				}
+			else if (g_ascii_strcasecmp (real_ellipsize, "start") == 0)
+				{
+					ret = RPT_ELLIPSIZE_START;
+				}
+			else if (g_ascii_strcasecmp (real_ellipsize, "middle") == 0)
+				{
+					ret = RPT_ELLIPSIZE_MIDDLE;
+				}
+			else if (g_ascii_strcasecmp (real_ellipsize, "end") == 0)
+				{
+					ret = RPT_ELLIPSIZE_END;
+				}
+			else
+				{
+					g_warning ("Ellipsize type «%s» not available.", real_ellipsize);
+				}
+		}
+
+	return ret;
+}
+
+/**
+ * rpt_common_enum_to_strellipsize:
+ * @unit:
+ *
+ * Returns: the string value that represents then enum value @unit.
+ */
+const gchar
+*rpt_common_enum_to_strellipsize (eRptEllipsize ellipsize)
+{
+	gchar *ret;
+
+	switch (ellipsize)
+		{
+			case RPT_ELLIPSIZE_NONE:
+				ret = g_strdup ("none");
+				break;
+
+			case RPT_ELLIPSIZE_START:
+				ret = g_strdup ("start");
+				break;
+
+			case RPT_ELLIPSIZE_MIDDLE:
+				ret = g_strdup ("middle");
+				break;
+
+			case RPT_ELLIPSIZE_END:
+				ret = g_strdup ("end");
+				break;
+
+			default:
+				g_warning ("Ellipsize type «%d» not available.", ellipsize);
+				ret = g_strdup ("none");
+				break;
+		}
+
+	return ret;
+}
+
+/**
  * rpt_common_stroutputtype_to_enum:
  * @output_type:
  *

@@ -183,6 +183,14 @@ struct _RptStroke
 };
 typedef struct _RptStroke RptStroke;
 
+typedef enum
+{
+	RPT_ELLIPSIZE_NONE,
+	RPT_ELLIPSIZE_START,
+	RPT_ELLIPSIZE_MIDDLE,
+	RPT_ELLIPSIZE_END
+} eRptEllipsize;
+
 
 gdouble rpt_common_value_to_points (eRptUnitLength unit, gdouble value);
 gdouble rpt_common_points_to_value (eRptUnitLength unit, gdouble value);
@@ -192,6 +200,9 @@ const gchar *rpt_common_enum_to_strunit (eRptUnitLength unit);
 
 eRptOutputType rpt_common_stroutputtype_to_enum (const gchar *output_type);
 const gchar *rpt_common_enum_to_stroutputtype (eRptOutputType output_type);
+
+eRptEllipsize rpt_common_strellipsize_to_enum (const gchar *ellipsize);
+const gchar *rpt_common_enum_to_strellipsize (eRptEllipsize ellipsize);
 
 RptPoint *rpt_common_rptpoint_new (void);
 RptPoint *rpt_common_rptpoint_new_with_values (gdouble x, gdouble y);

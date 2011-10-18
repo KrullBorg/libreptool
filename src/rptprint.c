@@ -851,7 +851,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	else
 		{
-			pango_font_description_set_size (pfdesc, 12);
+			pango_font_description_set_size (pfdesc, 12 * PANGO_SCALE);
 		}
 
 	pango_layout_set_font_description (playout, pfdesc);
@@ -910,6 +910,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			cairo_set_source_rgba (priv->cr, color->r, color->g, color->b, color->a);
 			cairo_fill_preserve (priv->cr);
 		}
+	if (prop != NULL) xmlFree (prop);
 
 	/* drawing border */
 	rpt_print_border (rpt_print, position, size, border, rotation);
@@ -956,6 +957,34 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			                 rpt_common_value_to_points (priv->unit, size->width) - padding_left - padding_right,
 			                 rpt_common_value_to_points (priv->unit, size->height) - padding_top - padding_bottom);
 			cairo_clip (priv->cr);
+		}
+
+	/* ellipsize */
+	prop = xmlGetProp (xnode, (const xmlChar *)"ellipsize");
+	if (prop != NULL)
+		{
+			eRptEllipsize ellipsize = rpt_common_strellipsize_to_enum (prop);
+			if (ellipsize > RPT_ELLIPSIZE_NONE)
+				{
+					switch (ellipsize)
+						{
+							case RPT_ELLIPSIZE_START:
+								pango_layout_set_ellipsize (playout, PANGO_ELLIPSIZE_START);
+								break;
+
+							case RPT_ELLIPSIZE_MIDDLE:
+								pango_layout_set_ellipsize (playout, PANGO_ELLIPSIZE_MIDDLE);
+								break;
+
+							case RPT_ELLIPSIZE_END:
+								pango_layout_set_ellipsize (playout, PANGO_ELLIPSIZE_END);
+								break;
+
+							default:
+								break;
+						}
+				}
+			xmlFree (prop);
 		}
 
 	/* drawing text */

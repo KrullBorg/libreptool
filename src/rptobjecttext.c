@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2006-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,8 @@ enum
 	PROP_PADDING_TOP,
 	PROP_PADDING_RIGHT,
 	PROP_PADDING_BOTTOM,
-	PROP_PADDING_LEFT
+	PROP_PADDING_LEFT,
+	PROP_ELLIPSIZE
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -64,35 +65,10 @@ struct _RptObjTextPrivate
 		gdouble padding_right;
 		gdouble padding_bottom;
 		gdouble padding_left;
+		eRptEllipsize ellipsize;
 	};
 
-GType
-rpt_obj_text_get_type (void)
-{
-	static GType rpt_obj_text_type = 0;
-
-	if (!rpt_obj_text_type)
-		{
-			static const GTypeInfo rpt_obj_text_info =
-			{
-				sizeof (RptObjTextClass),
-				NULL,	/* base_init */
-				NULL,	/* base_finalize */
-				(GClassInitFunc) rpt_obj_text_class_init,
-				NULL,	/* class_finalize */
-				NULL,	/* class_data */
-				sizeof (RptObjText),
-				0,	/* n_preallocs */
-				(GInstanceInitFunc) rpt_obj_text_init,
-				NULL
-			};
-
-			rpt_obj_text_type = g_type_register_static (TYPE_RPT_OBJECT, "RptObjText",
-			                                            &rpt_obj_text_info, 0);
-		}
-
-	return rpt_obj_text_type;
-}
+G_DEFINE_TYPE (RptObjText, rpt_obj_text, TYPE_RPT_OBJECT)
 
 static void
 rpt_obj_text_class_init (RptObjTextClass *klass)
@@ -167,6 +143,12 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                      "Padding Left",
 	                                                      0, G_MAXDOUBLE, 0,
 	                                                      G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_ELLIPSIZE,
+	                                 g_param_spec_uint ("ellipsize",
+	                                                    "Ellipsize",
+	                                                    "Ellipsize",
+	                                                    RPT_ELLIPSIZE_NONE, RPT_ELLIPSIZE_END, RPT_ELLIPSIZE_NONE,
+	                                                    G_PARAM_READWRITE));
 }
 
 static void
@@ -194,6 +176,8 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->font = font;
 	priv->align = NULL;
 	priv->background_color = NULL;
+
+	priv->ellipsize = RPT_ELLIPSIZE_NONE;
 }
 
 /**
@@ -261,6 +245,7 @@ RptObject
 
 					prop = (gchar *)xmlGetProp (xnode, "source");
 					g_object_set (rpt_obj_text, "source", prop, NULL);
+					if (prop != NULL) xmlFree (prop);
 
 					prop = (gchar *)xmlGetProp (xnode, "background-color");
 					if (prop != NULL)
@@ -269,27 +254,39 @@ RptObject
 
 							color = rpt_common_parse_color (g_strstrip (prop));
 							g_object_set (rpt_obj_text, "background-color", color, NULL);
+
+							xmlFree (prop);
 						}
 
 					prop = (gchar *)xmlGetProp (xnode, "padding-top");
 					if (prop != NULL)
 						{
 							g_object_set (rpt_obj_text, "padding-top", strtod (prop, NULL), NULL);
+							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-right");
 					if (prop != NULL)
 						{
 							g_object_set (rpt_obj_text, "padding-right", strtod (prop, NULL), NULL);
+							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-bottom");
 					if (prop != NULL)
 						{
 							g_object_set (rpt_obj_text, "padding-bottom", strtod (prop, NULL), NULL);
+							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-left");
 					if (prop != NULL)
 						{
 							g_object_set (rpt_obj_text, "padding-left", strtod (prop, NULL), NULL);
+							xmlFree (prop);
+						}
+					prop = (gchar *)xmlGetProp (xnode, "ellipsize");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "ellipsize", rpt_common_strellipsize_to_enum (prop), NULL);
+							xmlFree (prop);
 						}
 				}
 		}
@@ -339,13 +336,16 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 		{
 			xmlSetProp (xnode, "padding-left", g_strdup_printf ("%f", priv->padding_left));
 		}
+	if (priv->ellipsize > RPT_ELLIPSIZE_NONE)
+		{
+			xmlSetProp (xnode, "ellipsize", rpt_common_enum_to_strellipsize (priv->ellipsize));
+		}
 }
 
 static void
 rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	RptObjText *rpt_obj_text = RPT_OBJ_TEXT (object);
-
 	RptObjTextPrivate *priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
 	switch (property_id)
@@ -394,6 +394,10 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 				priv->padding_left = g_value_get_double (value);
 				break;
 
+			case PROP_ELLIPSIZE:
+				priv->ellipsize = g_value_get_uint (value);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -404,7 +408,6 @@ static void
 rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	RptObjText *rpt_obj_text = RPT_OBJ_TEXT (object);
-
 	RptObjTextPrivate *priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
 	switch (property_id)
@@ -451,6 +454,10 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 			case PROP_PADDING_LEFT:
 				g_value_set_double (value, priv->padding_left);
+				break;
+
+			case PROP_ELLIPSIZE:
+				g_value_set_uint (value, priv->ellipsize);
 				break;
 
 			default:

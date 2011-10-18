@@ -65,6 +65,7 @@
   padding-right      CDATA #IMPLIED
   padding-bottom     CDATA #IMPLIED
   padding-left       CDATA #IMPLIED
+  ellipsize          (none | start | middle | end)
 >
 
 <!ELEMENT line EMPTY>
