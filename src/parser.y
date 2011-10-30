@@ -37,7 +37,7 @@ string: exp      { *ret = g_strdup ($1); }
 
 exp:      INTEGER           { $$ = $1; }
         | FLOAT             { $$ = $1; }
-        | STRING            { $$ = g_strndup ($1 + 1, strlen ($1) - 2) }
+        | STRING            { $$ = g_strndup ($1 + 1, strlen ($1) - 2); }
         | FIELD             { $$ = rpt_report_get_field (rpt_report, g_strndup ($1 + 1, strlen ($1) - 2)); }
         | SPECIAL           { $$ = rpt_report_get_special (rpt_report, $1); }
 		| exp '+' exp		{ $$ = g_strdup_printf ("%f", strtod ($1, NULL) + strtod ($3, NULL)); }
