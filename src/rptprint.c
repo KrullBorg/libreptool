@@ -708,6 +708,8 @@ rpt_print_get_xml_page_attributes (RptPrint *rpt_print, xmlNode *xml_page)
 static void
 rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 {
+	gchar *prop;
+
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	xmlNode *cur = xnode->children;
@@ -731,28 +733,38 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 		{
 			if (!xmlNodeIsText (cur))
 				{
-					cairo_save (priv->cr);
-					if (g_strcmp0 (cur->name, "text") == 0)
+					prop = (gchar *)xmlGetProp (cur, "visible");
+					if (prop != NULL
+					    && strcmp (g_strstrip (prop), "y") == 0)
 						{
-							rpt_print_text_xml (rpt_print, cur);
+							cairo_save (priv->cr);
+							if (g_strcmp0 (cur->name, "text") == 0)
+								{
+									rpt_print_text_xml (rpt_print, cur);
+								}
+							else if (g_strcmp0 (cur->name, "line") == 0)
+								{
+									rpt_print_line_xml (rpt_print, cur);
+								}
+							else if (g_strcmp0 (cur->name, "rect") == 0)
+								{
+									rpt_print_rect_xml (rpt_print, cur);
+								}
+							else if (g_strcmp0 (cur->name, "ellipse") == 0)
+								{
+									rpt_print_ellipse_xml (rpt_print, cur);
+								}
+							else if (g_strcmp0 (cur->name, "image") == 0)
+								{
+									rpt_print_image_xml (rpt_print, cur);
+								}
+							cairo_restore (priv->cr);
 						}
-					else if (g_strcmp0 (cur->name, "line") == 0)
+
+					if (prop != NULL)
 						{
-							rpt_print_line_xml (rpt_print, cur);
+							xmlFree (prop);
 						}
-					else if (g_strcmp0 (cur->name, "rect") == 0)
-						{
-							rpt_print_rect_xml (rpt_print, cur);
-						}
-					else if (g_strcmp0 (cur->name, "ellipse") == 0)
-						{
-							rpt_print_ellipse_xml (rpt_print, cur);
-						}
-					else if (g_strcmp0 (cur->name, "image") == 0)
-						{
-							rpt_print_image_xml (rpt_print, cur);
-						}
-					cairo_restore (priv->cr);
 				}
 
 			cur = cur->next;

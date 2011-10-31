@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,7 @@ GType rpt_object_get_type (void) G_GNUC_CONST;
 RptObject *rpt_object_new (const gchar *name, RptPoint position);
 
 void rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode);
+void rpt_object_set_from_xml (RptObject *rpt_object, xmlNode *xnode);
 
 
 G_END_DECLS

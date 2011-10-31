@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,8 @@ enum
 {
 	PROP_0,
 	PROP_NAME,
-	PROP_POSITION
+	PROP_POSITION,
+	PROP_VISIBLE
 };
 
 static void rpt_object_class_init (RptObjectClass *klass);
@@ -45,35 +46,10 @@ struct _RptObjectPrivate
 	{
 		gchar *name;
 		RptPoint *position;
+		gboolean visibile;
 	};
 
-GType
-rpt_object_get_type (void)
-{
-	static GType rpt_object_type = 0;
-
-	if (!rpt_object_type)
-		{
-			static const GTypeInfo rpt_object_info =
-			{
-				sizeof (RptObjectClass),
-				NULL,	/* base_init */
-				NULL,	/* base_finalize */
-				(GClassInitFunc) rpt_object_class_init,
-				NULL,	/* class_finalize */
-				NULL,	/* class_data */
-				sizeof (RptObject),
-				0,	/* n_preallocs */
-				(GInstanceInitFunc) rpt_object_init,
-				NULL
-			};
-
-			rpt_object_type = g_type_register_static (G_TYPE_OBJECT, "RptObject",
-			                                          &rpt_object_info, 0);
-		}
-
-	return rpt_object_type;
-}
+G_DEFINE_TYPE (RptObject, rpt_object, G_TYPE_OBJECT)
 
 static void
 rpt_object_class_init (RptObjectClass *klass)
@@ -98,6 +74,12 @@ rpt_object_class_init (RptObjectClass *klass)
 	                                                       "Position",
 	                                                       "The object's position.",
 	                                                       G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_VISIBLE,
+	                                 g_param_spec_boolean ("visible",
+	                                                       "Visibility",
+	                                                       "The object's visibility.",
+	                                                       TRUE,
+	                                                       G_PARAM_READWRITE));
 }
 
 static void
@@ -105,7 +87,9 @@ rpt_object_init (RptObject *rpt_object)
 {
 	RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
 
+	priv->name = NULL;
 	priv->position = NULL;
+	priv->visibile = TRUE;
 }
 
 /**
@@ -142,20 +126,40 @@ rpt_object_get_xml (RptObject *rpt_object, xmlNode *xnode)
 			RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
 		
 			xmlSetProp (xnode, "name", priv->name);
+
 			if (priv->position != NULL)
 				{
 					rpt_common_set_position (xnode, priv->position);
 				}
 
+			xmlSetProp (xnode, "visible", priv->visibile ? "y" : "n");
+
 			RPT_OBJECT_GET_CLASS (rpt_object)->get_xml (rpt_object, xnode);
 		}
+}
+
+/**
+ * rpt_object_set_from_xml:
+ * @rpt_object:
+ * @xnode:
+ *
+ */
+void
+rpt_object_set_from_xml (RptObject *rpt_object, xmlNode *xnode)
+{
+	gchar *prop;
+
+	g_return_if_fail (IS_RPT_OBJECT (rpt_object));
+
+	prop = (gchar *)xmlGetProp (xnode, "visible");
+	g_object_set (rpt_object, "visible", g_strcmp0 (prop, "y") == 0, NULL);
+	if (prop != NULL) xmlFree (prop);
 }
 
 static void
 rpt_object_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	RptObject *rpt_object = RPT_OBJECT (object);
-
 	RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
 
 	switch (property_id)
@@ -168,6 +172,10 @@ rpt_object_set_property (GObject *object, guint property_id, const GValue *value
 				priv->position = g_memdup (g_value_get_pointer (value), sizeof (RptPoint));
 				break;
 
+			case PROP_VISIBLE:
+				priv->visibile = g_value_get_boolean (value);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -178,7 +186,6 @@ static void
 rpt_object_get_property (GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	RptObject *rpt_object = RPT_OBJECT (object);
-
 	RptObjectPrivate *priv = RPT_OBJECT_GET_PRIVATE (rpt_object);
 
 	switch (property_id)
@@ -189,6 +196,10 @@ rpt_object_get_property (GObject *object, guint property_id, GValue *value, GPar
 
 			case PROP_POSITION:
 				g_value_set_pointer (value, g_memdup (priv->position, sizeof (RptPoint)));
+				break;
+
+			case PROP_VISIBLE:
+				g_value_set_boolean (value, priv->visibile);
 				break;
 
 			default:

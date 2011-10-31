@@ -3,9 +3,10 @@
 >
 
 <!ENTITY % object_commons_attrs
-  "name   CDATA #REQUIRED
-   x      CDATA #REQUIRED
-   y      CDATA #REQUIRED"
+  "name     CDATA #REQUIRED
+   x        CDATA #REQUIRED
+   y        CDATA #REQUIRED
+   visible  (y | n) #IMPLIED"
 >
 
 <!ENTITY % object_size_attrs

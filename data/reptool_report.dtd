@@ -4,7 +4,8 @@
 
 <!ENTITY % object_position_attrs
   "x        CDATA #REQUIRED
-   y        CDATA #REQUIRED"
+   y        CDATA #REQUIRED
+   visible  (y | n) #IMPLIED"
 >
 
 <!ENTITY % object_size_attrs

@@ -75,6 +75,10 @@ main (int argc, char **argv)
 					rpt_print_set_output_filename (rptp, "test.pdf");
 					rpt_print_print (rptp, NULL);
 				}
+			else
+				{
+					g_warning ("Error on creating RptPrint.");
+				}
 		}
 
 	return 0;

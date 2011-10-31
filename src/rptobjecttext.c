@@ -235,6 +235,8 @@ RptObject
 				{
 					gchar *prop;
 
+					rpt_object_set_from_xml (RPT_OBJECT (rpt_obj_text), xnode);
+
 					priv = RPT_OBJ_TEXT_GET_PRIVATE (rpt_obj_text);
 
 					priv->size = rpt_common_get_size (xnode);

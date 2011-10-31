@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -191,6 +191,8 @@ RptObject
 			if (rpt_obj_image != NULL)
 				{
 					priv = RPT_OBJ_IMAGE_GET_PRIVATE (rpt_obj_image);
+
+					rpt_object_set_from_xml (RPT_OBJECT (rpt_obj_image), xnode);
 
 					priv->size = rpt_common_get_size (xnode);
 					priv->rotation = rpt_common_get_rotation (xnode);

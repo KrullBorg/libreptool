@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -159,6 +159,8 @@ RptObject
 					RptSize *size;
 					RptRotation *rotation;
 					RptStroke *stroke;
+
+					rpt_object_set_from_xml (RPT_OBJECT (rpt_obj_rect), xnode);
 
 					priv = RPT_OBJ_RECT_GET_PRIVATE (rpt_obj_rect);
 
