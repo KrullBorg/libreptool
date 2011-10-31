@@ -33,7 +33,8 @@ enum
 	PROP_PADDING_RIGHT,
 	PROP_PADDING_BOTTOM,
 	PROP_PADDING_LEFT,
-	PROP_ELLIPSIZE
+	PROP_ELLIPSIZE,
+	PROP_LETTER_SPACING
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -66,6 +67,7 @@ struct _RptObjTextPrivate
 		gdouble padding_bottom;
 		gdouble padding_left;
 		eRptEllipsize ellipsize;
+		guint letter_spacing;
 	};
 
 G_DEFINE_TYPE (RptObjText, rpt_obj_text, TYPE_RPT_OBJECT)
@@ -149,6 +151,12 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                    "Ellipsize",
 	                                                    RPT_ELLIPSIZE_NONE, RPT_ELLIPSIZE_END, RPT_ELLIPSIZE_NONE,
 	                                                    G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_LETTER_SPACING,
+	                                 g_param_spec_uint ("letter-spacing",
+	                                                    "Letter spacing",
+	                                                    "Amount of extra space to add between graphemes of the text.",
+	                                                    0, G_MAXUINT, 0,
+	                                                    G_PARAM_READWRITE));
 }
 
 static void
@@ -178,6 +186,8 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->background_color = NULL;
 
 	priv->ellipsize = RPT_ELLIPSIZE_NONE;
+
+	priv->letter_spacing = 0;
 }
 
 /**
@@ -201,10 +211,11 @@ RptObject
 			rpt_obj_text = RPT_OBJECT (g_object_new (rpt_obj_text_get_type (), NULL));
 
 			g_object_set (G_OBJECT (rpt_obj_text),
-	                      "name", name_,
-	                      "position", &position,
-	                      NULL);
+			              "name", name_,
+			              "position", &position,
+			              NULL);
 		}
+	g_free (name_);
 
 	return rpt_obj_text;
 }
@@ -263,31 +274,37 @@ RptObject
 					prop = (gchar *)xmlGetProp (xnode, "padding-top");
 					if (prop != NULL)
 						{
-							g_object_set (rpt_obj_text, "padding-top", strtod (prop, NULL), NULL);
+							g_object_set (rpt_obj_text, "padding-top", g_strtod (prop, NULL), NULL);
 							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-right");
 					if (prop != NULL)
 						{
-							g_object_set (rpt_obj_text, "padding-right", strtod (prop, NULL), NULL);
+							g_object_set (rpt_obj_text, "padding-right", g_strtod (prop, NULL), NULL);
 							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-bottom");
 					if (prop != NULL)
 						{
-							g_object_set (rpt_obj_text, "padding-bottom", strtod (prop, NULL), NULL);
+							g_object_set (rpt_obj_text, "padding-bottom", g_strtod (prop, NULL), NULL);
 							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "padding-left");
 					if (prop != NULL)
 						{
-							g_object_set (rpt_obj_text, "padding-left", strtod (prop, NULL), NULL);
+							g_object_set (rpt_obj_text, "padding-left", g_strtod (prop, NULL), NULL);
 							xmlFree (prop);
 						}
 					prop = (gchar *)xmlGetProp (xnode, "ellipsize");
 					if (prop != NULL)
 						{
 							g_object_set (rpt_obj_text, "ellipsize", rpt_common_strellipsize_to_enum (prop), NULL);
+							xmlFree (prop);
+						}
+					prop = (gchar *)xmlGetProp (xnode, "letter-spacing");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "letter-spacing", strtol (prop, NULL, 10), NULL);
 							xmlFree (prop);
 						}
 				}
@@ -341,6 +358,10 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 	if (priv->ellipsize > RPT_ELLIPSIZE_NONE)
 		{
 			xmlSetProp (xnode, "ellipsize", rpt_common_enum_to_strellipsize (priv->ellipsize));
+		}
+	if (priv->letter_spacing > 0)
+		{
+			xmlSetProp (xnode, "letter-spacing", g_strdup_printf ("%d", priv->letter_spacing));
 		}
 }
 
@@ -398,6 +419,10 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 
 			case PROP_ELLIPSIZE:
 				priv->ellipsize = g_value_get_uint (value);
+				break;
+
+			case PROP_LETTER_SPACING:
+				priv->letter_spacing = g_value_get_uint (value);
 				break;
 
 			default:
@@ -460,6 +485,10 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 			case PROP_ELLIPSIZE:
 				g_value_set_uint (value, priv->ellipsize);
+				break;
+
+			case PROP_LETTER_SPACING:
+				g_value_set_uint (value, priv->letter_spacing);
 				break;
 
 			default:

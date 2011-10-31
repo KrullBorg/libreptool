@@ -904,6 +904,32 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			pango_attr_list_insert (lpattr, pattr);
 		}
 
+	/* letter spacing */
+	prop = xmlGetProp (xnode, (const xmlChar *)"letter-spacing");
+	if (prop != NULL)
+		{
+			guint spacing;
+
+			spacing = strtol (prop, NULL, 10);
+
+			if (spacing > 0)
+				{
+					PangoAttribute *pattr;
+
+					pattr = pango_attr_letter_spacing_new (spacing * PANGO_SCALE);
+					pattr->start_index = 0;
+					pattr->end_index = strlen (text) + 1;
+
+					if (lpattr == NULL)
+						{
+							lpattr = pango_attr_list_new ();
+						}
+					pango_attr_list_insert (lpattr, pattr);
+				}
+
+			xmlFree (prop);
+		}
+
 	if (lpattr != NULL)
 		{
 			pango_layout_set_attributes (playout, lpattr);
