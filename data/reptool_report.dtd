@@ -107,7 +107,9 @@
 
 <!ELEMENT reptool_report (properties?, page*)>
 
-<!ELEMENT properties (unit-length?, output-type?, output-filename?, copies?)>
+<!ELEMENT properties (name?, description?, unit-length?, output-type?, output-filename?, copies?)>
+<!ELEMENT name CDATA #IMPLIED>
+<!ELEMENT description CDATA #IMPLIED>
 <!ELEMENT unit-length (pt | in | cm | mm) #IMPLIED>
 <!ELEMENT output-type (png, pdf, ps, svg, gtk, gtk-default) #IMPLIED>
 <!ELEMENT output-filename CDATA #IMPLIED>

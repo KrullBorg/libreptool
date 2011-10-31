@@ -152,15 +152,24 @@ void rpt_report_remove_object (RptReport *rpt_report,
 RptObject *rpt_report_get_object_from_name (RptReport *rpt_report,
                                             const gchar *name);
 
+void rpt_report_set_name (RptReport *rpt_report,
+                          const gchar *name);
+void rpt_report_set_description (RptReport *rpt_report,
+                                 const gchar *description);
+
 xmlDoc *rpt_report_get_xml (RptReport *rpt_report);
 
 xmlDoc *rpt_report_get_xml_rptprint (RptReport *rpt_report);
 
 xmlDoc *rpt_report_rptprint_new (void);
+
+void rpt_report_rptprint_set_name (xmlDoc *xdoc, const gchar *name);
+void rpt_report_rptprint_set_description (xmlDoc *xdoc, const gchar *description);
 void rpt_report_rptprint_set_unit_length (xmlDoc *xdoc, eRptUnitLength unit);
 void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_type);
 void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
 void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
+
 xmlNode *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin);
 void rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object);
 

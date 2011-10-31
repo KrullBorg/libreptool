@@ -100,7 +100,9 @@ typedef struct
 enum
 {
 	PROP_0,
-	PROP_UNIT_LENGTH
+	PROP_UNIT_LENGTH,
+	PROP_NAME,
+	PROP_DESCRIPTION
 };
 
 static void rpt_report_class_init (RptReportClass *klass);
@@ -162,6 +164,9 @@ struct _RptReportPrivate
 		PageFooter *page_footer;
 		Body *body;
 
+		gchar *name;
+		gchar *description;
+
 		guint cur_page;
 		gint cur_row;
 		GtkTreeIter *cur_iter;
@@ -185,6 +190,18 @@ rpt_report_class_init (RptReportClass *klass)
 	                                                   "The unit length.",
 	                                                   RPT_UNIT_POINTS, RPT_UNIT_MILLIMETRE,
 	                                                   RPT_UNIT_POINTS,
+	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_NAME,
+	                                 g_param_spec_string ("name",
+	                                                   "Report's name",
+	                                                   "Report's name.",
+	                                                   "",
+	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_DESCRIPTION,
+	                                 g_param_spec_string ("description",
+	                                                   "Report's description",
+	                                                   "Report's description.",
+	                                                   "",
 	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 	/**
@@ -314,7 +331,15 @@ RptReport
 							xmlNode *cur_property = xnodeprop->children;
 							while (cur_property != NULL)
 								{
-									if (g_strcmp0 (cur_property->name, "unit-length") == 0)
+									if (g_strcmp0 (cur_property->name, "name") == 0)
+										{
+											g_object_set (G_OBJECT (rpt_report), "name", (const gchar *)xmlNodeGetContent (cur_property), NULL);
+										}
+									else if (g_strcmp0 (cur_property->name, "description") == 0)
+										{
+											g_object_set (G_OBJECT (rpt_report), "description", (const gchar *)xmlNodeGetContent (cur_property), NULL);
+										}
+									else if (g_strcmp0 (cur_property->name, "unit-length") == 0)
 										{
 											g_object_set (G_OBJECT (rpt_report), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
 										}
@@ -1461,6 +1486,14 @@ xmlDoc
 	xmlNode *xnodeprop = xmlNewNode (NULL, "properties");
 	xmlAddChild (xroot, xnodeprop);
 
+	xnode = xmlNewNode (NULL, "name");
+	xmlNodeSetContent (xnode, priv->name);
+	xmlAddChild (xnodeprop, xnode);
+
+	xnode = xmlNewNode (NULL, "description");
+	xmlNodeSetContent (xnode, priv->description);
+	xmlAddChild (xnodeprop, xnode);
+
 	xnode = xmlNewNode (NULL, "unit-length");
 	xmlNodeSetContent (xnode, rpt_common_enum_to_strunit (priv->unit));
 	xmlAddChild (xnodeprop, xnode);
@@ -1572,6 +1605,8 @@ xmlDoc
 	priv->cur_page = 0;
 
 	/* properties */
+	rpt_report_rptprint_set_name (xdoc, priv->name);
+	rpt_report_rptprint_set_description (xdoc, priv->description);
 	rpt_report_rptprint_set_unit_length (xdoc, priv->unit);
 	rpt_report_rptprint_set_output_type (xdoc, priv->output_type);
 	rpt_report_rptprint_set_output_filename (xdoc, priv->output_filename);
@@ -1841,6 +1876,50 @@ xmlDoc
 	xmlDocSetRootElement (xdoc, xroot);
 
 	return xdoc;
+}
+
+void
+rpt_report_rptprint_set_name (xmlDoc *xdoc, const gchar *name)
+{
+	xmlNode *xnodeprop;
+	xmlNode *xnode;
+	xmlNode *xroot;
+
+	xnodeprop = rpt_report_rptprint_get_properties_node (xdoc);
+	if (xnodeprop == NULL)
+		{
+			xroot = xmlDocGetRootElement (xdoc);
+			xnodeprop = xmlNewNode (NULL, "properties");
+			xmlAddChild (xroot, xnodeprop);
+		}
+
+	/* TODO
+	 * replace eventually already present node */
+	xnode = xmlNewNode (NULL, "name");
+	xmlNodeSetContent (xnode, name);
+	xmlAddChild (xnodeprop, xnode);
+}
+
+void
+rpt_report_rptprint_set_description (xmlDoc *xdoc, const gchar *description)
+{
+	xmlNode *xnodeprop;
+	xmlNode *xnode;
+	xmlNode *xroot;
+
+	xnodeprop = rpt_report_rptprint_get_properties_node (xdoc);
+	if (xnodeprop == NULL)
+		{
+			xroot = xmlDocGetRootElement (xdoc);
+			xnodeprop = xmlNewNode (NULL, "properties");
+			xmlAddChild (xroot, xnodeprop);
+		}
+
+	/* TODO
+	 * replace eventually already present node */
+	xnode = xmlNewNode (NULL, "description");
+	xmlNodeSetContent (xnode, description);
+	xmlAddChild (xnodeprop, xnode);
 }
 
 void
@@ -2124,6 +2203,30 @@ RptObject
 	return obj;
 }
 
+void
+rpt_report_set_name (RptReport *rpt_report,
+                     const gchar *name)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+	g_return_if_fail (name != NULL);
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->name = g_strstrip (g_strdup (name));
+}
+
+void
+rpt_report_set_description (RptReport *rpt_report,
+                            const gchar *description)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+	g_return_if_fail (description != NULL);
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	priv->description = g_strstrip (g_strdup (description));
+}
+
 static void
 rpt_report_set_property (GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
@@ -2132,6 +2235,14 @@ rpt_report_set_property (GObject *object, guint property_id, const GValue *value
 
 	switch (property_id)
 		{
+			case PROP_NAME:
+				rpt_report_set_name (rpt_report, g_value_get_string (value));
+				break;
+
+			case PROP_DESCRIPTION:
+				rpt_report_set_description (rpt_report, g_value_get_string (value));
+				break;
+
 			case PROP_UNIT_LENGTH:
 				priv->unit = g_value_get_int (value);
 				break;
@@ -2150,6 +2261,14 @@ rpt_report_get_property (GObject *object, guint property_id, GValue *value, GPar
 
 	switch (property_id)
 		{
+			case PROP_NAME:
+				g_value_set_string (value, priv->name);
+				break;
+
+			case PROP_DESCRIPTION:
+				g_value_set_string (value, priv->description);
+				break;
+
 			case PROP_UNIT_LENGTH:
 				g_value_set_int (value, priv->unit);
 				break;
