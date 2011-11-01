@@ -3164,8 +3164,9 @@ gchar
 	else if (strncmp (real_special, "@Date", 5) == 0)
 		{
 			gchar *format;
-			time_t now = time (NULL);
-			struct tm *tm = localtime (&now);
+			GDateTime *now;
+
+			now = g_date_time_new_now_local ();
 
 			if (strlen (real_special) > 5
 			    && real_special[5] == '{'
@@ -3179,14 +3180,17 @@ gchar
 					format = g_strdup ("%Y-%m-%d");
 				}
 
-			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
+			ret = g_date_time_format (now, format);
+
 			g_free (format);
+			g_date_time_unref (now);
 		}
 	else if (strncmp (real_special, "@Time", 5) == 0)
 		{
 			gchar *format;
-			time_t now = time (NULL);
-			struct tm *tm = localtime (&now);
+			GDateTime *now;
+
+			now = g_date_time_new_now_local ();
 
 			if (strlen (real_special) > 5
 			    && real_special[5] == '{'
@@ -3200,8 +3204,9 @@ gchar
 					format = g_strdup ("%H:%M:%S");
 				}
 
-			ret = g_strdup_printf ("%s", rpt_report_get_str_from_tm (tm, format));
+			ret = g_date_time_format (now, format);
 			g_free (format);
+			g_date_time_unref (now);
 		}
 
 	return ret;
