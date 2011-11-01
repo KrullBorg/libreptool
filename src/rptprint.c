@@ -789,13 +789,15 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	PangoAttribute *pattr;
 	PangoAttrList *lpattr = NULL;
 
-	gchar *text = (gchar *)xmlNodeGetContent (xnode);
+	GString *text;
 	gchar *prop;
 
 	gdouble padding_top = 0.0;
 	gdouble padding_right = 0.0;
 	gdouble padding_bottom = 0.0;
 	gdouble padding_left = 0.0;
+
+	gdouble layout_width;
 
 	position = rpt_common_get_position (xnode);
 	size = rpt_common_get_size (xnode);
@@ -809,6 +811,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			g_warning ("Text node position is mandatory.");
 			return;
 		}
+
+	text = g_string_new ((gchar *)xmlNodeGetContent (xnode));
 
 	/* padding */
 	prop = xmlGetProp (xnode, (const xmlChar *)"padding-top");
@@ -836,6 +840,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 			xmlFree (prop);
 		}
 
+	layout_width = rpt_common_value_to_points (priv->unit, size->width) - padding_left - padding_right;
+
 	/* creating pango layout */
 	/*if (priv->output_type == RPTP_OUTPUT_GTK)
 		{
@@ -847,7 +853,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		/*}*/
 	if (size != NULL)
 		{
-			pango_layout_set_width (playout, (rpt_common_value_to_points (priv->unit, size->width) - padding_left - padding_right) * PANGO_SCALE);
+			pango_layout_set_width (playout, layout_width * PANGO_SCALE);
 		}
 
 	/* creating pango font description */
@@ -881,7 +887,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 			pattr = pango_attr_underline_new (font->underline);
 			pattr->start_index = 0;
-			pattr->end_index = strlen (text) + 1;
+			pattr->end_index = text->len + 1;
 
 			if (lpattr == NULL)
 				{
@@ -895,7 +901,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		
 			pattr = pango_attr_strikethrough_new (TRUE);
 			pattr->start_index = 0;
-			pattr->end_index = strlen (text) + 1;
+			pattr->end_index = text->len + 1;
 
 			if (lpattr == NULL)
 				{
@@ -918,7 +924,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 					pattr = pango_attr_letter_spacing_new (spacing * PANGO_SCALE);
 					pattr->start_index = 0;
-					pattr->end_index = strlen (text) + 1;
+					pattr->end_index = text->len + 1;
 
 					if (lpattr == NULL)
 						{
@@ -1046,7 +1052,36 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	cairo_move_to (priv->cr, rpt_common_value_to_points (priv->unit, position->x) + padding_left,
 	               rpt_common_value_to_points (priv->unit, position->y) + padding_top);
 
-	pango_layout_set_text (playout, text, -1);
+	pango_layout_set_text (playout, text->str, -1);
+
+	/* fill-with */
+	prop = xmlGetProp (xnode, (const xmlChar *)"fill-with");
+	if (prop != NULL
+	    && g_strcmp0 (g_strstrip (prop), "") != 0)
+		{
+			gint lines;
+
+			GString *text_tmp;
+
+			lines = pango_layout_get_line_count (playout);
+
+			text_tmp = g_string_new (text->str);
+
+			g_string_append (text_tmp, prop);
+			pango_layout_set_text (playout, text_tmp->str, -1);
+			while (lines == pango_layout_get_line_count (playout))
+				{
+					g_string_append (text, prop);
+
+					g_string_append (text_tmp, prop);
+					pango_layout_set_text (playout, text_tmp->str, -1);
+				}
+
+			g_string_free (text_tmp, TRUE);
+		}
+
+	pango_layout_set_text (playout, text->str, -1);
+
 	pango_cairo_show_layout (priv->cr, playout);
 
 	if (position != NULL && size != NULL)
@@ -1060,6 +1095,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	g_free (align);
 	g_free (border);
 	g_free (font);
+	g_string_free (text, TRUE);
 }
 
 static void

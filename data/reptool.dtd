@@ -74,6 +74,7 @@
   padding-left       CDATA #IMPLIED
   ellipsize          (none | start | middle | end)
   letter-spacing     CDATA #IMPLIED
+  fill-with          CDATA #IMPLIED
 >
 
 <!ELEMENT line EMPTY>

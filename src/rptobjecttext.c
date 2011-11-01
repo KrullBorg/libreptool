@@ -34,7 +34,8 @@ enum
 	PROP_PADDING_BOTTOM,
 	PROP_PADDING_LEFT,
 	PROP_ELLIPSIZE,
-	PROP_LETTER_SPACING
+	PROP_LETTER_SPACING,
+	PROP_FILL_WITH
 };
 
 static void rpt_obj_text_class_init (RptObjTextClass *klass);
@@ -68,6 +69,7 @@ struct _RptObjTextPrivate
 		gdouble padding_left;
 		eRptEllipsize ellipsize;
 		guint letter_spacing;
+		gchar *fill_with;
 	};
 
 G_DEFINE_TYPE (RptObjText, rpt_obj_text, TYPE_RPT_OBJECT)
@@ -126,37 +128,43 @@ rpt_obj_text_class_init (RptObjTextClass *klass)
 	                                                      "Padding Top",
 	                                                      "Padding Top",
 	                                                      0, G_MAXDOUBLE, 0,
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (object_class, PROP_PADDING_RIGHT,
 	                                 g_param_spec_double ("padding-right",
 	                                                      "Padding Right",
 	                                                      "Padding Right",
 	                                                      0, G_MAXDOUBLE, 0,
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (object_class, PROP_PADDING_BOTTOM,
 	                                 g_param_spec_double ("padding-bottom",
 	                                                      "Padding Bottom",
 	                                                      "Padding Bottom",
 	                                                      0, G_MAXDOUBLE, 0,
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (object_class, PROP_PADDING_LEFT,
 	                                 g_param_spec_double ("padding-left",
 	                                                      "Padding Left",
 	                                                      "Padding Left",
 	                                                      0, G_MAXDOUBLE, 0,
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (object_class, PROP_ELLIPSIZE,
 	                                 g_param_spec_uint ("ellipsize",
 	                                                    "Ellipsize",
 	                                                    "Ellipsize",
 	                                                    RPT_ELLIPSIZE_NONE, RPT_ELLIPSIZE_END, RPT_ELLIPSIZE_NONE,
-	                                                    G_PARAM_READWRITE));
+	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (object_class, PROP_LETTER_SPACING,
 	                                 g_param_spec_uint ("letter-spacing",
 	                                                    "Letter spacing",
 	                                                    "Amount of extra space to add between graphemes of the text.",
 	                                                    0, G_MAXUINT, 0,
-	                                                    G_PARAM_READWRITE));
+	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_FILL_WITH,
+	                                 g_param_spec_string ("fill-with",
+	                                                      "Fill with",
+	                                                      "Fill the box with the specified string.",
+	                                                      "",
+	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -184,10 +192,6 @@ rpt_obj_text_init (RptObjText *rpt_obj_text)
 	priv->font = font;
 	priv->align = NULL;
 	priv->background_color = NULL;
-
-	priv->ellipsize = RPT_ELLIPSIZE_NONE;
-
-	priv->letter_spacing = 0;
 }
 
 /**
@@ -307,6 +311,12 @@ RptObject
 							g_object_set (rpt_obj_text, "letter-spacing", strtol (prop, NULL, 10), NULL);
 							xmlFree (prop);
 						}
+					prop = (gchar *)xmlGetProp (xnode, "fill-with");
+					if (prop != NULL)
+						{
+							g_object_set (rpt_obj_text, "fill-with", prop, NULL);
+							xmlFree (prop);
+						}
 				}
 		}
 
@@ -362,6 +372,11 @@ rpt_obj_text_get_xml (RptObject *rpt_objtext, xmlNode *xnode)
 	if (priv->letter_spacing > 0)
 		{
 			xmlSetProp (xnode, "letter-spacing", g_strdup_printf ("%d", priv->letter_spacing));
+		}
+	if (priv->fill_with != NULL
+	    && g_strcmp0 (priv->fill_with, "") != 0)
+		{
+			xmlSetProp (xnode, "fill-with", priv->fill_with);
 		}
 }
 
@@ -423,6 +438,10 @@ rpt_obj_text_set_property (GObject *object, guint property_id, const GValue *val
 
 			case PROP_LETTER_SPACING:
 				priv->letter_spacing = g_value_get_uint (value);
+				break;
+
+			case PROP_FILL_WITH:
+				priv->fill_with = g_strstrip (g_strdup (g_value_get_string (value)));
 				break;
 
 			default:
@@ -489,6 +508,10 @@ rpt_obj_text_get_property (GObject *object, guint property_id, GValue *value, GP
 
 			case PROP_LETTER_SPACING:
 				g_value_set_uint (value, priv->letter_spacing);
+				break;
+
+			case PROP_FILL_WITH:
+				g_value_set_string (value, priv->fill_with);
 				break;
 
 			default:
