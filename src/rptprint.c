@@ -1059,6 +1059,8 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	if (prop != NULL
 	    && g_strcmp0 (g_strstrip (prop), "") != 0)
 		{
+			PangoLayoutLine *line;
+			PangoRectangle rect;
 			gint lines;
 
 			GString *text_tmp;
@@ -1069,12 +1071,17 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 
 			g_string_append (text_tmp, prop);
 			pango_layout_set_text (playout, text_tmp->str, -1);
-			while (lines == pango_layout_get_line_count (playout))
+			line = pango_layout_get_line (playout, pango_layout_get_line_count (playout) - 1);
+			pango_layout_line_get_pixel_extents (line, NULL, &rect);
+			while (lines == pango_layout_get_line_count (playout)
+			       && rect.width < layout_width)
 				{
 					g_string_append (text, prop);
 
 					g_string_append (text_tmp, prop);
 					pango_layout_set_text (playout, text_tmp->str, -1);
+					line = pango_layout_get_line (playout, pango_layout_get_line_count (playout) - 1);
+					pango_layout_line_get_pixel_extents (line, NULL, &rect);
 				}
 
 			g_string_free (text_tmp, TRUE);

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reptool>
+  <properties>
+    <name>Newline test</name>
+    <description>A report to test if the newline character (#10) works</description>
+  </properties>
+  <page width="595.000000" height="842.000000" margin-left="100.000000" margin-top="200.000000"/>
+  <report>
+    <body>
+      <text name="txt_id" visible="y" x="50.000000" y="50.000000" width="100.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="&quot;text with&#10;new line&quot;"/>
+      <text name="txt_invisible" visible="y" x="50.000000" y="250.000000" width="100.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="&quot;text with&#10;new line&quot;" letter-spacing="20"/>
+      <text name="txt_long" visible="y" x="50.000000" y="350.000000" width="300.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" border-right-width="1" border-right-color="#000" font-name="Sans" font-size="12.000000" source="&quot;text with new line&quot;" fill-with="."/>
+      <text name="txt_dot" visible="y" x="50.000000" y="400.000000" width="300.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="&quot;.&quot;"/>
+      <text name="txt_long_with_spacing" visible="y" x="0.000000" y="450.000000" width="400.000000" height="50.000000" border-top-width="1.000000" border-top-color="#FF0000FF" font-name="Sans" font-size="12.000000" source="&quot;text with&#10;new line&quot;" letter-spacing="10"/>
+      <text name="txt_date" visible="y" x="0.000000" y="500.000000" width="400.000000" height="50.000000" font-name="Sans" font-size="12.000000" source="@Date{%d/%m/%Y} &amp; &quot; &quot; &amp; @Time{%H.%M.%S}" letter-spacing="10"/>
+    </body>
+  </report>
+</reptool>

@@ -53,8 +53,6 @@ tests/test_rptreport
 tests/test_rptreport_creation
 tests/test_rptreport_liststore
 tests/test_report_created*
-tests/test_rptprint_mm.rptr
-tests/test_report_newline.rpt
 POTFILES
 mkinstalldirs
 stamp-it
