@@ -44,9 +44,10 @@ main (int argc, char **argv)
 	g_option_context_add_main_entries (context, entries, NULL);
 
 	error = NULL;
-	if (!g_option_context_parse (context, &argc, &argv, &error))
+	if (!g_option_context_parse (context, &argc, &argv, &error)
+	    || error != NULL)
 		{
-			g_error ("option parsing failed: %s\n", error->message);
+			g_error ("Option parsing failed: %s.", error != NULL && error->message != NULL ? error->message : "no details");
 			return 0;
 		}
 
@@ -55,8 +56,19 @@ main (int argc, char **argv)
 	if (rptp != NULL)
 		{
 			rpt_print_set_output_type (rptp, rpt_common_stroutputtype_to_enum (output_type));
-			rpt_print_set_output_filename (rptp, output_file_name == NULL ? "test.out" : output_file_name);
+			if (g_strcmp0 (output_type, "png") == 0
+			    || g_strcmp0 (output_type, "pdf") == 0
+			    || g_strcmp0 (output_type, "ps") == 0
+			    || g_strcmp0 (output_type, "svg") == 0)
+				{
+					rpt_print_set_output_filename (rptp, output_file_name == NULL ? g_strdup_printf ("test.%s", output_type) : output_file_name);
+				}
 			rpt_print_print (rptp, NULL);
+		}
+	else
+		{
+			g_error ("Error on creating RptPrint object.");
+			return 0;
 		}
 
 	return 0;
