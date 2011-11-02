@@ -6,16 +6,18 @@ AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
 libreptool = $(top_builddir)/src/libreptool.la
 
 noinst_PROGRAMS = \
-                  test_rptreport \
-                  test_rptprint \
-                  test_rptreport_creation \
-                  test_rptreport_liststore \
-                  rptreport_gtktreeview
+                  rptreport \
+                  rptprint \
+                  creation \
+                  liststore \
+                  gtktreeview
 
 LDADD = $(libreptool)
 
 EXTRA_DIST = \
-             test_report.rpt \
-             test_report_db.rpt \
-             test_rptprint.rptr \
-             db_test.db
+             report.rpt \
+             db.rpt \
+             mm.rptr \
+             newline.rpt \
+             db_test.db \
+             gnome-globe.png

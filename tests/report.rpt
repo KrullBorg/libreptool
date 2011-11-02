@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<reptool>
+	<page width="595" height="842" margin-top="50" margin-left="100" margin-right="10" />
+
+	<report>
+		<body height="800">
+			<text name="text4" x="-50" y="10" width="500" height="150" visible="y" source="&quot;text outside from left&quot;" />
+			<text name="text1" x="100" y="50" width="500" height="150" visible="y" source="&quot;the text's content&quot;" />
+			<text name="date" x="100" y="150" width="500" height="150" visible="y" source="@Date" />
+			<text name="time" x="100" y="250" width="500" height="150" visible="y" source="@Time" />
+			<text name="text2" x="100" y="350" width="200" height="100" visible="y" 
+				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
+				padding-top="20" padding-right="20" padding-bottom="20" padding-left="10"
+				source="&quot;text very very long to try padding and border&quot;" />
+			<text name="text3" x="400" y="350" width="200" height="50" visible="y" source="&quot;another long text to test page margins&quot;" />
+			<text name="text5" x="50" y="460" width="200" height="50" visible="y" source="[field_to_request]" />
+			<text name="text6" x="50" y="600" width="200" height="50" visible="y" 
+				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
+				border-bottom-style="10"
+				rotation="45" source="&quot;Rotated text&quot;" />
+			<line name="line1" x="350" y="50" width="200" height="0" visible="y" rotation="-45" />
+			<rect name="rect1" x="350" y="250" width="200" height="50" visible="y" fill-color="#FFFF00" rotation="45" stroke-style="10" />
+			<image name="image1" x="200" y="460" width="200" height="150" visible="y" 
+				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
+				border-top-color="#FF0000" border-right-color="#FF0000" border-bottom-color="#FF0000" border-left-color="#FF0000"
+				rotation="135" source="tests/city.png" />
+		</body>
+	</report>
+</reptool>

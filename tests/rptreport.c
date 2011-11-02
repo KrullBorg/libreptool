@@ -104,7 +104,7 @@ main (int argc, char **argv)
 				}
 
 			xmlDoc *rptprint = rpt_report_get_xml_rptprint (rptr);
-			if (xml_rptr_file_name)
+			if (xml_rptr_file_name != NULL)
 				{
 					xmlSaveFormatFileEnc (xml_rptr_file_name, rptprint, "UTF-8", 2);
 				}
