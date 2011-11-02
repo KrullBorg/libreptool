@@ -23,7 +23,7 @@
 			<image name="image1" x="200" y="460" width="200" height="150" visible="y" 
 				border-top-width="1.0" border-right-width="1.0" border-bottom-width="1.0" border-left-width="1.0"
 				border-top-color="#FF0000" border-right-color="#FF0000" border-bottom-color="#FF0000" border-left-color="#FF0000"
-				rotation="135" source="tests/city.png" />
+				rotation="135" source="rodents.png" />
 		</body>
 	</report>
 </reptool>

@@ -20,4 +20,5 @@ EXTRA_DIST = \
              mm.rptr \
              newline.rpt \
              db_test.db \
-             gnome-globe.png
+             gnome-globe.png \
+             rodents.png
