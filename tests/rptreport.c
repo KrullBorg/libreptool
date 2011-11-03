@@ -25,6 +25,8 @@ static gchar *xml_rptr_file_name = NULL;
 static gchar *path_relatives_to  = NULL;
 static gchar *output_type = NULL;
 static gchar *output_file_name = NULL;
+static gchar *printer_name = NULL;
+static gint copies = 1;
 
 static GOptionEntry entries[] =
 {
@@ -34,6 +36,8 @@ static GOptionEntry entries[] =
 	{ "path-relatives-to", 't', 0, G_OPTION_ARG_FILENAME, &path_relatives_to, "Path relatives to", "FILE-NAME" },
 	{ "output-type", 'o', 0, G_OPTION_ARG_STRING, &output_type, "Output type (png | pdf | ps | svg | gtk | gtk-default)", "OUTPUT-TYPE" },
 	{ "output-file-name", 'f', 0, G_OPTION_ARG_FILENAME, &output_file_name, "Output file name", "FILE-NAME" },
+	{ "printer-name", 0, 0, G_OPTION_ARG_STRING, &printer_name, "Printer name", "PRINTER-NAME" },
+	{ "copies", 0, 0, G_OPTION_ARG_INT, &copies, "Number of copies", "N_COPIES" },
 	{ NULL }
 };
 
@@ -73,6 +77,8 @@ main (int argc, char **argv)
 	RptReport *rptr;
 	RptPrint *rptp;
 
+	GtkPrintSettings *settings;
+
 	g_type_init ();
 
 	context = g_option_context_new ("- test rptprint");
@@ -97,6 +103,15 @@ main (int argc, char **argv)
 
 	if (rptr != NULL)
 		{
+			rpt_report_set_output_type (rptr, rpt_common_stroutputtype_to_enum (output_type));
+			if (g_strcmp0 (output_type, "png") == 0
+			    || g_strcmp0 (output_type, "pdf") == 0
+			    || g_strcmp0 (output_type, "ps") == 0
+			    || g_strcmp0 (output_type, "svg") == 0)
+				{
+					rpt_report_set_output_filename (rptr, output_file_name == NULL ? g_strdup_printf ("test.%s", output_type) : output_file_name);
+				}
+
 			xmlDoc *report = rpt_report_get_xml (rptr);
 			if (xml_rpt_file_name != NULL)
 				{
@@ -125,6 +140,29 @@ main (int argc, char **argv)
 						{
 							rpt_print_set_output_filename (rptp, output_file_name == NULL ? g_strdup_printf ("test.%s", output_type) : output_file_name);
 						}
+
+					if (printer_name != NULL)
+						{
+							if (!GTK_IS_PRINT_SETTINGS (settings))
+								{
+									settings = gtk_print_settings_new ();
+								}
+							gtk_print_settings_set_printer (settings, printer_name);
+						}
+					if (copies > 1)
+						{
+							if (!GTK_IS_PRINT_SETTINGS (settings))
+								{
+									settings = gtk_print_settings_new ();
+								}
+							gtk_print_settings_set_n_copies (settings, copies);
+						}
+
+					if (GTK_IS_PRINT_SETTINGS (settings))
+						{
+							rpt_print_set_gtkprintsettings (rptp, settings);
+						}
+
 					rpt_print_print (rptp, NULL);
 				}
 			else

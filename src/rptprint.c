@@ -113,7 +113,7 @@ struct _RptPrintPrivate
 		eRptOutputType output_type;
 		gchar *output_filename;
 
-		guint copies;
+		GtkPrintSettings *gtk_print_settings;
 
 		gdouble width;
 		gdouble height;
@@ -192,6 +192,7 @@ rpt_print_init (RptPrint *rpt_print)
 	priv->surface = NULL;
 	priv->cr = NULL;
 	priv->gtk_print_context = NULL;
+	priv->gtk_print_settings = NULL;
 }
 
 /**
@@ -298,10 +299,32 @@ rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_filename
 }
 
 /**
+ * rpt_print_set_gtkprintsettings:
+ * @rpt_print: an #RptPrint object.
+ * @settings: a #GtkPrintSettings object.
+ *
+ */
+void
+rpt_print_set_gtkprintsettings (RptPrint *rpt_print, GtkPrintSettings *settings)
+{
+	g_return_if_fail (IS_RPT_PRINT (rpt_print));
+	g_return_if_fail (GTK_IS_PRINT_SETTINGS (settings));
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	if (GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
+		{
+			g_object_unref (priv->gtk_print_settings);
+		}
+	priv->gtk_print_settings = gtk_print_settings_copy (settings);
+}
+
+/**
  * rpt_print_set_copies:
  * @rpt_print: an #RptPrint object.
  * @copies: number of copies.
  *
+ * Deprecated:0.2.2: use rpt_print_set_gtkprintsettings() instead.
  */
 void
 rpt_print_set_copies (RptPrint *rpt_print, guint copies)
@@ -310,7 +333,11 @@ rpt_print_set_copies (RptPrint *rpt_print, guint copies)
 
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	priv->copies = copies;
+	if (!GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
+		{
+			priv->gtk_print_settings = gtk_print_settings_new ();
+		}
+	gtk_print_settings_set_n_copies (priv->gtk_print_settings, copies);
 }
 
 /**
@@ -422,6 +449,11 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 			                  G_CALLBACK (rpt_print_gtk_request_page_setup), (gpointer)rpt_print);
 			g_signal_connect (G_OBJECT (operation), "draw-page",
 			                  G_CALLBACK (rpt_print_gtk_draw_page), (gpointer)rpt_print);
+
+			if (GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
+				{
+					gtk_print_operation_set_print_settings (operation, priv->gtk_print_settings);
+				}
 
 			error = NULL;
 			locale_num = setlocale (LC_NUMERIC, "C");
@@ -647,7 +679,14 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 				break;
 
 			case PROP_COPIES:
-				g_value_set_uint (value, priv->copies);
+				if (priv->gtk_print_settings != NULL)
+					{
+						g_value_set_uint (value, gtk_print_settings_get_n_copies (priv->gtk_print_settings));
+					}
+				else
+					{
+						g_value_set_uint (value, 1);
+					}
 				break;
 
 			case PROP_PATH_RELATIVES_TO:
@@ -1556,14 +1595,6 @@ rpt_print_gtk_begin_print (GtkPrintOperation *operation,
 
 	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
-
-	GtkPrintSettings *settings = gtk_print_operation_get_print_settings (operation);
-	if (settings == NULL)
-		{
-			settings = gtk_print_settings_new ();
-		}
-	gtk_print_settings_set_n_copies (settings, priv->copies);
-	gtk_print_operation_set_print_settings (operation, settings);
 }
 
 static void
