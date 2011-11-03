@@ -103,15 +103,6 @@ main (int argc, char **argv)
 
 	if (rptr != NULL)
 		{
-			rpt_report_set_output_type (rptr, rpt_common_stroutputtype_to_enum (output_type));
-			if (g_strcmp0 (output_type, "png") == 0
-			    || g_strcmp0 (output_type, "pdf") == 0
-			    || g_strcmp0 (output_type, "ps") == 0
-			    || g_strcmp0 (output_type, "svg") == 0)
-				{
-					rpt_report_set_output_filename (rptr, output_file_name == NULL ? g_strdup_printf ("test.%s", output_type) : output_file_name);
-				}
-
 			xmlDoc *report = rpt_report_get_xml (rptr);
 			if (xml_rpt_file_name != NULL)
 				{

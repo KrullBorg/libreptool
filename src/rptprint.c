@@ -115,6 +115,8 @@ struct _RptPrintPrivate
 
 		GtkPrintSettings *gtk_print_settings;
 
+		gchar *path_relatives_to;
+
 		gdouble width;
 		gdouble height;
 		gdouble margin_top;
@@ -123,8 +125,6 @@ struct _RptPrintPrivate
 		gdouble margin_left;
 
 		xmlDoc *xdoc;
-
-		gchar *path_relatives_to;
 
 		xmlNodeSet *pages;
 
@@ -151,7 +151,7 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                                   "The unit length.",
 	                                                   RPT_UNIT_POINTS, RPT_UNIT_MILLIMETRE,
 	                                                   RPT_UNIT_POINTS,
-	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	                                                   G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_OUTPUT_TYPE,
 	                                 g_param_spec_int ("output-type",
@@ -159,14 +159,14 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                                   "The output type.",
 	                                                   RPT_OUTPUT_PNG, RPT_OUTPUT_GTK,
 	                                                   RPT_OUTPUT_PDF,
-	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	                                                   G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_OUTPUT_FILENAME,
 	                                 g_param_spec_string ("output-filename",
 	                                                      "Output File Name",
 	                                                      "The output file's name.",
 	                                                      "rptreport.pdf",
-	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	                                                      G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_COPIES,
 	                                 g_param_spec_uint ("copies",
@@ -174,14 +174,14 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                                    "The number of copies to print.",
 	                                                    1, G_MAXUINT,
 	                                                    1,
-	                                                    G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	                                                    G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class, PROP_PATH_RELATIVES_TO,
 	                                 g_param_spec_string ("path-relatives-to",
 	                                                      "Path are relatives to",
 	                                                      "Path are relatives to this property's content.",
 	                                                      "",
-	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	                                                      G_PARAM_READWRITE));
 }
 
 static void
@@ -189,10 +189,15 @@ rpt_print_init (RptPrint *rpt_print)
 {
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
+	priv->unit = -1;
+	priv->output_type = -1;
+	priv->output_filename = NULL;
+	priv->gtk_print_settings = NULL;
+	priv->path_relatives_to = g_strdup ("");
+
 	priv->surface = NULL;
 	priv->cr = NULL;
 	priv->gtk_print_context = NULL;
-	priv->gtk_print_settings = NULL;
 }
 
 /**
@@ -393,19 +398,23 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 					xmlNode *cur_property = xnodeset->nodeTab[0]->children;
 					while (cur_property != NULL)
 						{
-							if (strcmp (cur_property->name, "unit-length") == 0)
+							if (g_strcmp0 (cur_property->name, "unit-length") == 0
+							    && priv->unit == -1)
 								{
 									g_object_set (G_OBJECT (rpt_print), "unit-length", rpt_common_strunit_to_enum ((const gchar *)xmlNodeGetContent (cur_property)), NULL);
 								}
-							else if (strcmp (cur_property->name, "output-type") == 0)
+							else if (g_strcmp0 (cur_property->name, "output-type") == 0
+							         && priv->output_type == -1)
 								{
 									rpt_print_set_output_type (rpt_print, rpt_common_stroutputtype_to_enum ((const gchar *)xmlNodeGetContent (cur_property)));
 								}
-							else if (strcmp (cur_property->name, "output-filename") == 0)
+							else if (g_strcmp0 (cur_property->name, "output-filename") == 0
+							         && priv->output_filename == NULL)
 								{
 									rpt_print_set_output_filename (rpt_print, (const gchar *)xmlNodeGetContent (cur_property));
 								}
-							else if (strcmp (cur_property->name, "copies") == 0)
+							else if (g_strcmp0 (cur_property->name, "copies") == 0
+							         && !GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
 								{
 									rpt_print_set_copies (rpt_print, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
 								}
