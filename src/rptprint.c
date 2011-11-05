@@ -442,13 +442,10 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 	if (priv->output_type == RPT_OUTPUT_GTK
 	    || priv->output_type == RPT_OUTPUT_GTK_DEFAULT_PRINTER)
 		{
-			gchar *locale_old;
-			gchar *locale_num;
 			GtkPrintOperation *operation;
 			GError *error;
 			GtkPrintOperationResult res;
 
-			locale_old = setlocale (LC_ALL, NULL);
 			gtk_init (0, NULL);
 
 			operation = gtk_print_operation_new ();
@@ -465,15 +462,9 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 				}
 
 			error = NULL;
-			locale_num = setlocale (LC_NUMERIC, "C");
 			res = gtk_print_operation_run (operation,
 			                               (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
 			                               transient, &error);
-			setlocale (LC_NUMERIC, locale_num);
-			setlocale (LC_ALL, locale_old);
-
-			g_free (locale_old);
-			g_free (locale_num);
 
 			if (priv->output_type == RPT_OUTPUT_GTK
 			    && res == GTK_PRINT_OPERATION_RESULT_CANCEL)
