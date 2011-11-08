@@ -39,6 +39,7 @@ enum
 	PROP_OUTPUT_TYPE,
 	PROP_OUTPUT_FILENAME,
 	PROP_COPIES,
+	PROP_TRANSLATION,
 	PROP_PATH_RELATIVES_TO
 };
 
@@ -115,6 +116,8 @@ struct _RptPrintPrivate
 
 		GtkPrintSettings *gtk_print_settings;
 
+		RptTranslation *translation;
+
 		gchar *path_relatives_to;
 
 		gdouble width;
@@ -176,6 +179,12 @@ rpt_print_class_init (RptPrintClass *klass)
 	                                                    1,
 	                                                    G_PARAM_READWRITE));
 
+	g_object_class_install_property (object_class, PROP_TRANSLATION,
+	                                 g_param_spec_pointer ("translation",
+	                                                       "Translation",
+	                                                       "Translation of the entire report.",
+	                                                       G_PARAM_READWRITE));
+
 	g_object_class_install_property (object_class, PROP_PATH_RELATIVES_TO,
 	                                 g_param_spec_string ("path-relatives-to",
 	                                                      "Path are relatives to",
@@ -194,6 +203,7 @@ rpt_print_init (RptPrint *rpt_print)
 	priv->output_filename = NULL;
 	priv->gtk_print_settings = NULL;
 	priv->path_relatives_to = g_strdup ("");
+	priv->translation = NULL;
 
 	priv->surface = NULL;
 	priv->cr = NULL;
@@ -346,6 +356,30 @@ rpt_print_set_copies (RptPrint *rpt_print, guint copies)
 }
 
 /**
+ * rpt_print_set_translation:
+ * @rpt_print: an #RptPrint object.
+ * @translation: an #RptTranslation struct.
+ *
+ */
+void
+rpt_print_set_translation (RptPrint *rpt_print, RptTranslation *translation)
+{
+	g_return_if_fail (IS_RPT_PRINT (rpt_print));
+
+	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
+
+	if (priv->translation != NULL)
+		{
+			g_free (priv->translation);
+			priv->translation = NULL;
+		}
+	if (translation != NULL)
+		{
+			priv->translation = rpt_common_rpttranslation_new_with_values (translation->x, translation->y);
+		}
+}
+
+/**
  * rpt_print_print:
  * @rpt_print: an #RptPrint object.
  * @transient:
@@ -417,6 +451,11 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 							         && !GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
 								{
 									rpt_print_set_copies (rpt_print, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
+								}
+							else if (g_strcmp0 (cur_property->name, "translation") == 0
+							         && priv->translation == NULL)
+								{
+									rpt_print_set_translation (rpt_print, rpt_common_get_translation (cur_property));
 								}
 
 							cur_property = cur_property->next;
@@ -648,6 +687,10 @@ rpt_print_set_property (GObject *object, guint property_id, const GValue *value,
 				rpt_print_set_copies (rpt_print, g_value_get_uint (value));
 				break;
 
+			case PROP_TRANSLATION:
+				rpt_print_set_translation (rpt_print, g_value_get_pointer (value));
+				break;
+
 			case PROP_PATH_RELATIVES_TO:
 				priv->path_relatives_to = g_strstrip (g_strdup (g_value_get_string (value)));
 				break;
@@ -687,6 +730,10 @@ rpt_print_get_property (GObject *object, guint property_id, GValue *value, GPara
 					{
 						g_value_set_uint (value, 1);
 					}
+				break;
+
+			case PROP_TRANSLATION:
+				g_value_set_pointer (value, priv->translation);
 				break;
 
 			case PROP_PATH_RELATIVES_TO:
@@ -1655,6 +1702,11 @@ rpt_print_gtk_draw_page (GtkPrintOperation *operation,
 	cairo_scale (priv->cr,
 	             gtk_print_context_get_width (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->width),
 	             gtk_print_context_get_height (priv->gtk_print_context) / rpt_common_value_to_points (priv->unit, priv->height));
+
+	if (priv->translation != NULL)
+		{
+			cairo_translate (priv->cr, priv->translation->x, priv->translation->y);
+		}
 
 	if (priv->width != 0 && priv->height != 0)
 		{

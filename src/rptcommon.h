@@ -78,6 +78,13 @@ struct _RptSize
 };
 typedef struct _RptSize RptSize;
 
+struct _RptTranslation
+{
+	gdouble x;
+	gdouble y;
+};
+typedef struct _RptTranslation RptTranslation;
+
 struct _RptRotation
 {
 	gdouble angle;
@@ -215,6 +222,12 @@ RptSize *rpt_common_rptsize_new_with_values (gdouble width, gdouble height);
 RptSize *rpt_common_get_size (xmlNode *xnode);
 void rpt_common_set_size (xmlNode *xnode,
                           const RptSize *size);
+
+RptTranslation *rpt_common_rpttranslation_new (void);
+RptTranslation *rpt_common_rpttranslation_new_with_values (gdouble x, gdouble y);
+RptTranslation *rpt_common_get_translation (xmlNode *xnode);
+void rpt_common_set_translation (xmlNode *xnode,
+                                 const RptTranslation *translation);
 
 RptRotation *rpt_common_rptrotation_new (void);
 RptRotation *rpt_common_rptrotation_new_with_values (gdouble angle);

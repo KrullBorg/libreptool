@@ -62,6 +62,7 @@ void rpt_print_set_output_filename (RptPrint *rpt_print, const gchar *output_fil
 
 void rpt_print_set_gtkprintsettings (RptPrint *rpt_print, GtkPrintSettings *settings);
 void rpt_print_set_copies (RptPrint *rpt_print, guint copies);
+void rpt_print_set_translation (RptPrint *rpt_print, RptTranslation *translation);
 
 void rpt_print_print (RptPrint *rpt_print, GtkWindow *transient);
 

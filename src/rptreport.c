@@ -102,7 +102,8 @@ enum
 	PROP_0,
 	PROP_UNIT_LENGTH,
 	PROP_NAME,
-	PROP_DESCRIPTION
+	PROP_DESCRIPTION,
+	PROP_TRANSLATION
 };
 
 static void rpt_report_class_init (RptReportClass *klass);
@@ -148,12 +149,17 @@ static void rpt_report_change_specials (RptReport *rpt_report, xmlDoc *xdoc);
 typedef struct _RptReportPrivate RptReportPrivate;
 struct _RptReportPrivate
 	{
+		gchar *name;
+		gchar *description;
+
 		eRptUnitLength unit;
 
 		eRptOutputType output_type;
 		gchar *output_filename;
 
 		guint copies;
+
+		RptTranslation *translation;
 
 		Database *db;
 
@@ -163,9 +169,6 @@ struct _RptReportPrivate
 		PageHeader *page_header;
 		PageFooter *page_footer;
 		Body *body;
-
-		gchar *name;
-		gchar *description;
 
 		guint cur_page;
 		gint cur_row;
@@ -203,6 +206,11 @@ rpt_report_class_init (RptReportClass *klass)
 	                                                   "Report's description.",
 	                                                   "",
 	                                                   G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (object_class, PROP_TRANSLATION,
+	                                 g_param_spec_pointer ("translation",
+	                                                       "Translation",
+	                                                       "Translation of the entire report.",
+	                                                       G_PARAM_READWRITE));
 
 	/**
 	 * RptReport::field-request:
@@ -237,6 +245,11 @@ rpt_report_init (RptReport *rpt_report)
 {
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
+	priv->output_type = RPT_OUTPUT_PDF;
+	priv->output_filename = g_strdup ("rptreport.pdf");
+	priv->copies = 1;
+	priv->translation = NULL;
+
 	priv->db = NULL;
 
 	priv->page = (Page *)g_malloc0 (sizeof (Page));
@@ -253,10 +266,6 @@ rpt_report_init (RptReport *rpt_report)
 	priv->body->height = 0.0;
 	priv->body->objects = NULL;
 	priv->body->new_page_after = FALSE;
-
-	priv->output_type = RPT_OUTPUT_PDF;
-	priv->output_filename = g_strdup ("rptreport.pdf");
-	priv->copies = 1;
 
 	priv->cur_row = -1;
 	priv->cur_iter = NULL;
@@ -354,6 +363,10 @@ RptReport
 									else if (g_strcmp0 (cur_property->name, "copies") == 0)
 										{
 											rpt_report_set_copies (rpt_report, strtol ((const gchar *)xmlNodeGetContent (cur_property), NULL, 10));
+										}
+									else if (g_strcmp0 (cur_property->name, "translation") == 0)
+										{
+											rpt_report_set_translation (rpt_report, rpt_common_get_translation (cur_property));
 										}
 
 									cur_property = cur_property->next;
@@ -808,6 +821,30 @@ rpt_report_set_copies (RptReport *rpt_report, guint copies)
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	priv->copies = copies;
+}
+
+/**
+ * rpt_report_set_translation:
+ * @rpt_report:
+ * @translation:
+ *
+ */
+void
+rpt_report_set_translation (RptReport *rpt_report, RptTranslation *translation)
+{
+	g_return_if_fail (IS_RPT_REPORT (rpt_report));
+
+	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
+
+	if (priv->translation != NULL)
+		{
+			g_free (priv->translation);
+			priv->translation = NULL;
+		}
+	if (translation != NULL)
+		{
+			priv->translation = rpt_common_rpttranslation_new_with_values (translation->x, translation->y);
+		}
 }
 
 /**
@@ -1510,6 +1547,11 @@ xmlDoc
 	xmlNodeSetContent (xnode, g_strdup_printf ("%d", priv->copies));
 	xmlAddChild (xnodeprop, xnode);
 
+	if (priv->translation != NULL)
+		{
+			rpt_common_set_translation (xnodeprop, priv->translation);
+		}
+
 	if (priv->db != NULL)
 		{
 			xmlNode *xnodedb = xmlNewNode (NULL, "database");
@@ -1611,6 +1653,10 @@ xmlDoc
 	rpt_report_rptprint_set_output_type (xdoc, priv->output_type);
 	rpt_report_rptprint_set_output_filename (xdoc, priv->output_filename);
 	rpt_report_rptprint_set_copies (xdoc, priv->copies);
+	if (priv->translation != NULL)
+		{
+			rpt_report_rptprint_set_translation (xdoc, priv->translation);
+		}
 
 	if (priv->db != NULL)
 		{
@@ -2010,6 +2056,26 @@ rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies)
 	xmlAddChild (xnodeprop, xnode);
 }
 
+void
+rpt_report_rptprint_set_translation (xmlDoc *xdoc, RptTranslation *translation)
+{
+	xmlNode *xnodeprop;
+	xmlNode *xnode;
+	xmlNode *xroot;
+
+	xnodeprop = rpt_report_rptprint_get_properties_node (xdoc);
+	if (xnodeprop == NULL)
+		{
+			xroot = xmlDocGetRootElement (xdoc);
+			xnodeprop = xmlNewNode (NULL, "properties");
+			xmlAddChild (xroot, xnodeprop);
+		}
+
+	/* TODO
+	 * replace eventually already present node */
+	rpt_common_set_translation (xnodeprop, translation);
+}
+
 xmlNode
 *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin)
 {
@@ -2247,6 +2313,10 @@ rpt_report_set_property (GObject *object, guint property_id, const GValue *value
 				priv->unit = g_value_get_int (value);
 				break;
 
+			case PROP_TRANSLATION:
+				priv->translation = g_value_get_pointer (value);
+				break;
+
 			default:
 				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 				break;
@@ -2271,6 +2341,10 @@ rpt_report_get_property (GObject *object, guint property_id, GValue *value, GPar
 
 			case PROP_UNIT_LENGTH:
 				g_value_set_int (value, priv->unit);
+				break;
+
+			case PROP_TRANSLATION:
+				g_value_set_pointer (value, priv->translation);
 				break;
 
 			default:

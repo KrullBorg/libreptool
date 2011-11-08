@@ -78,6 +78,7 @@ void rpt_report_set_output_type (RptReport *rpt_report, eRptOutputType output_ty
 void rpt_report_set_output_filename (RptReport *rpt_report, const gchar *output_filename);
 
 void rpt_report_set_copies (RptReport *rpt_report, guint copies);
+void rpt_report_set_translation (RptReport *rpt_report, RptTranslation *translation);
 
 const gchar *rpt_report_database_get_provider (RptReport *rpt_report);
 const gchar *rpt_report_database_get_connection_string (RptReport *rpt_report);
@@ -169,6 +170,7 @@ void rpt_report_rptprint_set_unit_length (xmlDoc *xdoc, eRptUnitLength unit);
 void rpt_report_rptprint_set_output_type (xmlDoc *xdoc, eRptOutputType output_type);
 void rpt_report_rptprint_set_output_filename (xmlDoc *xdoc, const gchar *output_filename);
 void rpt_report_rptprint_set_copies (xmlDoc *xdoc, guint copies);
+void rpt_report_rptprint_set_translation (xmlDoc *xdoc, RptTranslation *translation);
 
 xmlNode *rpt_report_rptprint_page_new (xmlDoc *xdoc, RptSize *size, RptMargin *margin);
 void rpt_report_rptprint_page_add_object (xmlNode *xnodepage, RptObject *rpt_object);

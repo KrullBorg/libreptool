@@ -519,6 +519,118 @@ rpt_common_set_size (xmlNode *xnode, const RptSize *size)
 }
 
 /**
+ * rpt_common_rpttranslation_new:
+ *
+ * Returns: an new allocated #RptTranslation struct.
+ */
+RptTranslation
+*rpt_common_rpttranslation_new (void)
+{
+	RptTranslation *translation;
+
+	translation = (RptTranslation *)g_new0 (RptTranslation, 1);
+	translation->x = 0.0;
+	translation->y = 0.0;
+
+	return translation;
+}
+
+/**
+ * rpt_common_rpttranslation_new_with_values:
+ * @x:
+ * @y:
+ *
+ * Returns: an new allocated #RptTranslation struct.
+ */
+RptTranslation
+*rpt_common_rpttranslation_new_with_values (gdouble x, gdouble y)
+{
+	RptTranslation *translation;
+
+	translation = rpt_common_rpttranslation_new ();
+	translation->x = x;
+	translation->y = y;
+
+	return translation;
+}
+
+/**
+ * rpt_common_get_translation:
+ * @xnode: an #xmlNode.
+ *
+ * Returns: an #RptTranslation struct that represent the object's rotation
+ * specified on @xnode.
+ */
+RptTranslation
+*rpt_common_get_translation (xmlNode *xnode)
+{
+	gchar *prop;
+	RptTranslation *translation = NULL;
+
+	gdouble x;
+	gdouble y;
+
+	/* TODO try the first level of children */
+	if (xmlStrcmp (xnode->name, "translation") == 0)
+		{
+			x = 0.0;
+			y = 0.0;
+
+			prop = xmlGetProp (xnode, "x");
+			if (prop != NULL)
+				{
+					translation = rpt_common_rpttranslation_new ();
+					translation->x = g_strtod (prop, NULL);
+					xmlFree (prop);
+				}
+			prop = xmlGetProp (xnode, "y");
+			if (prop != NULL)
+				{
+					if (translation == NULL)
+						{
+							translation = rpt_common_rpttranslation_new ();
+						}
+					translation->y = g_strtod (prop, NULL);
+					xmlFree (prop);
+				}
+		}
+
+	return translation;
+}
+
+/**
+ * rpt_common_set_translation:
+ * @xnode: an #xmlNode.
+ * @rotation:
+ *
+ */
+void
+rpt_common_set_translation (xmlNode *xnode, const RptTranslation *translation)
+{
+	xmlNode *_node;
+
+	if (translation != NULL)
+		{
+			_node = NULL;
+			if (xmlStrcmp (xnode->name, "translation") == 0)
+				{
+					_node = xnode;
+				}
+			else
+				{
+					_node = xmlNewNode (NULL, "translation");
+					xmlAddChild (xnode, _node);
+				}
+
+			if (_node != NULL)
+				{
+					xmlSetProp (_node, "x", g_strdup_printf ("%f", translation->x));
+					xmlSetProp (_node, "y", g_strdup_printf ("%f", translation->y));
+				}
+		}
+}
+
+/**
  * rpt_common_rptrotation_new:
  *
  * Returns: an new allocated #RptRotation struct.
