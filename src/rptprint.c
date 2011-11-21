@@ -483,11 +483,13 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 		{
 			GtkPrintOperation *operation;
 			GError *error;
+			GtkPrintSettings *settings;
 			GtkPrintOperationResult res;
 
 			gtk_init (0, NULL);
 
 			operation = gtk_print_operation_new ();
+
 			g_signal_connect (G_OBJECT (operation), "begin-print",
 			                  G_CALLBACK (rpt_print_gtk_begin_print), (gpointer)rpt_print);
 			g_signal_connect (G_OBJECT (operation), "request-page-setup",
@@ -497,12 +499,23 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 
 			if (GTK_IS_PRINT_SETTINGS (priv->gtk_print_settings))
 				{
-					gtk_print_operation_set_print_settings (operation, priv->gtk_print_settings);
+					settings = priv->gtk_print_settings;
 				}
+			else
+				{
+					settings = gtk_print_settings_new ();
+				}
+			if (priv->width > priv->height)
+				{
+					gtk_print_settings_set_orientation (settings, GTK_PAGE_ORIENTATION_LANDSCAPE);
+				}
+			gtk_print_operation_set_print_settings (operation, settings);
+
+			gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 
 			error = NULL;
 			res = gtk_print_operation_run (operation,
-			                               (priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT),
+			                               priv->output_type == RPT_OUTPUT_GTK ? GTK_PRINT_OPERATION_ACTION_PRINT_DIALOG : GTK_PRINT_OPERATION_ACTION_PRINT,
 			                               transient, &error);
 
 			if (priv->output_type == RPT_OUTPUT_GTK
@@ -1631,16 +1644,6 @@ rpt_print_gtk_begin_print (GtkPrintOperation *operation,
 	RptPrint *rpt_print = (RptPrint *)user_data;
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
-	GtkPageSetup *page_set = gtk_page_setup_new ();
-
-	gtk_page_setup_set_top_margin (page_set, 0.0, GTK_UNIT_POINTS);
-	gtk_page_setup_set_bottom_margin (page_set, 0.0, GTK_UNIT_POINTS);
-	gtk_page_setup_set_left_margin (page_set, 0.0, GTK_UNIT_POINTS);
-	gtk_page_setup_set_right_margin (page_set, 0.0, GTK_UNIT_POINTS);
-
-	gtk_print_operation_set_default_page_setup (operation, page_set);
-
-	gtk_print_operation_set_unit (operation, GTK_UNIT_POINTS);
 	gtk_print_operation_set_n_pages (operation, priv->pages->nodeNr);
 }
 
@@ -1652,38 +1655,24 @@ rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
                                   gpointer user_data)
 {
 	GtkPaperSize *paper_size;
-	gdouble swap;
 
 	RptPrint *rpt_print = (RptPrint *)user_data;
 	RptPrintPrivate *priv = RPT_PRINT_GET_PRIVATE (rpt_print);
 
 	rpt_print_get_xml_page_attributes (rpt_print, priv->pages->nodeTab[page_nr]);
 
-	gtk_print_operation_set_use_full_page (operation, TRUE);
-	swap = 0.0;
-	if (priv->width > priv->height)
-		{
-			swap = priv->width;
-			priv->width = priv->height;
-			priv->height = swap;
-
-			gtk_page_setup_set_orientation (setup, GTK_PAGE_ORIENTATION_LANDSCAPE);
-		}
-
 	paper_size = gtk_paper_size_new_custom ("reptool",
 	                                        "RepTool",
-	                                        rpt_common_value_to_points (priv->unit, priv->width),
-	                                        rpt_common_value_to_points (priv->unit, priv->height),
+	                                        rpt_common_value_to_points (priv->unit, priv->width > priv->height ? priv->height : priv->width),
+	                                        rpt_common_value_to_points (priv->unit, priv->width > priv->height ? priv->width : priv->height),
 	                                        GTK_UNIT_POINTS);
 
 	gtk_page_setup_set_paper_size (setup, paper_size);
 
-	if (swap != 0)
-		{
-			swap = priv->width;
-			priv->width = priv->height;
-			priv->height = swap;
-		}
+	gtk_page_setup_set_top_margin (setup, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_bottom_margin (setup, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_left_margin (setup, 0.0, GTK_UNIT_POINTS);
+	gtk_page_setup_set_right_margin (setup, 0.0, GTK_UNIT_POINTS);
 }
 
 static void
