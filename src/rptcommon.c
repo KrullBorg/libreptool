@@ -711,7 +711,7 @@ RptMargin
 {
 	RptMargin *margin;
 
-	margin = (RptMargin *)g_malloc0 (sizeof (RptMargin));
+	margin = (RptMargin *)g_new0 (RptMargin, 1);
 	margin->top = 0.0;
 	margin->right = 0.0;
 	margin->bottom = 0.0;
@@ -761,22 +761,22 @@ RptMargin
 
 	margin = rpt_common_rptmargin_new ();
 
-	prop = xmlGetProp (xnode, (const xmlChar *)"top");
+	prop = xmlGetProp (xnode, (const xmlChar *)"margin-top");
 	if (prop != NULL)
 		{
 			margin->top = g_strtod (prop, NULL);
 		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"right");
+	prop = xmlGetProp (xnode, (const xmlChar *)"margin-right");
 	if (prop != NULL)
 		{
 			margin->right = g_strtod (prop, NULL);
 		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"bottom");
+	prop = xmlGetProp (xnode, (const xmlChar *)"margin-bottom");
 	if (prop != NULL)
 		{
 			margin->bottom = g_strtod (prop, NULL);
 		}
-	prop = xmlGetProp (xnode, (const xmlChar *)"left");
+	prop = xmlGetProp (xnode, (const xmlChar *)"margin-left");
 	if (prop != NULL)
 		{
 			margin->left = g_strtod (prop, NULL);
@@ -796,10 +796,10 @@ rpt_common_set_margin (xmlNode *xnode, const RptMargin *margin)
 {
 	if (margin != NULL)
 		{
-			xmlSetProp (xnode, "top", g_strdup_printf ("%f", margin->top));
-			xmlSetProp (xnode, "right", g_strdup_printf ("%f", margin->right));
-			xmlSetProp (xnode, "bottom", g_strdup_printf ("%f", margin->bottom));
-			xmlSetProp (xnode, "left", g_strdup_printf ("%f", margin->left));
+			xmlSetProp (xnode, "margin-top", g_strdup_printf ("%f", margin->top));
+			xmlSetProp (xnode, "margin-right", g_strdup_printf ("%f", margin->right));
+			xmlSetProp (xnode, "margin-bottom", g_strdup_printf ("%f", margin->bottom));
+			xmlSetProp (xnode, "margin-left", g_strdup_printf ("%f", margin->left));
 		}
 }
 
