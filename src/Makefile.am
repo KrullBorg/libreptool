@@ -20,6 +20,8 @@ rptmarshal.h: reptool_marshal.list $(GLIB_GENMARSHAL)
 	$(GLIB_GENMARSHAL) reptool_marshal.list --header --prefix=_rpt_marshal > $@
 
 libreptool_la_SOURCES = \
+                        parser.tab.c \
+                        lexycal.yy.c \
                         rptobject.c \
                         rptobjecttext.c \
                         rptobjectline.c \
@@ -29,9 +31,7 @@ libreptool_la_SOURCES = \
                         rptreport.c \
                         rptprint.c \
                         rptcommon.c \
-                        rptmarshal.c \
-                        parser.tab.c \
-                        lexycal.yy.c
+                        rptmarshal.c
 
 libreptool_include_HEADERS = \
                   libreptool.h \
@@ -46,10 +46,10 @@ libreptool_include_HEADERS = \
                   rptcommon.h
 
 noinst_HEADERS = \
-                 rptreport_priv.h \
-                 rptmarshal.h \
                  parser.tab.h \
-                 lexycal.yy.h
+                 lexycal.yy.h \
+                 rptreport_priv.h \
+                 rptmarshal.h
 
 EXTRA_DIST = \
              parser.y \
