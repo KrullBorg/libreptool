@@ -6,7 +6,7 @@ AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
 parser.tab.c parser.tab.h: parser.y
 	bison -d parser.y
 
-laxycal.yy.c lexycal.yy.h: lexycal.fl
+lexycal.yy.c lexycal.yy.h: lexycal.fl
 	flex -o lexycal.yy.c --header-file=lexycal.yy.h lexycal.fl
 
 lib_LTLIBRARIES = libreptool.la

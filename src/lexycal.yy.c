@@ -496,8 +496,9 @@ char *yytext;
 
 #include <glib.h>
 
+#include "rptreport_priv.h"
 #include "parser.tab.h"
-#line 501 "lexycal.yy.c"
+#line 502 "lexycal.yy.c"
 
 #define INITIAL 0
 
@@ -684,10 +685,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 11 "lexycal.fl"
+#line 12 "lexycal.fl"
 
 
-#line 691 "lexycal.yy.c"
+#line 692 "lexycal.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -772,7 +773,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 13 "lexycal.fl"
+#line 14 "lexycal.fl"
 {
 			/*printf("An integer: %d\n", atoi (yytext));*/
 			yylval = g_strdup (yytext);
@@ -781,7 +782,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 19 "lexycal.fl"
+#line 20 "lexycal.fl"
 {
 					/*printf("A float: %f\n", atof (yytext));*/
 					yylval = g_strdup (yytext);
@@ -791,7 +792,7 @@ YY_RULE_SETUP
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 25 "lexycal.fl"
+#line 26 "lexycal.fl"
 {
 			/*printf ("A string: %s\n", yytext);*/
 			yylval = g_strdup (yytext);
@@ -801,7 +802,7 @@ YY_RULE_SETUP
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 31 "lexycal.fl"
+#line 32 "lexycal.fl"
 {
 			/*printf ("A field: %s\n", yytext);*/
 			yylval = g_strdup (yytext);
@@ -809,21 +810,21 @@ YY_RULE_SETUP
 			}
 	YY_BREAK
 case 5:
-#line 38 "lexycal.fl"
-case 6:
 #line 39 "lexycal.fl"
-case 7:
+case 6:
 #line 40 "lexycal.fl"
+case 7:
+#line 41 "lexycal.fl"
 case 8:
 /* rule 8 can match eol */
-#line 41 "lexycal.fl"
+#line 42 "lexycal.fl"
 case 9:
 /* rule 9 can match eol */
-#line 42 "lexycal.fl"
+#line 43 "lexycal.fl"
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 42 "lexycal.fl"
+#line 43 "lexycal.fl"
 {
 		/*printf ("A special value: %s\n", yytext);*/
 		yylval = g_strdup (yytext);
@@ -832,7 +833,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 48 "lexycal.fl"
+#line 49 "lexycal.fl"
 {
 					/*printf ("An operator: %s\n", yytext );*/
 					yylval = NULL;
@@ -841,7 +842,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 54 "lexycal.fl"
+#line 55 "lexycal.fl"
 {
 								/*printf ("A function: %s\n", yytext);*/
 								yylval = g_strdup (yytext);
@@ -851,15 +852,15 @@ YY_RULE_SETUP
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 60 "lexycal.fl"
+#line 61 "lexycal.fl"
 /* eat up unmatched chars */
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 62 "lexycal.fl"
+#line 63 "lexycal.fl"
 ECHO;
 	YY_BREAK
-#line 863 "lexycal.yy.c"
+#line 864 "lexycal.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1857,7 +1858,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 62 "lexycal.fl"
+#line 63 "lexycal.fl"
 
 
 
