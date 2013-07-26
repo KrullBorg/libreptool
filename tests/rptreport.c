@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,8 +78,6 @@ main (int argc, char **argv)
 	RptPrint *rptp;
 
 	GtkPrintSettings *settings;
-
-	g_type_init ();
 
 	context = g_option_context_new ("- test rptprint");
 	g_option_context_add_main_entries (context, entries, NULL);
