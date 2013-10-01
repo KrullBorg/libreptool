@@ -31,6 +31,8 @@
 									<listOptionValue builtIn="false" value="&quot;C:\mingw\include\libxml2&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\mingw\include\libgda-4.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\mingw\include\libgda-4.0\libgda&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\mingw\include\cairo&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\mingw\include\pango-1.0&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.348969489" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>

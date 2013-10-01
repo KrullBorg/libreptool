@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -598,7 +598,11 @@ RptReport
 
 	guint idx;
 
+	gdouble height;
+
 	g_return_val_if_fail (GTK_IS_TREE_VIEW (view), NULL);
+
+	height = 8;
 
 	style = gtk_widget_get_style (GTK_WIDGET (view));
 	pango_font = pango_font_description_copy (style->font_desc);
@@ -608,7 +612,7 @@ RptReport
 
 			pango_font = pango_font_description_new ();
 			pango_font_description_set_family (pango_font, "Arial");
-			pango_font_description_set_size (pango_font, 10 * PANGO_SCALE);
+			pango_font_description_set_absolute_size (pango_font, 10 * PANGO_SCALE);
 		}
 
 	ret = rpt_report_new ();
@@ -627,14 +631,14 @@ RptReport
 	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 27);
 	rpt_report_set_page_header_first_last_page (ret, TRUE, TRUE);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, 15);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, height);
 
 	if (title != NULL)
 		{
 			point = rpt_common_rptpoint_new_with_values (0, 0);
 			obj = rpt_obj_text_new ("title", *point);
 
-			size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 10);
+			size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, height);
 			font = rpt_common_rptfont_from_pango_description (pango_font);
 			font->size += 2;
 			font->bold = TRUE;
@@ -660,17 +664,17 @@ RptReport
 			col = (GtkTreeViewColumn *)columns->data;
 
 			col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
-			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96.0 * 72.0);
+			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, (gtk_tree_view_column_get_width (col) * 72.0) / 96.0);
 
 			point = rpt_common_rptpoint_new_with_values (x, 15);
 			if (columns->next == NULL && x < page_size->width)
 				{
 					/* the last column is always large until the end of the page */
-					size = rpt_common_rptsize_new_with_values ((page_size->width - page_margin->left - page_margin->right) - x, 10);
+					size = rpt_common_rptsize_new_with_values ((page_size->width - page_margin->left - page_margin->right) - x, height);
 				}
 			else
 				{
-					size = rpt_common_rptsize_new_with_values (col_width, 10);
+					size = rpt_common_rptsize_new_with_values (col_width, height);
 				}
 			font = rpt_common_rptfont_from_pango_description (pango_font);
 			font->bold = TRUE;
@@ -707,7 +711,7 @@ RptReport
 
 			g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
 
-			x += col_width + 5;
+			x += col_width + 1;
 			idx++;
 
 			columns = g_list_next (columns);
