@@ -1003,8 +1003,6 @@ rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report,
 	g_return_if_fail (GTK_IS_TREE_MODEL (model));
 	g_return_if_fail (columns_names != NULL);
 
-	g_return_if_fail (GTK_IS_LIST_STORE (model));
-
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
 	if (priv->db != NULL)
