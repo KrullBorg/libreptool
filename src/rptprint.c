@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2006-2013 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -969,11 +969,11 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 	if (font->size > 0.0f)
 		{
-			pango_font_description_set_size (pfdesc, (int)font->size * PANGO_SCALE);
+			pango_font_description_set_absolute_size (pfdesc, (int)font->size * PANGO_SCALE);
 		}
 	else
 		{
-			pango_font_description_set_size (pfdesc, 12 * PANGO_SCALE);
+			pango_font_description_set_absolute_size (pfdesc, 12 * PANGO_SCALE);
 		}
 
 	pango_layout_set_font_description (playout, pfdesc);

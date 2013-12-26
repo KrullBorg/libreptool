@@ -44,6 +44,19 @@ on_btn_stampa_clicked (GtkButton *button, gpointer user_data)
 	RptReport *rptr;
 	RptPrint *rptp;
 
+	GtkCellRenderer *renderer;
+	GList *lst;
+	GtkTreeViewColumn *column;
+	gint wi;
+	gint he;
+
+	column = gtk_tree_view_get_column (GTK_TREE_VIEW (tree), 0);
+	lst = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (column));
+	renderer = (GtkCellRenderer *)lst->data;
+
+	gtk_cell_renderer_get_size (renderer, tree, NULL, NULL, NULL, &wi, &he);
+	g_message ("w %d h %d", wi, he);
+
 	rptr = rpt_report_new_from_gtktreeview (GTK_TREE_VIEW (tree), "\"Report's Title\"");
 
 	if (rptr != NULL)
@@ -78,7 +91,6 @@ main (int argc, char **argv)
 	GtkTreeIter   iter;
 
 	gtk_list_store_append (store, &iter);  /* Acquire an iterator */
-
 	gtk_list_store_set (store, &iter,
 	                    TITLE_COLUMN, "The Principle of Reason",
 	                    AUTHOR_COLUMN, "Martin Heidegger",
@@ -89,20 +101,45 @@ main (int argc, char **argv)
 	gtk_list_store_set (store, &iter,
 	                    TITLE_COLUMN, "The Art of Computer Programming",
 	                    AUTHOR_COLUMN, "Donald E. Knuth",
+	                    CHECKED_COLUMN, TRUE,
+	                    -1);
+
+	gtk_list_store_append (store, &iter);
+	gtk_list_store_set (store, &iter,
+	                    TITLE_COLUMN, "Pinocchio",
+	                    AUTHOR_COLUMN, "Collodi",
 	                    CHECKED_COLUMN, FALSE,
 	                    -1);
 
+	gtk_list_store_append (store, &iter);
+	gtk_list_store_set (store, &iter,
+	                    TITLE_COLUMN, "Hyperion",
+	                    AUTHOR_COLUMN, "Dan Simmons",
+	                    CHECKED_COLUMN, TRUE,
+	                    -1);
+	gtk_list_store_append (store, &iter);
+	gtk_list_store_set (store, &iter,
+	                    TITLE_COLUMN, "A very very long title to see what it does (a galaxy far far away)",
+	                    AUTHOR_COLUMN, "I",
+	                    CHECKED_COLUMN, TRUE,
+	                    -1);
+
 	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
+	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW (tree), TRUE);
 
 	GtkCellRenderer *renderer;
 	GtkTreeViewColumn *column;
 
 	renderer = gtk_cell_renderer_text_new ();
+
 	column = gtk_tree_view_column_new_with_attributes ("Book's title",
 	                                                   renderer,
 	                                                   "text", TITLE_COLUMN,
 	                                                   NULL);
 	gtk_tree_view_column_set_resizable (column, TRUE);
+	gtk_tree_view_column_set_clickable (column, TRUE);
+	gtk_tree_view_column_set_sort_column_id (column, TITLE_COLUMN);
+	gtk_tree_view_column_set_reorderable (column, TRUE);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
 	renderer = gtk_cell_renderer_text_new ();
@@ -111,6 +148,20 @@ main (int argc, char **argv)
 	                                                   "text", AUTHOR_COLUMN,
 	                                                   NULL);
 	gtk_tree_view_column_set_resizable (column, TRUE);
+	gtk_tree_view_column_set_clickable (column, TRUE);
+	gtk_tree_view_column_set_sort_column_id (column, AUTHOR_COLUMN);
+	gtk_tree_view_column_set_reorderable (column, TRUE);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+
+	renderer = gtk_cell_renderer_toggle_new ();
+	column = gtk_tree_view_column_new_with_attributes ("Checked",
+	                                                   renderer,
+	                                                   "active", CHECKED_COLUMN,
+	                                                   NULL);
+	gtk_tree_view_column_set_resizable (column, TRUE);
+	gtk_tree_view_column_set_clickable (column, TRUE);
+	gtk_tree_view_column_set_sort_column_id (column, CHECKED_COLUMN);
+	gtk_tree_view_column_set_reorderable (column, TRUE);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
 	w = gtk_window_new (GTK_WINDOW_TOPLEVEL);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -581,6 +581,8 @@ RptReport
 	GList *columns;
 	GHashTable *columns_names;
 
+	GList *lst_cells;
+
 	RptSize *page_size;
 	RptMargin *page_margin;
 
@@ -598,6 +600,9 @@ RptReport
 
 	guint idx;
 
+	gint iheight;
+	gdouble height;
+
 	g_return_val_if_fail (GTK_IS_TREE_VIEW (view), NULL);
 
 	style = gtk_widget_get_style (GTK_WIDGET (view));
@@ -608,13 +613,19 @@ RptReport
 
 			pango_font = pango_font_description_new ();
 			pango_font_description_set_family (pango_font, "Arial");
-			pango_font_description_set_size (pango_font, 10 * PANGO_SCALE);
+			pango_font_description_set_absolute_size (pango_font, 10 * PANGO_SCALE);
 		}
 
 	ret = rpt_report_new ();
 
 	columns = gtk_tree_view_get_columns (view);
 	if (columns == NULL) return NULL;
+
+	/* find the height to use as defaul height from gtkcellrenderer */
+	lst_cells = gtk_cell_layout_get_cells (GTK_CELL_LAYOUT (columns->data));
+	gtk_cell_renderer_get_size ((GtkCellRenderer *)lst_cells->data, GTK_WIDGET (view),
+	                            NULL, NULL, NULL, NULL, &iheight);
+	height = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, (iheight * 72.0) / 96.0);
 
 	g_object_set (G_OBJECT (ret), "unit-length", RPT_UNIT_MILLIMETRE, NULL);
 
@@ -624,17 +635,17 @@ RptReport
 	page_margin = rpt_common_rptmargin_new_with_values (10, 10, 10, 10);
 	rpt_report_set_page_margins_struct (ret, *page_margin);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, 27);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_HEADER, (height * 3) + 2);
 	rpt_report_set_page_header_first_last_page (ret, TRUE, TRUE);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, 15);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_BODY, height);
 
 	if (title != NULL)
 		{
 			point = rpt_common_rptpoint_new_with_values (0, 0);
 			obj = rpt_obj_text_new ("title", *point);
 
-			size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 10);
+			size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, height);
 			font = rpt_common_rptfont_from_pango_description (pango_font);
 			font->size += 2;
 			font->bold = TRUE;
@@ -659,61 +670,65 @@ RptReport
 		{
 			col = (GtkTreeViewColumn *)columns->data;
 
-			col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
-			col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, gtk_tree_view_column_get_width (col) / 96.0 * 72.0);
-
-			point = rpt_common_rptpoint_new_with_values (x, 15);
-			if (columns->next == NULL && x < page_size->width)
+			if (gtk_tree_view_column_get_visible (col))
 				{
-					/* the last column is always large until the end of the page */
-					size = rpt_common_rptsize_new_with_values ((page_size->width - page_margin->left - page_margin->right) - x, 10);
+					col_title = g_strdup_printf ("\"%s\"", gtk_tree_view_column_get_title (col));
+					col_width = rpt_common_points_to_value (RPT_UNIT_MILLIMETRE, (gtk_tree_view_column_get_width (col) * 72.0) / 96.0);
+
+					point = rpt_common_rptpoint_new_with_values (x, height * 2);
+					if (columns->next == NULL && x < page_size->width)
+						{
+							/* the last column is always large until the end of the page */
+							size = rpt_common_rptsize_new_with_values ((page_size->width - page_margin->left - page_margin->right) - x, height);
+						}
+					else
+						{
+							size = rpt_common_rptsize_new_with_values (col_width, height);
+						}
+					font = rpt_common_rptfont_from_pango_description (pango_font);
+					font->bold = TRUE;
+
+					obj = rpt_obj_text_new (g_strdup_printf ("title_%d", idx), *point);
+
+					g_object_set (obj,
+					              "source", col_title,
+					              "size", size,
+					              "font", font,
+					              NULL);
+
+					rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
+
+					g_free (point);
+
+					point = rpt_common_rptpoint_new_with_values (x, 0);
+					font = rpt_common_rptfont_from_pango_description (pango_font);
+
+					field_name = g_strdup_printf ("field_%d", idx);
+					obj = rpt_obj_text_new (field_name, *point);
+
+					g_object_set (obj,
+					              "source", g_strdup_printf ("[%s]", field_name),
+					              "size", size,
+					              "font", font,
+					              "ellipsize", RPT_ELLIPSIZE_END,
+					              NULL);
+
+					rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_BODY);
+
+					g_free (point);
+					g_free (size);
+
+					g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
+
+					x += col_width;
 				}
-			else
-				{
-					size = rpt_common_rptsize_new_with_values (col_width, 10);
-				}
-			font = rpt_common_rptfont_from_pango_description (pango_font);
-			font->bold = TRUE;
 
-			obj = rpt_obj_text_new (g_strdup_printf ("title_%d", idx), *point);
-
-			g_object_set (obj,
-			              "source", col_title,
-			              "size", size,
-			              "font", font,
-			              NULL);
-
-			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
-
-			g_free (point);
-
-			point = rpt_common_rptpoint_new_with_values (x, 0);
-			font = rpt_common_rptfont_from_pango_description (pango_font);
-
-			field_name = g_strdup_printf ("field_%d", idx);
-			obj = rpt_obj_text_new (field_name, *point);
-
-			g_object_set (obj,
-			              "source", g_strdup_printf ("[%s]", field_name),
-			              "size", size,
-			              "font", font,
-			              "ellipsize", RPT_ELLIPSIZE_END,
-			              NULL);
-
-			rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_BODY);
-
-			g_free (point);
-			g_free (size);
-
-			g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
-
-			x += col_width + 5;
 			idx++;
 
 			columns = g_list_next (columns);
 		}
 
-	point = rpt_common_rptpoint_new_with_values (0, 25);
+	point = rpt_common_rptpoint_new_with_values (0, (height * 3) + 1);
 	obj = rpt_obj_line_new ("line1", *point);
 
 	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 0);
@@ -727,7 +742,7 @@ RptReport
 
 	rpt_report_add_object_to_section (ret, obj, RPTREPORT_SECTION_PAGE_HEADER);
 
-	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_FOOTER, 12);
+	rpt_report_set_section_height (ret, RPTREPORT_SECTION_PAGE_FOOTER, height + 2);
 
 	point = rpt_common_rptpoint_new_with_values (0, 0);
 	obj = rpt_obj_line_new ("line2", *point);
@@ -747,7 +762,7 @@ RptReport
 	point = rpt_common_rptpoint_new_with_values (0, 2);
 	obj = rpt_obj_text_new ("pages", *point);
 
-	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, 10);
+	size = rpt_common_rptsize_new_with_values (page_size->width - page_margin->left - page_margin->right, height);
 	align = rpt_common_rptalign_new ();
 	align->h_align = RPT_HALIGN_RIGHT;
 	font = rpt_common_rptfont_from_pango_description (pango_font);
@@ -987,8 +1002,6 @@ rpt_report_set_database_as_gtktreemodel (RptReport *rpt_report,
 	g_return_if_fail (IS_RPT_REPORT (rpt_report));
 	g_return_if_fail (GTK_IS_TREE_MODEL (model));
 	g_return_if_fail (columns_names != NULL);
-
-	g_return_if_fail (GTK_IS_LIST_STORE (model));
 
 	RptReportPrivate *priv = RPT_REPORT_GET_PRIVATE (rpt_report);
 
