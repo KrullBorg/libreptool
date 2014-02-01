@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2014 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -599,6 +599,8 @@ RptReport
 	gchar *field_name;
 
 	guint idx;
+	gint col_idx;
+	gpointer ptr_col_idx;
 
 	gint iheight;
 	gdouble height;
@@ -718,7 +720,15 @@ RptReport
 					g_free (point);
 					g_free (size);
 
-					g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", idx));
+					/* it's not possible to read column attribute that represents the source from liststore */
+					col_idx = idx;
+					ptr_col_idx = g_object_get_data (G_OBJECT (col), "rpt_text_col_idx");
+					if (ptr_col_idx != NULL)
+						{
+							col_idx = strtol ((gchar *)ptr_col_idx, NULL, 10);
+						}
+
+					g_hash_table_insert (columns_names, field_name, g_strdup_printf ("%d", col_idx));
 
 					x += col_width;
 				}

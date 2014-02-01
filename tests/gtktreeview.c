@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2013 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2011-2014 Andrea Zagli <azagli@libero.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,11 +131,11 @@ main (int argc, char **argv)
 	GtkTreeViewColumn *column;
 
 	renderer = gtk_cell_renderer_text_new ();
-
 	column = gtk_tree_view_column_new_with_attributes ("Book's title",
 	                                                   renderer,
 	                                                   "text", TITLE_COLUMN,
 	                                                   NULL);
+	g_object_set_data (G_OBJECT (column), "rpt_text_col_idx", g_strdup_printf ("%d", TITLE_COLUMN));
 	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_column_set_clickable (column, TRUE);
 	gtk_tree_view_column_set_sort_column_id (column, TITLE_COLUMN);
@@ -147,6 +147,7 @@ main (int argc, char **argv)
 	                                                   renderer,
 	                                                   "text", AUTHOR_COLUMN,
 	                                                   NULL);
+	g_object_set_data (G_OBJECT (column), "rpt_text_col_idx", g_strdup_printf ("%d", AUTHOR_COLUMN));
 	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_column_set_clickable (column, TRUE);
 	gtk_tree_view_column_set_sort_column_id (column, AUTHOR_COLUMN);
@@ -158,6 +159,7 @@ main (int argc, char **argv)
 	                                                   renderer,
 	                                                   "active", CHECKED_COLUMN,
 	                                                   NULL);
+	g_object_set_data (G_OBJECT (column), "rpt_text_col_idx", g_strdup_printf ("%d", CHECKED_COLUMN));
 	gtk_tree_view_column_set_resizable (column, TRUE);
 	gtk_tree_view_column_set_clickable (column, TRUE);
 	gtk_tree_view_column_set_sort_column_id (column, CHECKED_COLUMN);
