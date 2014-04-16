@@ -66,6 +66,21 @@ AC_FUNC_STRFTIME
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([memset strcasecmp strstr strtol])
 
+dnl ******************************
+dnl Check for Operating System
+dnl ******************************
+
+platform_win32=no
+
+case "$host" in
+*-mingw*)
+    platform_win32=yes
+    ;;
+esac
+
+AM_CONDITIONAL(PLATFORM_WIN32, [test $platform_win32 = yes])
+
+# Output files
 AC_CONFIG_FILES([
 	libreptool.pc
 	Makefile

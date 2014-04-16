@@ -12,6 +12,11 @@ distclean-local:
 		rm -f ChangeLog; \
 	fi
 
+if PLATFORM_WIN32
+install-data-hook:
+	\cp -f -r $(prefix)/* /mingw
+endif
+
 ChangeLog:
 	@echo Creating $@
 	@if test -d "$(srcdir)/.git"; then \
