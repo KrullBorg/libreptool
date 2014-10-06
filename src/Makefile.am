@@ -4,20 +4,20 @@ AM_CPPFLAGS = $(REPTOOL_CFLAGS) \
               -DG_LOG_DOMAIN=\"libreptool\"
 
 parser.tab.c parser.tab.h: parser.y
-	bison -d parser.y
+	bison -d $(srcdir)/parser.y
 
 lexycal.yy.c lexycal.yy.h: lexycal.fl
-	flex -o lexycal.yy.c --header-file=lexycal.yy.h lexycal.fl
+	flex -o $(srcdir)/lexycal.yy.c --header-file=$(srcdir)/lexycal.yy.h $(srcdir)/lexycal.fl
 
 lib_LTLIBRARIES = libreptool.la
 
 libreptool_la_LDFLAGS = -no-undefined
 
 rptmarshal.c: rptmarshal.h reptool_marshal.list $(GLIB_GENMARSHAL)
-	$(GLIB_GENMARSHAL) reptool_marshal.list --body --prefix=_rpt_marshal > $@
+	$(GLIB_GENMARSHAL) $(srcdir)/reptool_marshal.list --body --prefix=_rpt_marshal > $(srcdir)/$@
 
 rptmarshal.h: reptool_marshal.list $(GLIB_GENMARSHAL)
-	$(GLIB_GENMARSHAL) reptool_marshal.list --header --prefix=_rpt_marshal > $@
+	$(GLIB_GENMARSHAL) $(srcdir)/reptool_marshal.list --header --prefix=_rpt_marshal > $(srcdir)/$@
 
 libreptool_la_SOURCES = \
                         parser.tab.c \
