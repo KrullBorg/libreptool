@@ -60,3 +60,5 @@ stamp-it
 intltool-*
 Rules-quot
 *.exe
+compile
+gtk-doc.m4
