@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@inwind.it>
+ * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,6 @@ main (int argc, char **argv)
 	RptSize size;
 	RptStroke stroke;
 	RptColor *color;
-
-	g_type_init ();
 
 	rptr = rpt_report_new ();
 

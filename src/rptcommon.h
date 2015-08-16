@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2011 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2007-2013 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,7 @@
 #define __RPT_COMMON_H__
 
 #include <glib.h>
-#include <gdk/gdkcolor.h>
+#include <gdk/gdk.h>
 #include <libxml/tree.h>
 
 #include <pango/pango-attributes.h>

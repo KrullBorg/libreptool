@@ -172,7 +172,7 @@ main (int argc, char **argv)
 	g_signal_connect (w, "delete-event", G_CALLBACK (on_w_delete_event), NULL);
 	g_signal_connect (w, "destroy", gtk_main_quit, NULL);
 
-	GtkWidget *box = gtk_vbox_new (FALSE, 5);
+	GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
 
 	gtk_container_add (GTK_CONTAINER (w), box);
 
