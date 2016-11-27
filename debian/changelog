@@ -1,0 +1,10 @@
+libreptool (0.5.0-1~2.gbpc31542) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @c315425058715515fac8a8e59004169c68707740 **
+
+  [ Andrea Zagli ]
+  * Initial release
+
+  [ tux ]
+
+ -- Andrea Zagli <azagli@libero.it>  Sun, 27 Nov 2016 09:59:40 +0100

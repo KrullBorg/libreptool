@@ -62,3 +62,4 @@ Rules-quot
 *.exe
 compile
 gtk-doc.m4
+build/
