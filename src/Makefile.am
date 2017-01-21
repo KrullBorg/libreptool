@@ -22,6 +22,7 @@ rptmarshal.h: reptool_marshal.list $(GLIB_GENMARSHAL)
 libreptool_la_SOURCES = \
                         parser.tab.c \
                         lexycal.yy.c \
+                        rptmarshal.c \
                         rptobject.c \
                         rptobjecttext.c \
                         rptobjectline.c \
@@ -30,11 +31,11 @@ libreptool_la_SOURCES = \
                         rptobjectimage.c \
                         rptreport.c \
                         rptprint.c \
-                        rptcommon.c \
-                        rptmarshal.c
+                        rptcommon.c
 
 libreptool_include_HEADERS = \
                   libreptool.h \
+                  rptmarshal.h \
                   rptobject.h \
                   rptobjecttext.h \
                   rptobjectline.h \
