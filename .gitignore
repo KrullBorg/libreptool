@@ -65,3 +65,4 @@ compile
 gtk-doc.m4
 src/lexycal.yy.[ch]
 src/rptmarshal.[ch]
+build/*
