@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -118,7 +118,7 @@ RptObject
 
 	gchar *name_ = g_strstrip (g_strdup (name));
 
-	if (strcmp (name_, "") != 0)
+	if (g_strcmp0 (name_, "") != 0)
 		{
 			rpt_obj_rect = RPT_OBJECT (g_object_new (rpt_obj_rect_get_type (), NULL));
 
@@ -144,7 +144,7 @@ RptObject
 	RptObject *rpt_obj_rect = NULL;
 
 	name = g_strdup ((gchar *)xmlGetProp (xnode, "name"));
-	if (name != NULL && strcmp (g_strstrip (name), "") != 0)
+	if (name != NULL && g_strcmp0 (g_strstrip (name), "") != 0)
 		{
 			RptPoint *position;
 			RptObjRectPrivate *priv;
