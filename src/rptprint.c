@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -90,7 +90,7 @@ static void rpt_print_rotate (RptPrint *rpt_print,
                               gdouble angle);
 
 
-static void rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
+static void rpt_print_gtk_begin_print (GtkPrintOperation *operation,
                                        GtkPrintContext *context,
                                        gpointer user_data);
 static void rpt_print_gtk_request_page_setup (GtkPrintOperation *operation,
@@ -228,7 +228,7 @@ RptPrint
 	xmlNode *cur = xmlDocGetRootElement (xdoc);
 	if (cur != NULL)
 		{
-			if (strcmp (cur->name, "reptool_report") == 0)
+			if (g_strcmp0 (cur->name, "reptool_report") == 0)
 				{
 					RptPrintPrivate *priv;
 
@@ -530,7 +530,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 		}
 	else
 		{
-			if (strcmp (g_strstrip (priv->output_filename), "") == 0)
+			if (g_strcmp0 (g_strstrip (priv->output_filename), "") == 0)
 				{
 					switch (priv->output_type)
 						{
@@ -562,7 +562,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 			for (npage = 0; npage < priv->pages->nodeNr; npage++)
 				{
 					cur = priv->pages->nodeTab[npage];
-					if (strcmp (cur->name, "page") == 0)
+					if (g_strcmp0 (cur->name, "page") == 0)
 						{
 							rpt_print_get_xml_page_attributes (rpt_print, cur);
 							if (priv->width != 0 && priv->height != 0)
@@ -620,7 +620,7 @@ rpt_print_print (RptPrint *rpt_print, GtkWindow *transient)
 													if (priv->output_type == RPT_OUTPUT_PNG)
 														{
 															gchar *new_out_filename = rpt_print_new_numbered_filename (priv->output_filename, npage + 1);
-														
+
 															cairo_surface_write_to_png (priv->surface,
 															                            new_out_filename);
 															cairo_surface_destroy (priv->surface);
@@ -834,7 +834,7 @@ rpt_print_page (RptPrint *rpt_print, xmlNode *xnode)
 				{
 					prop = (gchar *)xmlGetProp (cur, "visible");
 					if (prop != NULL
-					    && strcmp (g_strstrip (prop), "y") == 0)
+					    && g_strcmp0 (g_strstrip (prop), "y") == 0)
 						{
 							cairo_save (priv->cr);
 							if (g_strcmp0 (cur->name, "text") == 0)
@@ -997,7 +997,7 @@ rpt_print_text_xml (RptPrint *rpt_print, xmlNode *xnode)
 	if (font->strike)
 		{
 			PangoAttribute *pattr;
-		
+
 			pattr = pango_attr_strikethrough_new (TRUE);
 			pattr->start_index = 0;
 			pattr->end_index = text->len + 1;
@@ -1353,7 +1353,7 @@ rpt_print_ellipse_xml (RptPrint *rpt_print, xmlNode *xnode)
 	             rpt_common_value_to_points (priv->unit, size->height));
 	cairo_arc (priv->cr, 0., 0., 1., 0., 2. * M_PI);
 	cairo_restore (priv->cr);
-	
+
 	if (prop != NULL && fill_color != NULL)
 		{
 			cairo_set_source_rgba (priv->cr, fill_color->r, fill_color->g, fill_color->b, fill_color->a);
@@ -1424,23 +1424,23 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 		}
 
 	cairo_matrix_init_identity (&matrix);
-	if (strcmp (adapt, "none") != 0)
+	if (g_strcmp0 (adapt, "none") != 0)
 		{
 			w = cairo_image_surface_get_width (image);
 			h = cairo_image_surface_get_height (image);
 
-			if (strcmp (adapt, "to-box") == 0)
+			if (g_strcmp0 (adapt, "to-box") == 0)
 				{
 					cairo_matrix_scale (&matrix, w / rpt_common_value_to_points (priv->unit, size->width), h / rpt_common_value_to_points (priv->unit, size->height));
 				}
-			else if (strcmp (adapt, "to-image") == 0)
+			else if (g_strcmp0 (adapt, "to-image") == 0)
 				{
 					size->width = rpt_common_points_to_value (priv->unit, (gdouble)w);
 					size->height = rpt_common_points_to_value (priv->unit, (gdouble)h);
 				}
 		}
 	cairo_matrix_translate (&matrix, rpt_common_value_to_points (priv->unit, -position->x), rpt_common_value_to_points (priv->unit, -position->y));
-	
+
 	cairo_pattern_set_matrix (pattern, &matrix);
 	cairo_set_source (priv->cr, pattern);
 
@@ -1451,7 +1451,7 @@ rpt_print_image_xml (RptPrint *rpt_print, xmlNode *xnode)
 	cairo_fill (priv->cr);
 
 	rpt_print_border (rpt_print, position, size, border, rotation);
-	
+
 	cairo_pattern_destroy (pattern);
 	cairo_surface_destroy (image);
 
@@ -1637,7 +1637,7 @@ rpt_print_rotate (RptPrint *rpt_print, const RptPoint *position, const RptSize *
 }
 
 static void
-rpt_print_gtk_begin_print (GtkPrintOperation *operation, 
+rpt_print_gtk_begin_print (GtkPrintOperation *operation,
                            GtkPrintContext *context,
                            gpointer user_data)
 {

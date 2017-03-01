@@ -24,6 +24,7 @@ Makevars
 aclocal.m4
 autom4te.cache/
 config.guess
+config.h.in
 config.log
 config.sub
 configure
@@ -63,3 +64,5 @@ Rules-quot
 compile
 gtk-doc.m4
 build/
+src/lexycal.yy.[ch]
+src/rptmarshal.[ch]
