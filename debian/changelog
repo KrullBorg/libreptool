@@ -1,10 +1,20 @@
-libreptool (0.5.0-1~2.gbpc31542) UNRELEASED; urgency=medium
+libreptool (0.5.0-1~3.gbp6a90d1) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @c315425058715515fac8a8e59004169c68707740 **
+  ** SNAPSHOT build @6a90d18d116faaed3f24ef60a6b353db8f1d2683 **
 
   [ Andrea Zagli ]
   * Initial release
 
   [ tux ]
 
- -- Andrea Zagli <azagli@libero.it>  Sun, 27 Nov 2016 09:59:40 +0100
+  [ Andrea Zagli ]
+  * New autogen.sh.
+  * Removed from rep files generated during build.
+  * Use of g_strcmp0 instead of strcmp.
+  * Missing ref of rptmarshal.h in autotools.
+  * Enabled gtkdocize in autogen.
+  * Reordering genereated files in makefile.
+
+  [ tux ]
+
+ -- tux <tux@develop64.comune.scandicci.fi.it>  Wed, 01 Mar 2017 15:25:52 +0100

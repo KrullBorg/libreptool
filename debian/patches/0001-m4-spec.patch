@@ -1,0 +1,21 @@
+From: Andrea Zagli <azagli@libero.it>
+Date: Wed, 1 Mar 2017 15:29:59 +0100
+Subject: m4 spec.
+
+---
+ autogen.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/autogen.sh b/autogen.sh
+index c32ddd7..2529218 100755
+--- a/autogen.sh
++++ b/autogen.sh
+@@ -22,7 +22,7 @@ if [ "$#" = 0 -a "x$NOCONFIGURE" = "x" ]; then
+ fi
+ 
+ set -x
+-aclocal --install || exit 1
++aclocal --install -I m4 || exit 1
+ glib-gettextize --force --copy || exit 1
+ gtkdocize --copy || exit 1
+ intltoolize --force --copy --automake || exit 1
