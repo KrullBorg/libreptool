@@ -30,6 +30,8 @@ AC_PROG_LEX
 AC_PROG_LIBTOOL
 GTK_DOC_CHECK
 
+GOBJECT_INTROSPECTION_CHECK([1.30.0])
+
 dnl ******************************
 dnl glib-genmarshal
 dnl ******************************

@@ -66,3 +66,5 @@ gtk-doc.m4
 build/
 src/lexycal.yy.[ch]
 src/rptmarshal.[ch]
+*.gir
+*.typelib

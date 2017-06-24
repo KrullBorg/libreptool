@@ -36,8 +36,7 @@ libreptool_la_SOURCES = \
                         rptprint.c \
                         rptcommon.c
 
-libreptool_include_HEADERS = \
-                  libreptool.h \
+gir_include = \
                   rptmarshal.h \
                   rptobject.h \
                   rptobjecttext.h \
@@ -48,6 +47,10 @@ libreptool_include_HEADERS = \
                   rptreport.h \
                   rptprint.h \
                   rptcommon.h
+
+libreptool_include_HEADERS = \
+                  libreptool.h \
+                  $(gir_include)
 
 noinst_HEADERS = \
                  parser.tab.h \
@@ -64,3 +67,29 @@ libreptool_includedir = $(includedir)/libreptool
 clean-local:
 	-rm -f $(srcdir)/lexycal.yy.*
 	-rm -f $(srcdir)/parser.tab.*
+
+CLEANFILES =
+
+-include $(INTROSPECTION_MAKEFILE)
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all --accept-unprefixed
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+
+if HAVE_INTROSPECTION
+introspection_sources = $(libreptool_la_SOURCES)
+
+Rpt-1.0.gir: libreptool.la
+Rpt_1_0_gir_INCLUDES = Gtk-3.0 Gda-5.0 libxml2-2.0
+Rpt_1_0_gir_CFLAGS = $(AM_CPPFLAGS)
+Rpt_1_0_gir_LIBS = libreptool.la
+Rpt_1_0_gir_FILES = $(introspection_sources)
+INTROSPECTION_GIRS += Rpt-1.0.gir
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif
